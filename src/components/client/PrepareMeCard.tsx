@@ -12,7 +12,7 @@ import { ChevronDown, ChevronUp, FileText } from "@/components/ui/RichlandIcon";
  * `sessionId` is passed when the stage has a session on the calendar, so the
  * briefing is filed against that session and the stage page and the session
  * detail page stay in sync. Without one (a brand-new client with nothing
- * scheduled, or Growth Action Plan, which has no session) the API still
+ * scheduled, or Action Plan, which has no session) the API still
  * assembles the full client dump — the briefing is just as complete, it's
  * filed by stage label instead.
  */

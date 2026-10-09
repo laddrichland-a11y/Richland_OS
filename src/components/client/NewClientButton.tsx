@@ -154,7 +154,7 @@ export default function NewClientButton({
                     value={packageName}
                     onChange={(e) => setPackageName(e.target.value)}
                     className="mt-1 w-full border border-ink-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-clay-200"
-                    placeholder="Full Journey Support"
+                    placeholder="Executive Coaching Engagement"
                   />
                 </div>
                 <div>

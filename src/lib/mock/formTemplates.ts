@@ -466,7 +466,7 @@ export function buildFormTemplates(): FormTemplate[] {
     },
 
     // -------------------------------------------------------------------
-    // 6. Integration Session 1 — Reflection Form
+    // 6. Follow-up Session — Reflection Form
     //
     // Structure follows the MAPS Integration Workbook's "Six Domains of
     // Integration" (Mind, Body, Spirit, Relationships & Community, Nature,
@@ -480,7 +480,7 @@ export function buildFormTemplates(): FormTemplate[] {
     {
       id: "tmpl_integration_session_1",
       document_type: "integration_session_1",
-      title: "Integration Session 1 — Reflection Form",
+      title: "Follow-up Session — Reflection Form",
       description: "Reflect on your journey experience before your first integration session, within the first days after your journey.",
       required: true,
       active: true,
@@ -547,7 +547,7 @@ export function buildFormTemplates(): FormTemplate[] {
     },
 
     // -------------------------------------------------------------------
-    // 7. Integration Session 2 — Reflection Form
+    // 7. Follow-up Session 2 — Reflection Form
     //
     // In the MAPS protocol, later integration sessions serve two purposes:
     // continuing integration, and taking stock of what's actually carried
@@ -560,8 +560,8 @@ export function buildFormTemplates(): FormTemplate[] {
     {
       id: "tmpl_integration_session_2",
       document_type: "integration_session_2",
-      title: "Integration Session 2 — Reflection Form",
-      description: "Reflect on your integration progress since your first integration session — this is the final step before your Growth Action Plan.",
+      title: "Follow-up Session 2 — Reflection Form",
+      description: "Reflect on your integration progress since your first integration session — this is the final step before your Action Plan.",
       required: true,
       active: true,
       session_types: ["integration_2"],
@@ -612,7 +612,7 @@ export function buildFormTemplates(): FormTemplate[] {
         {
           id: "looking_ahead",
           title: "Looking Ahead",
-          body: "After this session, we'll put together your Growth Action Plan together, building on everything you've reflected on across both integration sessions.",
+          body: "After this session, we'll put together your Action Plan together, building on everything you've reflected on across both integration sessions.",
           fields: [
             { id: "still_unresolved", type: "long_text", label: "Is there anything that still feels unresolved from the journey or your integration so far?", required: false },
             { id: "ongoing_practices", type: "long_text", label: "What ongoing practices or supports feel most important for you to maintain going forward?", required: false },
@@ -695,12 +695,12 @@ export function buildFormTemplates(): FormTemplate[] {
     },
 
     // -------------------------------------------------------------------
-    // 9. 12-Hour Check-In
+    // 9. Check-In
     // -------------------------------------------------------------------
     {
       id: "tmpl_check_in_12hr_form",
       document_type: "check_in_12hr_form",
-      title: "12-Hour Check-In",
+      title: "Check-In",
       description: "How things feel about 12 hours after the journey — filled in by the client or during the check-in call.",
       required: true,
       active: true,

@@ -155,7 +155,7 @@ export default function FullPageForm({
           if (latest) setSubmission(latest);
           return latest ?? undefined;
         }}
-        editorLabel={isPractitioner ? "your client" : "your practitioner"}
+        editorLabel={isPractitioner ? "your client" : "your coach"}
         onSaveProgress={async (answers) => {
           await saveFormProgressAction(clientId, documentId, templateId, answers);
           const latest = await getFormSubmissionAction(documentId);

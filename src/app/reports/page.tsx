@@ -68,7 +68,7 @@ export default async function ReportsOverviewPage({ searchParams }: { searchPara
     </div>
     <div className="reports-grid reports-grid--referrals">
       <ReportCard title="Referral sources" description="Where current client relationships began"><ReferralBarChart data={summary.referralBreakdown} /></ReportCard>
-      <ReportCard title="Journey performance" description="Completed journey activity in the selected period">
+      <ReportCard title="Engagement performance" description="Completed journey activity in the selected period">
         <div className="journey-performance-grid">
           {journeyMetrics.map((metric) => <div key={metric.label} className="journey-performance-metric"><strong>{metric.value}</strong><span>{metric.label}</span>{metric.note && <small>{metric.note}</small>}</div>)}
         </div>

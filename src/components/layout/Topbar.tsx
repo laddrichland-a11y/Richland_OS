@@ -196,13 +196,13 @@ export default function Topbar({
                 aria-expanded={viewMenuOpen}
                 onClick={() => setViewMenuOpen((open) => !open)}
               >
-                <span>{role === "practitioner" ? "Practitioner View" : "Client Portal View"}</span>
+                <span>{role === "practitioner" ? "Coach View" : "Client Portal View"}</span>
                 <ChevronDown aria-hidden="true" />
               </button>
               {viewMenuOpen && (
                 <div className="topbar-popover topbar-view-options" role="menu">
                   <button role="menuitem" data-selected={role === "practitioner"} onClick={() => { setRole("practitioner"); setViewMenuOpen(false); router.push("/dashboard"); }}>
-                    <span><strong>Practitioner View</strong><small>Manage your practice</small></span>{role === "practitioner" && <Check />}
+                    <span><strong>Coach View</strong><small>Manage your practice</small></span>{role === "practitioner" && <Check />}
                   </button>
                   <button role="menuitem" data-selected={role === "client"} onClick={() => { setRole("client"); setIsPreview(true); setViewMenuOpen(false); router.push("/portal"); }}>
                     <span><strong>Client Portal View</strong><small>Preview the client experience</small></span>{role === "client" && <Check />}
@@ -221,7 +221,7 @@ export default function Topbar({
               {accountMenuOpen && (
                 <div className="topbar-popover topbar-account-menu" role="menu">
                   <div className="topbar-account-summary"><span className="topbar-avatar">{practitionerInitials}</span><span><strong>{practitionerName}</strong><small>{practiceName}</small></span></div>
-                  <button role="menuitem" onClick={() => { setAccountMenuOpen(false); router.push("/settings"); }}><Settings /><span>Edit practitioner account</span></button>
+                  <button role="menuitem" onClick={() => { setAccountMenuOpen(false); router.push("/settings"); }}><Settings /><span>Edit coach account</span></button>
                   <button role="menuitem" onClick={async () => { try { await logoutAction(); } catch (err) { if (err instanceof Error && err.message === "NEXT_REDIRECT") throw err; } }}><LogOut /><span>Log out</span></button>
                 </div>
               )}

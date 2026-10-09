@@ -8,7 +8,7 @@ import { SessionType } from "@/lib/types";
  * Each stage gets its OWN briefing. Previously this loaded "the most recent
  * session-less briefing" for the client, with no notion of which stage it
  * belonged to — so a briefing generated on the Preparation page reappeared,
- * verbatim, on Check-In, Integration 1, Integration 2 and Growth Plan, while
+ * verbatim, on Check-In, Follow-up 1, Follow-up 2 and Action Plan, while
  * Journey Day (reached through its session record) showed nothing at all.
  *
  * Scoping now works in two tiers:
@@ -34,7 +34,7 @@ export default async function PhasePrepareMe({
 }: {
   clientId: string;
   sessionTypeLabel: string;
-  /** Session type this stage maps to; omit for stages with no session (Growth Action Plan). */
+  /** Session type this stage maps to; omit for stages with no session (Action Plan). */
   sessionType?: SessionType;
   /** Pass directly when the page has already resolved its session, to skip the extra lookup. */
   sessionId?: string;

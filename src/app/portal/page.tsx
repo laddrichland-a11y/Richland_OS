@@ -95,14 +95,14 @@ interface Bundle {
   recordings: Recording[];
 }
 
-const TABS = ["Home", "Appointments", "Forms & Check-Ins", "Growth & Integration", "Messages"] as const;
+const TABS = ["Home", "Appointments", "Forms & Check-Ins", "Action Plan", "Messages"] as const;
 type PortalTab = (typeof TABS)[number] | "Settings";
 
 const PORTAL_PAGE_TITLES: Record<PortalTab, string> = {
   Home: "Home",
   Appointments: "Appointments",
   "Forms & Check-Ins": "Forms & Check-Ins",
-  "Growth & Integration": "Growth & Integration",
+  "Action Plan": "Action Plan",
   Messages: "Messages",
   Settings: "Settings",
 };
@@ -111,7 +111,7 @@ const PORTAL_NAV = [
   { label: "Home", icon: LayoutDashboard },
   { label: "Appointments", icon: CalendarDays },
   { label: "Forms & Check-Ins", icon: ListChecks },
-  { label: "Growth & Integration", icon: Sprout },
+  { label: "Action Plan", icon: Sprout },
   { label: "Messages", icon: MessageSquareText },
 ] as const;
 
@@ -119,7 +119,7 @@ const ASSIGNMENT_TYPE_LABELS: Record<PortalAssignment["assignment_type"], string
   form: "Form",
   homework: "Homework",
   journaling_prompt: "Journal prompt",
-  integration_exercise: "Integration exercise",
+  integration_exercise: "Exercise",
   action_item: "Action item",
 };
 
@@ -162,7 +162,7 @@ function PortalPageInner() {
   const [portalNow, setPortalNow] = useState(Date.now);
   // Set once ?client=<id> is confirmed dead. Holds who to contact, and
   // whether the viewer is the practitioner (who needs a way out, not a
-  // "contact your practitioner" message).
+  // "contact your coach" message).
   const [linkInvalid, setLinkInvalid] = useState<{
     isPractitioner: boolean;
     practitionerName?: string;
@@ -376,7 +376,7 @@ function PortalPageInner() {
     return (
       <div className="auth-shell min-h-screen flex items-center justify-center bg-[var(--background)] px-4">
         <div className="card p-8 max-w-md w-full text-center space-y-4">
-          <div className="portal-auth-brand"><RichlandBrand subtitle="Your Journey Portal" /></div>
+          <div className="portal-auth-brand"><RichlandBrand subtitle="Your Coaching Portal" /></div>
           {isPractitioner ? (
             <>
               <h1 className="text-lg font-semibold text-ink-900">That client link is out of date</h1>
@@ -408,11 +408,11 @@ function PortalPageInner() {
               <p className="text-sm text-ink-500">
                 {practitionerFirstName
                   ? `${practitionerFirstName} can send you a fresh one — it only takes a moment.`
-                  : "Your practitioner can send you a fresh one — it only takes a moment."}
+                  : "Your coach can send you a fresh one — it only takes a moment."}
               </p>
               {mailtoHref && (
                 <a href={mailtoHref} className="btn-primary text-sm px-4 py-2 inline-block">
-                  {practitionerFirstName ? `Email ${practitionerFirstName}` : "Email your practitioner"}
+                  {practitionerFirstName ? `Email ${practitionerFirstName}` : "Email your coach"}
                 </a>
               )}
             </>
@@ -426,7 +426,7 @@ function PortalPageInner() {
     return (
       <div className="portal-shell min-h-screen flex items-center justify-center bg-[var(--background)] px-4">
         <div className="card p-8 max-w-md w-full text-center space-y-4">
-          <div className="portal-auth-brand"><RichlandBrand subtitle="Your Journey Portal" /></div>
+          <div className="portal-auth-brand"><RichlandBrand subtitle="Your Coaching Portal" /></div>
           <h1 className="text-lg font-semibold text-ink-900">Welcome to your Client Portal</h1>
           <p className="text-sm text-ink-500">For this demo, choose which client account to view.</p>
           <div className="space-y-2 text-left">
@@ -503,7 +503,7 @@ function PortalPageInner() {
       id: `form-${form.document?.id ?? form.documentType}`,
       title: form.title,
       status: form.state === "missing_template" || form.state === "missing_document"
-        ? "Waiting for practitioner"
+        ? "Waiting for coach"
         : form.state === "in_progress" ? "In progress" : "Not started",
       action: form.state === "in_progress" ? "Continue" : "Review",
       onClick: () => setTab("Forms & Check-Ins"),
@@ -550,7 +550,7 @@ function PortalPageInner() {
   const canSkipAgreementReview = isPreview;
 
   if (agreementItems.length > 0 && agreementsOutstanding > 0 && (!isPreview || !previewSkipGate)) {
-    const practitionerName = bundle.practitioner?.full_name ?? "your practitioner";
+    const practitionerName = bundle.practitioner?.full_name ?? "your coach";
     const practitionerEmail = bundle.practitioner?.email;
     return (
       <div className="portal-shell portal-onboarding app-frame richland-site-shell flex min-h-screen bg-[var(--background)]">
@@ -565,7 +565,7 @@ function PortalPageInner() {
         <header className="portal-onboarding-header portal-mobile-header">
           <div className="portal-onboarding-header__inner justify-between gap-4">
             <div className="portal-onboarding-brand">
-              <RichlandBrand subtitle="Your Journey Portal" />
+              <RichlandBrand subtitle="Your Coaching Portal" />
             </div>
             {canUsePortalPreviewControls && <PractitionerViewReturn onReturn={returnToPractitionerView} />}
           </div>
@@ -575,10 +575,10 @@ function PortalPageInner() {
           <div className="portal-onboarding-intro">
             <div className="portal-onboarding-step-row">
               <p className="portal-onboarding-step">Step 1 of {agreementItems.length} · Agreements</p>
-              {canUsePortalPreviewControls && <PractitionerViewReturn onReturn={returnToPractitionerView} className="portal-onboarding-return" label="Practitioner View" />}
+              {canUsePortalPreviewControls && <PractitionerViewReturn onReturn={returnToPractitionerView} className="portal-onboarding-return" label="Coach View" />}
             </div>
             <h1>Welcome, {client.full_name.split(" ")[0]}</h1>
-            <p>Review and sign these agreements before continuing to your journey portal. They explain how we&apos;ll work together and what to expect.</p>
+            <p>Review and sign these agreements before continuing to your coaching portal. They explain how we&apos;ll work together and what to expect.</p>
           </div>
 
           <section className="portal-agreements-surface">
@@ -614,7 +614,7 @@ function PortalPageInner() {
                     <span className="portal-agreement-row__icon"><FileText aria-hidden="true" /></span>
                     <span className="portal-agreement-row__copy">
                       <span className="portal-agreement-row__title"><strong>{item.template.title}</strong><span className="portal-agreement-status is-pending">{AGREEMENT_STATE_LABELS.not_opened}</span></span>
-                      <small>Waiting to be assigned by your practitioner</small>
+                      <small>Waiting to be assigned by your coach</small>
                     </span>
                   </div>
                 </div>
@@ -660,7 +660,7 @@ function PortalPageInner() {
         <header className="bg-white border-b border-ink-100">
           <div className="portal-onboarding-header__inner justify-between gap-4">
             <div className="portal-onboarding-brand">
-              <RichlandBrand subtitle="Your Journey Portal" />
+              <RichlandBrand subtitle="Your Coaching Portal" />
             </div>
             {canUsePortalPreviewControls && <PractitionerViewReturn onReturn={returnToPractitionerView} />}
           </div>
@@ -708,7 +708,7 @@ function PortalPageInner() {
                   aria-expanded={portalViewMenuOpen}
                   onClick={() => setPortalViewMenuOpen((open) => !open)}
                 >
-                  <span>{role === "practitioner" ? "Practitioner View" : "Client Portal View"}</span>
+                  <span>{role === "practitioner" ? "Coach View" : "Client Portal View"}</span>
                   <ChevronDown aria-hidden="true" />
                 </button>
                 {portalViewMenuOpen && (
@@ -719,7 +719,7 @@ function PortalPageInner() {
                       data-selected={role === "practitioner"}
                       onClick={returnToPractitionerView}
                     >
-                      <span><strong>Practitioner View</strong><small>Manage your practice</small></span>
+                      <span><strong>Coach View</strong><small>Manage your practice</small></span>
                       {role === "practitioner" && <Check aria-hidden="true" />}
                     </button>
                     <button
@@ -825,18 +825,18 @@ function PortalPageInner() {
           <div className="portal-overview">
             <section className="card p-5 portal-journey-card">
               <div className="portal-section-heading">
-                <div className="portal-heading-with-icon"><span className="portal-heading-icon"><Sprout aria-hidden="true" /></span><h2>Your Journey</h2></div>
+                <div className="portal-heading-with-icon"><span className="portal-heading-icon"><Sprout aria-hidden="true" /></span><h2>Your Coaching</h2></div>
                 {nextJourneyStage && <span className="portal-phase-label">Next: {nextJourneyStage.label}</span>}
               </div>
               <div className="portal-journey-summary">
                 <div>
-                  <span>Journey stage</span>
+                  <span>Current stage</span>
                   <div className="portal-current-step-line"><strong>{currentJourneyStage?.label ?? "Your journey"}</strong><span className="portal-phase-label">{client.status === "inactive" ? "Inactive" : journeyStageStatusLabel(currentJourneyStage?.status ?? "future")}</span></div>
                 </div>
                 <div className="portal-journey-progress-copy"><strong>{journeyProgress.completed} of {journeyProgress.total}</strong><span>completed</span></div>
               </div>
               <JourneyProgressBar client={client} milestones={bundle.milestones} compact />
-              <button type="button" className="portal-journey-continue" onClick={() => setTab("Forms & Check-Ins")}>Continue journey <ArrowRight aria-hidden="true" /></button>
+              <button type="button" className="portal-journey-continue" onClick={() => setTab("Forms & Check-Ins")}>Continue <ArrowRight aria-hidden="true" /></button>
             </section>
             <div className="portal-home-secondary-grid">
             <section className="card p-5 portal-next-session-card">
@@ -845,7 +845,7 @@ function PortalPageInner() {
               </div>
               {nextSession ? (
                 <div className="portal-next-session-content">
-                  <div><span className="portal-next-session-date"><CalendarDays aria-hidden="true" /><strong>{formatDateTime(nextSession.scheduled_at)}</strong></span><span>{sessionTypeLabel(nextSession.session_type)} · {bundle.practitioner?.full_name ?? "Your practitioner"}{nextSession.location && ` · ${nextSession.location}`}</span></div>
+                  <div><span className="portal-next-session-date"><CalendarDays aria-hidden="true" /><strong>{formatDateTime(nextSession.scheduled_at)}</strong></span><span>{sessionTypeLabel(nextSession.session_type)} · {bundle.practitioner?.full_name ?? "Your coach"}{nextSession.location && ` · ${nextSession.location}`}</span></div>
                   <button type="button" onClick={() => setTab("Appointments")}>View appointment <ArrowRight aria-hidden="true" /></button>
                 </div>
               ) : (
@@ -896,7 +896,7 @@ function PortalPageInner() {
                     .map((form) => (
                       <div key={form.documentType} className="rounded-xl border border-amber-200 bg-amber-50/60 px-3 py-3 text-sm text-ink-700">
                         <strong className="block font-medium text-ink-900">{form.title}</strong>
-                        <span>This required form needs to be added by your practitioner before you can complete it.</span>
+                        <span>This required form needs to be added by your coach before you can complete it.</span>
                       </div>
                     ))}
                   {bundle.documents
@@ -974,7 +974,7 @@ function PortalPageInner() {
                 </>
               )}
             </div>
-            {/* The 12-Hour Check-In is now a regular form (listed with the other
+            {/* The Check-In is now a regular form (listed with the other
                 forms). This older card only shows if that form is switched off. */}
             {!bundle.formTemplates.some((t) => t.document_type === "check_in_12hr_form" && t.active) &&
               (bundle.checkIns.length > 0 || PHASE_ORDER.indexOf(client.current_phase) >= PHASE_ORDER.indexOf("post_journey_check_in")) && (
@@ -983,11 +983,11 @@ function PortalPageInner() {
           </div>
         )}
 
-        {tab === "Growth & Integration" && (
+        {tab === "Action Plan" && (
           <div className="space-y-6">
             <div className="card p-5">
               <h2 className="font-semibold text-ink-900 mb-3 flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-clay-500" /> Your Growth Action Plan
+                <Sparkles className="h-4 w-4 text-clay-500" /> Your Action Plan
               </h2>
               {bundle.growthPlan ? (
                 <div className="grid sm:grid-cols-2 gap-4 text-sm">
@@ -998,7 +998,7 @@ function PortalPageInner() {
                   <PlanList title="Accountability Commitments" items={bundle.growthPlan.accountability_commitments} />
                 </div>
               ) : (
-                <p className="text-sm text-ink-400">Your Growth Action Plan will appear here after Integration Session 2.</p>
+                <p className="text-sm text-ink-400">Your Action Plan will appear here once we build it together.</p>
               )}
             </div>
           </div>
@@ -1025,7 +1025,7 @@ function PortalMobileTabBar({
     Home: "Home",
     Appointments: "Appointments",
     "Forms & Check-Ins": "Forms",
-    "Growth & Integration": "Growth",
+    "Action Plan": "Growth",
     Messages: "Messages",
   };
   return (
@@ -1082,7 +1082,7 @@ function PortalSidebar({
       </button>
 
       <button type="button" onClick={() => !agreementMode && onTabChange("Home")} className="sidebar-brand flex items-center gap-2 px-5 py-5 transition-colors" aria-label="Richland client portal home">
-        <RichlandBrand subtitle="Your Journey Portal" />
+        <RichlandBrand subtitle="Your Coaching Portal" />
       </button>
 
       <nav id="client-portal-navigation" className="sidebar-nav flex-1 px-3 py-4 space-y-1" aria-label="Client portal navigation">
@@ -1128,10 +1128,10 @@ function PractitionerViewReturn({ onReturn, className, label }: { onReturn: () =
       type="button"
       onClick={onReturn}
       className={className ?? "btn-secondary inline-flex items-center gap-2 whitespace-nowrap px-3 py-2 text-sm"}
-      aria-label={label ?? "Back to Practitioner View"}
+      aria-label={label ?? "Back to Coach View"}
     >
       <LayoutDashboard aria-hidden="true" />
-      <span>{label ?? "Back to Practitioner View"}</span>
+      <span>{label ?? "Back to Coach View"}</span>
     </button>
   );
 }
@@ -1143,16 +1143,16 @@ const SESSION_STATUS_BADGE: Record<Session["status"], string> = {
   no_show: "bg-clay-100 text-clay-700",
 };
 
-// Friendlier, client-facing names for each session type — "Journey Day"
-// reads a lot better to a client than the internal "Harm Reduction Support"
-// session_type value.
+// Client-facing names for each session type. Legacy Heartful types are
+// kept so any imported history still reads sensibly.
 const SESSION_TYPE_DISPLAY_LABELS: Partial<Record<Session["session_type"], string>> = {
-  intake_assessment: "Intake & Assessment",
-  preparation: "Preparation Session",
-  harm_reduction_support: "Journey Day",
-  check_in_12hr: "12-Hour Check-In",
-  integration_1: "Integration Session 1",
-  integration_2: "Integration Session 2",
+  intake_assessment: "Intake & Assessments",
+  preparation: "Goals & Agreement Session",
+  coaching: "Coaching Session",
+  harm_reduction_support: "Coaching Session",
+  check_in_12hr: "Check-In",
+  integration_1: "Follow-up Session",
+  integration_2: "Follow-up Session",
 };
 
 function sessionTypeLabel(type: Session["session_type"]) {
@@ -1233,16 +1233,16 @@ function AppointmentsPanel({
 }
 
 const STAGE_RECORDING_LABELS: Record<string, string> = {
-  intake: "Intake & Assessment",
-  preparation: "Preparation",
-  journey_day: "Journey Day",
-  check_in_12hr: "12-Hour Check-In",
-  integration_1: "Integration Session 1",
-  integration_2: "Integration Session 2",
-  growth_plan: "Growth Plan",
+  intake: "Intake & Assessments",
+  preparation: "Goals & Agreement",
+  journey_day: "Coaching",
+  check_in_12hr: "Check-In",
+  integration_1: "Follow-up Session",
+  integration_2: "Follow-up Session 2",
+  growth_plan: "Action Plan",
 };
 
-// Recordings your practitioner added on a stage page rather than to a
+// Recordings your coach added on a stage page rather than to a
 // specific appointment — listed on their own so none go missing.
 function StageRecordingsCard({ clientId, recordings }: { clientId: string; recordings: Recording[] }) {
   const [playingId, setPlayingId] = useState<string | null>(null);
@@ -1559,7 +1559,7 @@ function FormDocumentCard({
               prefill={prefill}
               live={status === "in_progress"}
               onPoll={() => getFormSubmissionAction(doc.id)}
-              editorLabel="your practitioner"
+              editorLabel="your coach"
               onSaveProgress={async (answers) => { await saveFormProgressAction(clientId, doc.id, template.id, answers); }}
               onSubmit={async (answers, signed) => { await submitClientFormAction(clientId, doc.id, template.id, answers, signed); setEditing(false); onChanged(); }}
             />
@@ -1607,7 +1607,7 @@ function FormDocumentCard({
                       prefill={prefill}
             live={status === "in_progress"}
             onPoll={() => getFormSubmissionAction(doc.id)}
-            editorLabel="your practitioner"
+            editorLabel="your coach"
             onSaveProgress={async (answers) => {
               await saveFormProgressAction(clientId, doc.id, template.id, answers);
             }}
@@ -1636,7 +1636,7 @@ function CheckInCard({ clientId, checkIn, onSaved }: { clientId: string; checkIn
 
   return (
     <div className="card p-5 space-y-3">
-      <h2 className="font-semibold text-ink-900">12-Hour Check-In</h2>
+      <h2 className="font-semibold text-ink-900">Check-In</h2>
       {(Object.keys(fields) as (keyof typeof fields)[]).map((k) => (
         <div key={k}>
           <label className="text-sm font-medium text-ink-800 capitalize">{k.replace(/_/g, " ")}</label>
@@ -1717,7 +1717,7 @@ function MessagesPanel({ clientId, messages, onSent }: { clientId: string; messa
 
   return (
     <div className="card p-5 portal-messages-panel flex flex-col h-[60vh]">
-      <h2 className="font-semibold text-ink-900 mb-3">Messages with your Practitioner</h2>
+      <h2 className="font-semibold text-ink-900 mb-3">Messages with your Coach</h2>
       <div className="message-thread-scroll flex-1 overflow-y-auto space-y-2 pr-1">
         {visibleMessages.map((m) => (
           <div key={m.id} className={cx("max-w-[80%] break-words rounded-2xl px-3 py-2 text-sm", m.sender === "client" ? "bg-clay-500 text-white ml-auto" : "bg-ink-100 text-ink-800")}>
@@ -1830,7 +1830,7 @@ function PortalAuthGate({
   return (
     <div className="auth-shell min-h-screen flex items-center justify-center bg-[var(--background)] px-4">
       <div className="card p-6 w-full max-w-sm space-y-4 text-center">
-        <div className="portal-auth-brand"><RichlandBrand subtitle="Your Journey Portal" /></div>
+        <div className="portal-auth-brand"><RichlandBrand subtitle="Your Coaching Portal" /></div>
         {accountExists ? (
           <PortalLoginForm clientId={clientId} clientEmail={clientEmail} onUnlocked={onUnlocked} />
         ) : (
@@ -1904,7 +1904,7 @@ function PortalLoginForm({
           {busy ? "Logging in..." : "Log in"}
         </button>
         <p className="text-xs text-ink-400">
-          Forgot your password? Ask your practitioner to reset it, then come back to this link to set a new one.
+          Forgot your password? Ask your coach to reset it, then come back to this link to set a new one.
         </p>
       </form>
     </>

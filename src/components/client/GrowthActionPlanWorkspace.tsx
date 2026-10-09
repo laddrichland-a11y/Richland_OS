@@ -10,7 +10,7 @@ import ActionCardHeader from "@/components/client/ActionCardHeader";
 import { ScrollText, Trash2 } from "@/components/ui/RichlandIcon";
 import { deleteGrowthActionPlanAction } from "@/lib/actions";
 
-// Standalone Growth Action Plan step — pulled out of IntegrationWorkspace so
+// Standalone Action Plan step — pulled out of IntegrationWorkspace so
 // it has its own stable URL (/clients/[id]/growth-plan) instead of living
 // inside Integration Session Two, which the client header's phase pill
 // stops linking to once a completed session record exists for that phase.
@@ -42,7 +42,7 @@ export default function GrowthActionPlanWorkspace({
   const [deletingPlan, setDeletingPlan] = useState(false);
 
   async function handleDeleteGrowthPlan() {
-    if (!confirm("Clear the current Growth Action Plan so you can generate a fresh one? Earlier generated versions stay in the Versions list below.")) return;
+    if (!confirm("Clear the current Action Plan so you can generate a fresh one? Earlier generated versions stay in the Versions list below.")) return;
     setDeletingPlan(true);
     try {
       await deleteGrowthActionPlanAction(clientId);
@@ -61,7 +61,7 @@ export default function GrowthActionPlanWorkspace({
 
       <div className="card p-5 space-y-4">
         <ActionCardHeader
-          title="Growth Action Plan"
+          title="Action Plan"
           description={growthPlan
             ? "Enhance the existing plan using your notes above, without starting over. Each result is kept as a new version."
             : `Turn ${clientName}'s journey into practical 30-day commitments and next steps.`}
@@ -72,7 +72,7 @@ export default function GrowthActionPlanWorkspace({
               disabled={deletingPlan}
               className="p-1 rounded text-ink-300 hover:text-red-500 hover:bg-red-50 disabled:opacity-50"
               title="Clear the current plan"
-              aria-label="Clear the current Growth Action Plan"
+              aria-label="Clear the current Action Plan"
             >
               <Trash2 className="h-3.5 w-3.5" />
             </button>
@@ -81,7 +81,7 @@ export default function GrowthActionPlanWorkspace({
             <AiGenerateButton
               clientId={clientId}
               summaryType="growth_action_plan"
-              label={growthPlan ? "Enhance Growth Action Plan" : "Generate Growth Action Plan"}
+              label={growthPlan ? "Enhance Action Plan" : "Generate Action Plan"}
               extra={{ transcript: notes, stageNotesKey: "growth_plan" }}
               disabled={!canCompleteStage || !notes.trim()}
               onDone={(s) => {
@@ -107,7 +107,7 @@ export default function GrowthActionPlanWorkspace({
             <PlanList title="Accountability Commitments" items={growthPlan.accountability_commitments} />
           </div>
         ) : (
-          <p className="text-sm text-ink-400">No Growth Action Plan generated yet.</p>
+          <p className="text-sm text-ink-400">No Action Plan generated yet.</p>
         )}
       </div>
 
@@ -115,9 +115,9 @@ export default function GrowthActionPlanWorkspace({
         clientId={clientId}
         summaries={versions}
         onChange={setVersions}
-        heading="Growth Action Plan Versions"
+        heading="Action Plan Versions"
         description={`Every plan the AI has generated for ${clientName}, newest first, with the notes each one came from. Deleting a version here doesn't change the current plan above.`}
-        cardTitle="Growth Action Plan"
+        cardTitle="Action Plan"
       />
     </div>
   );

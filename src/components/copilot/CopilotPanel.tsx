@@ -221,7 +221,7 @@ export default function CopilotPanel({
 
       <section className="card prep-section prep-secondary" aria-labelledby="journey-heading">
         <div className="prep-heading">
-          <h2 id="journey-heading"><IntegrationLink className="h-4 w-4" /> Living Journey Summary</h2>
+          <h2 id="journey-heading"><IntegrationLink className="h-4 w-4" /> Living Client Summary</h2>
         </div>
         <div className="prep-controls prep-summary-controls">
           <div className="prep-field">
@@ -249,7 +249,7 @@ export default function CopilotPanel({
           </button>
         </div>
         {summaryError && <p className="prep-error" role="alert">{summaryError}</p>}
-        {livingSummary && <div className="prep-result"><SummaryCard title="Living Journey Summary" content={livingSummary.content} model={livingSummary.model} /></div>}
+        {livingSummary && <div className="prep-result"><SummaryCard title="Living Client Summary" content={livingSummary.content} model={livingSummary.model} /></div>}
       </section>
     </div>
   );

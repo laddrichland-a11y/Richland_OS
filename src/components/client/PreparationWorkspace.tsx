@@ -32,7 +32,7 @@ export default function PreparationWorkspace({
   documents: ClientDocument[];
   formTemplates: FormTemplate[];
   formSubmissions: FormSubmission[];
-  /** Every Journey Brief generated so far, newest first. */
+  /** Every Engagement Brief generated so far, newest first. */
   existingBriefs: AiSummary[];
   /** Notes already saved on the client record for this stage. */
   initialNotes: string;
@@ -63,12 +63,12 @@ export default function PreparationWorkspace({
             </span>
           }
           titleAs="h2"
-          description={`Your notes are saved to ${clientName}'s record as you type. Generate a Journey Brief from them for use on Journey Day — each one is kept as a new version.`}
+          description={`Your notes are saved to ${clientName}'s record as you type. Generate a Engagement Brief from them for use on Journey Day — each one is kept as a new version.`}
           action={
             <AiGenerateButton
               clientId={clientId}
               summaryType="journey_brief"
-              label={briefs.length > 0 ? "Generate New Version" : "Generate Journey Brief"}
+              label={briefs.length > 0 ? "Generate New Version" : "Generate Engagement Brief"}
               extra={{ transcript: notes, stageNotesKey: "preparation" }}
               onDone={(s) => setBriefs((prev) => [s as unknown as AiSummary, ...prev])}
               disabled={!canCompleteStage || !notes.trim()}
@@ -83,9 +83,9 @@ export default function PreparationWorkspace({
         clientId={clientId}
         summaries={briefs}
         onChange={setBriefs}
-        heading="Journey Brief"
-        description={`Every Journey Brief generated for ${clientName}, newest first. Open "Notes this version was generated from" to see what each one was based on.`}
-        cardTitle="Journey Brief"
+        heading="Engagement Brief"
+        description={`Every Engagement Brief generated for ${clientName}, newest first. Open "Notes this version was generated from" to see what each one was based on.`}
+        cardTitle="Engagement Brief"
         variant="journey"
       />
 

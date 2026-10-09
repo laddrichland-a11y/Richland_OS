@@ -212,7 +212,7 @@ export default function ClientRecordTabs({
         <>
           <section id="journey-stages" className="client-surface journey-stages-card mb-5 px-5 py-4">
             <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
-              <h2 className="journey-icon-heading text-base font-semibold text-ink-900"><ListChecks aria-hidden="true" />Journey stages</h2>
+              <h2 className="journey-icon-heading text-base font-semibold text-ink-900"><ListChecks aria-hidden="true" />Engagement stages</h2>
               <span className="text-xs text-ink-400">{journeyProgress.completed} of {journeyProgress.total} stages complete</span>
             </div>
             <JourneyStageNav clientId={client.id} client={client} sessions={sessions} milestones={milestones} current={viewingStage} />
@@ -398,12 +398,12 @@ const FORM_STAGE_GROUPS: {
     hint: "Complete during preparation sessions",
   },
   {
-    label: "Integration Session 1 Forms",
+    label: "Follow-up Session Forms",
     sessionTypes: ["integration_1"],
     hint: "Complete before or during the first integration session",
   },
   {
-    label: "Integration Session 2 Forms",
+    label: "Follow-up Session Forms (2)",
     sessionTypes: ["integration_2"],
     hint: "Complete before or during the second integration session",
   },

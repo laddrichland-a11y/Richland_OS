@@ -50,9 +50,9 @@ export default function IntegrationWorkspace({
   );
   const [summaries, setSummaries] = useState(existingSummaries);
 
-  // "Integration Summary" / "Second Integration Summary" — the button reads
+  // "Session Summary" / "Second Session Summary" — the button reads
   // `Generate ${summaryLabel}`.
-  const summaryLabel = sessionNumber === 1 ? "Integration Summary" : "Second Integration Summary";
+  const summaryLabel = sessionNumber === 1 ? "Session Summary" : "Second Session Summary";
 
   return (
     <div className="space-y-6">
@@ -68,7 +68,7 @@ export default function IntegrationWorkspace({
           generate that session's summary. Pre-session preparation is Prepare
           Me's job now (it reads the whole record, including this session's
           reflection form), so Session One no longer carries a separate
-          "Integration Session One Brief" button that did the same work with
+          "Follow-up Session Brief" button that did the same work with
           less context. Briefs already generated stay in the client record. */}
       <div className="card p-5 space-y-4">
         <h2 className="flex items-center gap-2 font-semibold text-ink-900"><ScrollText className="h-4 w-4 text-ink-500" />Session Notes &amp; Transcript</h2>

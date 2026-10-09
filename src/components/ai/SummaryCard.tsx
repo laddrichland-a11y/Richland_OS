@@ -4,18 +4,18 @@ import { useState } from "react";
 import { Trash2, Pencil, Check, X, Loader2 } from "@/components/ui/RichlandIcon";
 
 const ASSESSMENT_GROUPS = [
-  { title: "Goals & background", keys: ["client_goals", "personal_history"] },
-  { title: "Clinical context", keys: ["mental_health_history", "previous_psychedelic_experience", "current_challenges"] },
-  { title: "Safety & support", keys: ["potential_risk_factors", "support_resources", "facilitator_concerns", "follow_up_recommendations"] },
+  { title: "Goals & context", keys: ["client_goals", "role_and_context", "current_challenges"] },
+  { title: "Strengths & growth", keys: ["leadership_strengths", "development_areas", "assessment_insights"] },
+  { title: "Next steps", keys: ["watch_outs", "follow_up_recommendations"] },
 ] as const;
 
 const JOURNEY_GROUPS = [
-  { title: "Client context", keys: ["client_summary", "intentions", "themes"] },
-  { title: "Navigation & support", keys: ["potential_challenges", "navigation_reminders", "support_recommendations"] },
-  { title: "Integration", keys: ["integration_focus_areas"] },
+  { title: "Client & goals", keys: ["client_summary", "goals", "success_measures"] },
+  { title: "Plan", keys: ["coaching_approach", "accountability_commitments", "themes"] },
+  { title: "Watch for", keys: ["potential_obstacles"] },
 ] as const;
 
-const ATTENTION_FIELDS = new Set(["potential_risk_factors", "facilitator_concerns", "potential_challenges", "navigation_reminders"]);
+const ATTENTION_FIELDS = new Set(["watch_outs", "potential_obstacles"]);
 
 function assessmentLabel(key: string) {
   const label = key.replace(/_/g, " ");
@@ -115,7 +115,7 @@ export default function SummaryCard({
                 <section key={group.title} className="session-assessment-group" aria-label={group.title}>
                   <h4>{group.title}</h4>
                   <dl>{entries.map(([key, value]) => (
-                    <div key={key} className={`session-assessment-field${ATTENTION_FIELDS.has(key) ? " session-assessment-field--attention" : key === "integration_focus_areas" ? " session-assessment-field--direction" : ""}`}>
+                    <div key={key} className={`session-assessment-field${ATTENTION_FIELDS.has(key) ? " session-assessment-field--attention" : key === "accountability_commitments" ? " session-assessment-field--direction" : ""}`}>
                       <dt>{assessmentLabel(key)}</dt>
                       <dd>{toDisplayString(value)}</dd>
                     </div>
@@ -256,21 +256,21 @@ export function SessionBriefContent({ content }: { content: Record<string, unkno
         <section className="ai-session-brief-section">
           <h4>Context</h4>
           <BriefField label="Who is this client" value={field("who_is_this_client")} />
-          <BriefField label="Why are they here" value={field("why_are_they_here")} />
+          <BriefField label="Working on now" value={field("why_are_they_here")} />
         </section>
         <section className="ai-session-brief-section">
-          <h4>Intentions &amp; insights</h4>
-          <BriefField label="Their intentions" value={field("their_intentions")} />
+          <h4>Goals &amp; insights</h4>
+          <BriefField label="Goals & progress" value={field("their_intentions")} />
           <BriefField label="Insights so far" value={field("insights_so_far")} />
         </section>
       </div>
       {hasRisk && (
         <section className="ai-session-brief-risk">
-          <BriefField label="Risks to hold" value={risk} />
+          <BriefField label="Watch-outs" value={risk} />
         </section>
       )}
       <section className="ai-session-brief-section ai-session-brief-commitments">
-        <BriefField label="Commitments made" value={field("commitments_made")} />
+        <BriefField label="Accountability — open commitments" value={field("commitments_made")} />
       </section>
     </div>
   );

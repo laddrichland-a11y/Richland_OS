@@ -48,7 +48,7 @@ export default function MobileNav({ open, onClose }: { open: boolean; onClose: (
                 onClose();
               }}
             >
-              Practitioner View
+              Coach View
             </button>
             <button
               type="button"

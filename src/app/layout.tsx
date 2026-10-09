@@ -7,7 +7,7 @@ import { getPractitioner } from "@/lib/data";
 
 export const metadata: Metadata = {
   title: "Richland OS",
-  description: "Client journey management for psychedelic harm reduction and integration practitioners.",
+  description: "Coaching operating system for Richland Advisors — sessions, accountability, and client portal.",
   manifest: "/manifest.webmanifest",
   // Lets clients "Add to Home Screen" on iOS with the real logo (via
   // apple-icon.tsx) and open as a standalone app rather than a browser tab.

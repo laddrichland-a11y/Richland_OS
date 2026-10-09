@@ -21,7 +21,7 @@ export function PractitionerProvider({
   children: React.ReactNode;
 }) {
   const [practitionerName, setPractitionerName] = useState(initialName);
-  const [practiceName, setPracticeName] = useState(initialPracticeName ?? "Stillwater Integration Studio");
+  const [practiceName, setPracticeName] = useState(initialPracticeName ?? "Richland Advisors");
   const value = useMemo(
     () => ({ practitionerName, setPractitionerName, practiceName, setPracticeName }),
     [practitionerName, practiceName]

@@ -64,7 +64,7 @@ export const PRACTITIONER: Profile = {
   role: "practitioner",
   full_name: "Ladd Richland",
   email: "ladd.richland@gmail.com",
-  practice_name: "Stillwater Integration Studio",
+  practice_name: "Richland Advisors",
   title: "Integration & Harm Reduction Specialist",
 };
 
@@ -152,7 +152,7 @@ function docSet(
       current_version_id: versions[0]?.id,
     };
   });
-  // 12-Hour Check-In form, only for clients whose check-in is done. Uses fixed
+  // Check-In form, only for clients whose check-in is done. Uses fixed
   // ids (not nextId) so adding it doesn't shift every later demo id — bookmarked
   // client/session URLs stay valid.
   const checkInStatus = overrides.check_in_12hr_form;
@@ -263,7 +263,7 @@ function client(
     emergency_contact_relationship: "Partner",
     referral_source_id: REFERRAL_SOURCES[0].id,
     notes: "",
-    package_name: "Full Journey Support Package",
+    package_name: "Executive Coaching Engagement",
     package_value: 2400,
     amount_paid: 1200,
     created_at: daysAgo(40),
@@ -412,7 +412,7 @@ function buildDaniel(): SeedBundle {
     intentions: "To meet my grief directly instead of thinking my way around it, and to find out what 'purpose' actually feels like in my body rather than as an idea.",
     desired_outcomes: "A felt sense of having grieved my father, even partially. More trust in my own emotional signals. Less reliance on intellectualizing as a coping strategy.",
     fears: "Losing control. Crying and not being able to stop. Being judged for being 'too much.'",
-    support_systems: "Partner (Ren) will be on-call by phone during integration window. Therapist aware and supportive. Men's group meets the week after Integration Session 2.",
+    support_systems: "Partner (Ren) will be on-call by phone during integration window. Therapist aware and supportive. Men's group meets the week after Follow-up Session 2.",
     preparation_practices: "Daily 10-minute body scan. Journaling on father's voicemail he kept. One embodiment session with a somatic practitioner before the journey.",
     mindset_considerations: "Practice 'no fixing' — let inquiry replace analysis. Working mantra: 'I don't have to understand it to feel it.'",
     environmental_considerations: "Bring father's old flannel shirt. Photo of dad in his 30s. Playlist curated with songs from his childhood home.",
@@ -425,7 +425,7 @@ function buildDaniel(): SeedBundle {
     id: nextId("ai"),
     client_id: c.id,
     summary_type: "journey_brief",
-    title: "Journey Brief",
+    title: "Engagement Brief",
     content: {
       client_summary: "Daniel is preparing to process unresolved grief for his father (d. 2024) and explore a sense of post-career-change purpose. He intellectualizes readily and is actively practicing staying embodied.",
       intentions: "Meet grief directly; locate a felt (not conceptual) sense of purpose.",
@@ -551,15 +551,15 @@ function buildPriya(): SeedBundle {
     checkIns: [],
     postIntegrationForms: [],
     tasks: [
-      { id: nextId("task"), client_id: c.id, practitioner_id: PRACTITIONER.id, title: "12-Hour Check-In", task_type: "form", due_at: hoursAgo(6), status: "overdue", assigned_to: "client" },
+      { id: nextId("task"), client_id: c.id, practitioner_id: PRACTITIONER.id, title: "Check-In", task_type: "form", due_at: hoursAgo(6), status: "overdue", assigned_to: "client" },
       { id: nextId("task"), client_id: c.id, practitioner_id: PRACTITIONER.id, title: "48-Hour Reflection Reminder", task_type: "reflection", due_at: hoursFromNow(18), status: "pending", assigned_to: "client" },
-      { id: nextId("task"), client_id: c.id, practitioner_id: PRACTITIONER.id, title: "Schedule Integration Session 1 (within 72 hrs)", task_type: "session_prep", due_at: hoursFromNow(42), status: "pending", assigned_to: "practitioner" },
+      { id: nextId("task"), client_id: c.id, practitioner_id: PRACTITIONER.id, title: "Schedule Follow-up Session (within 72 hrs)", task_type: "session_prep", due_at: hoursFromNow(42), status: "pending", assigned_to: "practitioner" },
     ],
     messages: [
       { id: nextId("msg"), client_id: c.id, sender: "practitioner", body: "Checking in — how are you feeling this morning? No rush to respond fully, just want to know you're safe and resting.", created_at: hoursAgo(10) },
     ],
     portalAssignments: [
-      { id: nextId("pa"), client_id: c.id, assignment_type: "form", title: "12-Hour Check-In", status: "pending", due_at: hoursAgo(6) },
+      { id: nextId("pa"), client_id: c.id, assignment_type: "form", title: "Check-In", status: "pending", due_at: hoursAgo(6) },
     ],
     payments: [
       { id: nextId("pay"), client_id: c.id, amount: 1000, paid_at: daysAgo(34).slice(0, 10), method: "Bank Transfer" },
@@ -569,7 +569,7 @@ function buildPriya(): SeedBundle {
 }
 
 // ---------------------------------------------------------------------------
-// CLIENT 4 — Marcus Webb — Integration Session 1 in progress
+// CLIENT 4 — Marcus Webb — Follow-up Session in progress
 // ---------------------------------------------------------------------------
 function buildMarcus(): SeedBundle {
   const c = client({
@@ -600,7 +600,7 @@ function buildMarcus(): SeedBundle {
     id: nextId("ai"),
     client_id: c.id,
     summary_type: "check_in_12hr_summary",
-    title: "12-Hour Check-In Summary",
+    title: "Check-In Summary",
     content: {
       summary: "Marcus reports a stable, integrating nervous system 12 hours post-journey — appropriate fatigue, no safety concerns, and an early insight about anticipatory people-pleasing that aligns with his pre-journey intentions around authenticity. Recommend light-touch follow-up; no escalation needed.",
       flags: "None requiring immediate practitioner outreach.",
@@ -652,7 +652,7 @@ function buildMarcus(): SeedBundle {
       },
     ],
     tasks: [
-      { id: nextId("task"), client_id: c.id, practitioner_id: PRACTITIONER.id, title: "Integration Session 1 (within 72 hrs)", task_type: "session_prep", due_at: daysFromNow(1), status: "pending", assigned_to: "practitioner" },
+      { id: nextId("task"), client_id: c.id, practitioner_id: PRACTITIONER.id, title: "Follow-up Session (within 72 hrs)", task_type: "session_prep", due_at: daysFromNow(1), status: "pending", assigned_to: "practitioner" },
     ],
     messages: [
       { id: nextId("msg"), client_id: c.id, sender: "client", body: "Submitted the post-integration form. The people-pleasing thing keeps coming up everywhere I look this week.", created_at: daysAgo(3) },
@@ -715,7 +715,7 @@ function buildSarah(): SeedBundle {
     id: nextId("ai"),
     client_id: c.id,
     summary_type: "growth_action_plan",
-    title: "Growth Action Plan",
+    title: "Action Plan",
     content: gap as unknown as Record<string, unknown>,
     model: "gpt-4o (mock)",
     created_at: daysAgo(8),

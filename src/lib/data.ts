@@ -236,7 +236,7 @@ async function clearFields<T extends { id: string }>(
 // Scheduling or completing a session moves the client's status/phase
 // forward automatically — but only forward. We never downgrade a client
 // (e.g. completing an old "preparation" session after they're already in
-// Integration 2 shouldn't roll them back), and we never touch clients who
+// Follow-up 2 shouldn't roll them back), and we never touch clients who
 // are inactive or already closed out.
 // ---------------------------------------------------------------------------
 
@@ -397,7 +397,7 @@ const UPLOAD_ONLY_DOCUMENT_TYPES: { type: DocumentType; required: boolean }[] = 
 // PRACTITIONER PROFILE + REFERRAL SOURCES
 // ---------------------------------------------------------------------------
 
-const PRACTICE_NAME = "Stillwater Integration Studio";
+const PRACTICE_NAME = "Richland Advisors";
 
 export async function getPractitioner(): Promise<Profile> {
   if (isFirebaseConfigured) {
@@ -682,7 +682,7 @@ export async function deleteClient(clientId: string): Promise<void> {
 }
 
 // Self-heal: a client created before MILESTONE_TEMPLATE grew a new entry
-// (e.g. Growth Action Plan Complete was added after some clients already
+// (e.g. Action Plan Complete was added after some clients already
 // existed) won't have that milestone's record at all. Creating whatever's
 // missing on read means every client always has the full current template,
 // with no one-time migration script to remember to run.
@@ -869,7 +869,7 @@ export async function getFormTemplates(): Promise<FormTemplate[]> {
       // the practitioner's real intake/consent forms available immediately.
       return insertDocs("formTemplates", store.formTemplates);
     }
-    // A built-in form added to the code later (e.g. the 12-Hour Check-In)
+    // A built-in form added to the code later (e.g. the Check-In)
     // is added automatically — without this it would never appear until
     // someone pressed "Update form content".
     const existingIds = new Set(existing.map((t) => t.id));
@@ -1765,7 +1765,7 @@ export async function setGrowthActionPlan(clientId: string, plan: Omit<GrowthAct
   return create(store.growthActionPlans, "growthActionPlans", created);
 }
 
-// Clears a client's CURRENT Growth Action Plan so the practitioner can
+// Clears a client's CURRENT Action Plan so the practitioner can
 // regenerate a fresh one from scratch rather than being stuck enhancing
 // whatever was first generated. The generated versions (AiSummary rows) are
 // deliberately kept — they're the record's history and are deleted one at a
@@ -1813,7 +1813,7 @@ export interface OutstandingFormItem {
 // forms incorrectly reads as having nothing outstanding.
 /**
  * Drop form rows that duplicate an outstanding task for the same client
- * (e.g. a "12-Hour Check-In" task AND the 12-Hour Check-In form, or
+ * (e.g. a "Check-In" task AND the Check-In form, or
  * "Collect Harm Reduction Services Agreement" AND the agreement itself).
  * The task wins because it carries the due date.
  */

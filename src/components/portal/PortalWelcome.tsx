@@ -41,19 +41,19 @@ const SECTIONS: {
   {
     icon: ClipboardCheck,
     title: "Forms & Check-Ins",
-    body: "The reflections that come before and after a session. They help your practitioner meet you where you actually are, rather than where the schedule says you should be.",
+    body: "The reflections that come before and after a session. They help your coach meet you where you actually are, rather than where the schedule says you should be.",
     tint: "bg-plum-50 text-plum-600",
   },
   {
     icon: Sprout,
-    title: "Growth & Integration",
+    title: "Action Plan",
     body: "Where the work settles. Intentions you've set, insights you've gathered, and the practices that carry the experience into ordinary days.",
     tint: "bg-sage-50 text-sage-700",
   },
   {
     icon: MessageSquareText,
     title: "Messages",
-    body: "A direct line to your practitioner between sessions. Not urgent care — but a place to put a question rather than carry it alone.",
+    body: "A direct line to your coach between sessions. Not urgent care — but a place to put a question rather than carry it alone.",
     tint: "bg-ink-100 text-ink-600",
   },
 ];
@@ -131,7 +131,7 @@ export default function PortalWelcome({
               a line ends in an expression, which silently glued the
               practitioner's name to the next word. */}
           <p className="text-xs text-ink-600 leading-relaxed">
-            {`Only you and ${practitioner?.full_name ?? "your practitioner"} can see what\u2019s in this portal. Write plainly \u2014 nothing you put here is graded, and there\u2019s no version of this you\u2019re supposed to get right.`}
+            {`Only you and ${practitioner?.full_name ?? "your coach"} can see what\u2019s in this portal. Write plainly \u2014 nothing you put here is graded, and there\u2019s no version of this you\u2019re supposed to get right.`}
           </p>
         </div>
       </div>

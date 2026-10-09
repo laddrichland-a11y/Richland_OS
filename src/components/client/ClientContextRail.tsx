@@ -165,8 +165,8 @@ export default function ClientContextRail({
       </section>
 
       <section className="wn-rail-card">
-        <RailHeading icon={ClipboardCheck} title="Journey Progress" />
-        <p className="wn-rail-kicker">Journey stage</p>
+        <RailHeading icon={ClipboardCheck} title="Engagement Progress" />
+        <p className="wn-rail-kicker">Current stage</p>
         <div className="wn-journey-summary">
           <strong>{journeyProgress.currentStageLabel}</strong>
           <span>{client.status === "inactive" ? "Inactive" : journeyStageStatusLabel(journeyProgress.currentStageStatus)}</span>
@@ -175,7 +175,7 @@ export default function ClientContextRail({
         <div
           className="wn-rail-progress"
           role="progressbar"
-          aria-label="Journey stages completed"
+          aria-label="Engagement stages completed"
           aria-valuemin={0}
           aria-valuemax={journeyProgress.total}
           aria-valuenow={journeyProgress.completed}

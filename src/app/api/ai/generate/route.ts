@@ -39,16 +39,18 @@ const PREPARE_ME_STAGE_ORDER: Record<SessionType, number> = {
 };
 
 const PREPARE_ME_LABEL_STAGE_ORDER: Record<string, number> = {
+  "Intake & Assessments": 0,
   "Intake & Assessment": 0,
+  "Goals & Agreement": 1,
   Preparation: 1,
+  "Coaching Session": 2,
   "Journey Day": 2,
-  "12-Hour Check-In": 3,
-  "Integration Session 1": 4,
+  "Check-In": 3,
+  "Follow-up Session": 4,
   "Integration Session One": 4,
-  "Integration Session 2": 5,
+  "Follow-up Session 2": 5,
   "Integration Session Two": 5,
-  "Growth Plan": 6,
-  "Growth Action Plan": 6,
+  "Action Plan": 6,
 };
 
 function prepareMeStageOrder(sessionId: string | undefined, sessions: Session[], label: string | undefined): number {
@@ -177,9 +179,9 @@ export async function POST(req: NextRequest) {
       if (completionError) return completionError;
       const prompt = prompts.buildAssessmentSummaryPrompt(transcript, client.full_name);
       const { data, model } = await runAiJson(prompt, () => mocks.mockAssessmentSummary(transcript, client.full_name));
-      const summary = await addAiSummary(clientId, summaryType, "Client Assessment Summary", data, model, undefined, undefined, sourceNotes);
+      const summary = await addAiSummary(clientId, summaryType, "Client Intake Summary", data, model, undefined, undefined, sourceNotes);
       await addMemoryItems(clientId, [
-        { item_type: "challenge", content: String((data as Record<string, unknown>).potential_risk_factors ?? ""), phase: "intake" },
+        { item_type: "challenge", content: String((data as Record<string, unknown>).watch_outs ?? ""), phase: "intake" },
       ]);
       await completeJourneyStage(clientId, "intake_complete");
       return NextResponse.json({ summary });
@@ -197,7 +199,7 @@ export async function POST(req: NextRequest) {
         : "No preparation plan recorded yet.";
       const prompt = prompts.buildJourneyBriefPrompt(transcript, client.full_name, planSummary);
       const { data, model } = await runAiJson(prompt, () => mocks.mockJourneyBrief(client.full_name));
-      const summary = await addAiSummary(clientId, summaryType, "Journey Brief", data, model, undefined, undefined, sourceNotes);
+      const summary = await addAiSummary(clientId, summaryType, "Engagement Brief", data, model, undefined, undefined, sourceNotes);
       await completeJourneyStage(clientId, "preparation_complete");
       return NextResponse.json({ summary });
     }
@@ -229,7 +231,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ summary });
     }
     case "check_in_12hr_summary": {
-      // Three possible sources, all used when present: the 12-Hour Check-In
+      // Three possible sources, all used when present: the Check-In
       // form (Forms for This Session), a check-in recorded the older way,
       // and the practitioner's notes/transcript from the check-in call.
       const [checkIns, documents, formTemplates, formSubmissions] = await Promise.all([
@@ -283,7 +285,7 @@ export async function POST(req: NextRequest) {
         client.full_name
       );
       const { data, model } = await runAiJson(prompt, () => mocks.mockIntegration1Brief(client.full_name));
-      const summary = await addAiSummary(clientId, summaryType, "Integration Session One Brief", data, model, undefined, undefined, sourceNotes);
+      const summary = await addAiSummary(clientId, summaryType, "Follow-up Session Brief", data, model, undefined, undefined, sourceNotes);
       return NextResponse.json({ summary });
     }
     case "integration_summary": {
@@ -341,7 +343,7 @@ export async function POST(req: NextRequest) {
         reflection_questions: string[];
         accountability_commitments: string[];
       }>(prompt, () => mocks.mockGrowthActionPlan(client.full_name));
-      const summary = await addAiSummary(clientId, summaryType, "Growth Action Plan", data, model, undefined, undefined, sourceNotes);
+      const summary = await addAiSummary(clientId, summaryType, "Action Plan", data, model, undefined, undefined, sourceNotes);
       await setGrowthActionPlan(clientId, data);
       await completeJourneyStage(clientId, "growth_action_plan_complete");
       return NextResponse.json({ summary });
@@ -382,7 +384,7 @@ export async function POST(req: NextRequest) {
       );
       const completedForms = formSubmissions
         // A completed form for the current stage is preparatory input (for
-        // example, the post-journey reflection before Integration 1), so it
+        // example, the post-journey reflection before Follow-up 1), so it
         // belongs in the briefing too.
         .filter((submission) => (submission.status === "submitted" || submission.status === "signed") && formStageOrder(submission, documents, formTemplates) <= stageOrder)
         .map((submission) => ({
@@ -441,7 +443,7 @@ export async function POST(req: NextRequest) {
       const dump = JSON.stringify({ client, memory, summaries });
       const prompt = prompts.buildLivingJourneySummaryPrompt(dump, client.full_name);
       const { data, model } = await runAiJson(prompt, () => mocks.mockLivingJourneySummary(client.full_name));
-      const summary = await addAiSummary(clientId, summaryType, "Living Journey Summary", data, model);
+      const summary = await addAiSummary(clientId, summaryType, "Living Client Summary", data, model);
       return NextResponse.json({ summary });
     }
     case "session_call_summary": {

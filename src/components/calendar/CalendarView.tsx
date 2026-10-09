@@ -1024,7 +1024,7 @@ function SessionForm({
             type="text"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-            placeholder="e.g. Journey Space — Sunroom"
+            placeholder="e.g. Zoom, or office"
             className="mt-1 w-full border border-ink-200 rounded-lg px-2.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-clay-200"
           />
         </div>

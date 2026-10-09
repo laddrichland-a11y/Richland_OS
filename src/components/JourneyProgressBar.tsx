@@ -23,7 +23,7 @@ export default function JourneyProgressBar({
     <div className="w-full">
       {!compact && (
         <div className="mb-1.5 flex items-center justify-between text-xs text-ink-500">
-          <span className="flex items-center gap-1.5"><IntegrationLink className="h-4 w-4" />Journey Progress</span>
+          <span className="flex items-center gap-1.5"><IntegrationLink className="h-4 w-4" />Engagement Progress</span>
           <span>
             {completedCount}/{sorted.length} milestones
           </span>

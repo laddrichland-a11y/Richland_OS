@@ -166,7 +166,7 @@ export default function ProspectWorkspace({
   }
 
   async function deletePractitionerSummary() {
-    if (!confirm("Delete the practitioner summary? This can't be undone — you can regenerate it from the transcript anytime.")) return;
+    if (!confirm("Delete the coach summary? This can't be undone — you can regenerate it from the transcript anytime.")) return;
     setSummaryContent(null);
     setSummaryModel(undefined);
     await updateProspectAction(prospect.id, {
@@ -253,7 +253,7 @@ export default function ProspectWorkspace({
         : transcriptDirty
           ? { title: "Save the call transcript", detail: "Save your changes before generating a summary.", label: "Save transcript", action: saveTranscript }
           : !summaryContent
-            ? { title: "Generate the call summary", detail: "Turn the saved transcript into a concise practitioner brief.", label: "Generate summary", action: generateSummary }
+            ? { title: "Generate the call summary", detail: "Turn the saved transcript into a concise coach brief.", label: "Generate summary", action: generateSummary }
             : { title: "Convert prospect to client", detail: "The call is documented and this prospect is ready to move forward.", label: "Convert to client", action: handleConvert };
 
   return (
@@ -451,7 +451,7 @@ export default function ProspectWorkspace({
             {summaryContent && (
               <div className="prospect-summary-wrap">
             <SummaryCard
-              title="Intro Call Summary (Practitioner)"
+              title="Intro Call Summary (Coach)"
               content={summaryContent}
               model={summaryModel}
               onDelete={deletePractitionerSummary}

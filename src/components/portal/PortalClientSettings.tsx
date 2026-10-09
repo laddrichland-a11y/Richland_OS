@@ -9,8 +9,8 @@ import { getSavedTheme, saveTheme, ThemeOptions, type Theme } from "@/components
 const NOTIFICATIONS = [
   { key: "appointments", label: "Appointment reminders", description: "Reminders about upcoming sessions." },
   { key: "forms", label: "Forms & check-ins", description: "When something is ready for you to complete." },
-  { key: "messages", label: "New messages", description: "When your practitioner sends a message." },
-  { key: "journey", label: "Journey / integration reminders", description: "Gentle prompts for your next step." },
+  { key: "messages", label: "New messages", description: "When your coach sends a message." },
+  { key: "journey", label: "Session & action-item reminders", description: "Gentle prompts for your next step." },
 ] as const;
 
 function storageKey(clientId: string) {

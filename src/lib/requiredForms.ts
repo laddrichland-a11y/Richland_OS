@@ -17,7 +17,7 @@ export interface RequiredFormDefinition {
 
 // One canonical map owns which digital form belongs to each journey stage.
 // Legacy upload-only document types such as post_integration_form are not
-// requirements: Integration Session 1/2 are the current editable templates.
+// requirements: Follow-up Session/2 are the current editable templates.
 export const REQUIRED_FORM_DEFINITIONS: readonly RequiredFormDefinition[] = [
   { documentType: "participant_screening_form", phase: "intake", sessionTypes: ["intake_assessment"] },
   { documentType: "informed_consent", phase: "intake", sessionTypes: ["intake_assessment"] },

@@ -10,18 +10,22 @@
 // clinical or diagnostic documents. The AI is instructed accordingly.
 // ---------------------------------------------------------------------------
 
-const BASE_SYSTEM_FRAME = `You are an assistant supporting a psychedelic harm reduction specialist,
-preparation coach, or integration coach inside "Richland OS" — a client journey
-management platform. This is explicitly NOT a medical record system and you are
-NOT providing clinical diagnoses, medical advice, or treatment recommendations.
-Your job is to help the practitioner understand their client's journey, intentions,
-themes, and support needs so they can show up more present and prepared.
+const BASE_SYSTEM_FRAME = `You are an assistant supporting an executive and CEO coach inside
+"Richland OS" — the coaching operating system for Richland Advisors. The coach works
+with CEOs, founders, and senior leaders on leadership, strategy, team dynamics,
+communication, and personal effectiveness, through an ongoing series of coaching
+sessions with clear goals and accountability.
 
-Write in clear, warm, grounded language — never clinical jargon, never diagnostic
-labels. If something in the transcript suggests a genuine safety concern (suicidality,
-risk of harm to self/others, medical emergency, signs of psychosis), flag it plainly
-and recommend the practitioner follow their emergency protocol and/or refer to licensed
-medical/mental health professionals — do not attempt to assess or resolve it yourself.
+This is not a medical or therapy record and you never give clinical diagnoses,
+medical, legal, or financial advice. Your job is to help the coach understand the
+client's goals, context, commitments, and progress so they can show up prepared
+and hold the client accountable.
+
+Write in clear, direct, professional language — specific, never generic, never
+psychological labels. Ground every point in what is actually in the material.
+If something suggests a genuine wellbeing or safety concern (self-harm, harm to
+others, a crisis), flag it plainly and recommend the coach refer the client to an
+appropriate licensed professional — do not attempt to assess or resolve it yourself.
 
 Always respond with valid JSON matching the requested schema exactly. No prose outside JSON.`;
 
@@ -33,22 +37,21 @@ export interface PromptPair {
 export function buildAssessmentSummaryPrompt(transcript: string, clientName: string): PromptPair {
   return {
     system: BASE_SYSTEM_FRAME,
-    user: `Below is a transcript (or notes) from an Intake & Assessment Session (90 minutes) with client "${clientName}".
+    user: `Below is a transcript (or notes) from the Intake call with coaching client "${clientName}", possibly along with assessment results they completed (for example DISC, Enneagram, StrengthsFinder, or 360 feedback).
 
-Produce a Client Assessment Summary as JSON with exactly these keys (all strings):
+Produce a Client Intake Summary as JSON with exactly these keys (all strings):
 {
-  "client_goals": "",
-  "personal_history": "",
-  "mental_health_history": "",
-  "previous_psychedelic_experience": "",
-  "current_challenges": "",
-  "potential_risk_factors": "",
-  "support_resources": "",
-  "facilitator_concerns": "",
-  "follow_up_recommendations": ""
+  "client_goals": "What they want from coaching, in their own words where possible",
+  "role_and_context": "Their role, company, stage of business, team, and key stakeholders",
+  "current_challenges": "The specific problems or pressures they described",
+  "leadership_strengths": "Strengths evident from the conversation and any assessments",
+  "development_areas": "Growth edges they named or that the assessments point to",
+  "assessment_insights": "Key takeaways from any assessment results provided, or 'No assessments provided yet.'",
+  "watch_outs": "Anything the coach should keep in mind — blind spots, constraints, sensitivities. Not a diagnosis.",
+  "follow_up_recommendations": "Concrete next steps for the Goals & Agreement stage"
 }
 
-Transcript:
+Transcript / notes:
 """
 ${transcript}
 """`,
@@ -62,28 +65,28 @@ export function buildJourneyBriefPrompt(
 ): PromptPair {
   return {
     system: BASE_SYSTEM_FRAME,
-    user: `Below is a transcript from a Preparation Session (90 minutes) with client "${clientName}", along with their current Preparation & Navigation Plan.
+    user: `Below is a transcript from the Goals & Agreement session with coaching client "${clientName}", along with their goals worksheet so far.
 
-Produce a Journey Brief as JSON with exactly these keys (all strings):
+Produce an Engagement Brief as JSON with exactly these keys (all strings):
 {
-  "client_summary": "",
-  "intentions": "",
-  "themes": "",
-  "potential_challenges": "",
-  "navigation_reminders": "",
-  "support_recommendations": "",
-  "integration_focus_areas": ""
+  "client_summary": "Two or three sentences on who they are and what this engagement is about",
+  "goals": "The 2-4 goals agreed for the engagement, each stated concretely",
+  "success_measures": "How the client and coach will know each goal is met",
+  "themes": "Recurring themes behind the goals",
+  "potential_obstacles": "What is most likely to get in the way",
+  "coaching_approach": "How the coach plans to work with this client — cadence, focus, style",
+  "accountability_commitments": "What the client has committed to and how progress will be tracked"
 }
 
-This Journey Brief will be referenced by the facilitator on Journey Day, so make
-"navigation_reminders" and "potential_challenges" concrete and actionable.
+The coach will refer back to this brief before every session, so make
+"goals", "success_measures" and "accountability_commitments" specific and checkable.
 
-Preparation & Navigation Plan so far:
+Goals worksheet so far:
 """
 ${preparationPlanSummary}
 """
 
-Preparation Session Transcript:
+Session transcript:
 """
 ${transcript}
 """`,
@@ -93,17 +96,17 @@ ${transcript}
 export function buildJourneySummaryPrompt(structuredNotes: string, clientName: string): PromptPair {
   return {
     system: BASE_SYSTEM_FRAME,
-    user: `Below are timestamped structured notes taken during an 8-hour Harm Reduction Support Session for client "${clientName}" (observations, significant moments, client requests, safety notes, potential integration themes).
+    user: `Below are the coach's notes from a coaching session with client "${clientName}".
 
-Produce a Journey Summary as JSON with exactly these keys (all strings):
+Produce a Session Summary as JSON with exactly these keys (all strings):
 {
   "major_themes": "",
-  "important_events": "",
-  "potential_breakthroughs": "",
-  "suggested_integration_topics": ""
+  "important_events": "Decisions, shifts, or notable moments in the session",
+  "potential_breakthroughs": "Insights the client reached, if any",
+  "suggested_integration_topics": "Topics to pick up in the next session"
 }
 
-Session Notes:
+Session notes:
 """
 ${structuredNotes}
 """`,
@@ -113,18 +116,18 @@ ${structuredNotes}
 export function buildJourneyManualNotesSummaryPrompt(
   manualNotes: string,
   clientName: string,
-  sessionTypeLabel: string = "Harm Reduction Support Session"
+  sessionTypeLabel: string = "Coaching Session"
 ): PromptPair {
   return {
     system: BASE_SYSTEM_FRAME,
-    user: `Below are the practitioner's notes and/or session transcript from a "${sessionTypeLabel}" session with client "${clientName}" — this is the practitioner's own reference material, not shown to the client, so write freely and include clinical impressions or concerns where relevant.
+    user: `Below are the coach's private notes and/or transcript from a "${sessionTypeLabel}" with client "${clientName}". This is coach-only reference material, not shown to the client, so write candidly.
 
-Produce a Practitioner Summary as JSON with exactly these keys (all strings):
+Produce a Coach Summary as JSON with exactly these keys (all strings):
 {
   "key_observations": "",
   "notable_moments": "",
   "themes": "",
-  "follow_up_considerations": ""
+  "follow_up_considerations": "What to raise or check on next session"
 }
 
 Notes:
@@ -137,15 +140,15 @@ ${manualNotes}
 export function buildCheckInSummaryPrompt(checkInData: string, clientName: string): PromptPair {
   return {
     system: BASE_SYSTEM_FRAME,
-    user: `Below is the 12-Hour Check-In information for client "${clientName}" — the check-in form answers (emotional state, physical state, immediate insights, support needs, safety concerns) and/or the practitioner's notes or transcript from the check-in call.
+    user: `Below is a between-session check-in from coaching client "${clientName}" — their check-in form answers and/or the coach's notes from a short check-in call.
 
-Produce a 12-Hour Check-In Summary as JSON with exactly these keys:
+Produce a Check-In Summary as JSON with exactly these keys:
 {
-  "summary": "a short narrative summary of how the client is doing",
-  "flags": "any items that may warrant practitioner outreach, or 'None requiring immediate practitioner outreach.' if none"
+  "summary": "A short summary of progress on their commitments and how things are going",
+  "flags": "Anything that needs the coach's attention before the next session, or 'Nothing needing attention before the next session.' if none"
 }
 
-Check-In Data:
+Check-in:
 """
 ${checkInData}
 """`,
@@ -161,35 +164,35 @@ export function buildIntegration1BriefPrompt(
 ): PromptPair {
   return {
     system: BASE_SYSTEM_FRAME,
-    user: `You are preparing the facilitator for Integration Session One (must occur within 72 hours of the journey) with client "${clientName}".
+    user: `You are preparing the coach for a follow-up session with client "${clientName}".
 
-Synthesize the Post Integration Form, the original Journey Brief, the Journey Summary, and the session transcript (if provided) into an Integration Session One Brief as JSON with exactly these keys:
+Synthesize the client's reflection form, the Engagement Brief, the latest session summary, and any transcript into a Follow-up Session Brief as JSON with exactly these keys:
 {
-  "original_intentions": "",
+  "original_intentions": "The goals agreed at the start of the engagement",
   "key_themes": "",
   "emerging_insights": "",
   "areas_for_exploration": "",
   "suggested_questions": ""
 }
 
-"suggested_questions" should be a string of 4-6 open-ended questions separated by newlines.
+"suggested_questions" should be 4-6 sharp, open-ended coaching questions separated by newlines.
 
-Post Integration Form:
+Reflection form:
 """
 ${postIntegrationForm}
 """
 
-Original Journey Brief:
+Engagement Brief:
 """
 ${journeyBrief}
 """
 
-Journey Summary:
+Latest session summary:
 """
 ${journeySummary}
 """
 
-Integration Session Transcript (if available):
+Transcript (if available):
 """
 ${transcript}
 """`,
@@ -203,10 +206,10 @@ export function buildIntegrationSummaryPrompt(
 ): PromptPair {
   return {
     system: BASE_SYSTEM_FRAME,
-    user: `Summarize Integration Session ${sessionNumber} for client "${clientName}" as JSON with exactly these keys:
+    user: `Summarize follow-up coaching session ${sessionNumber} with client "${clientName}" as JSON with exactly these keys:
 {
-  "summary": "a concise narrative summary of what was discussed and what shifted",
-  "key_takeaways": "a string of 3-5 bullet-style takeaways separated by newlines"
+  "summary": "A concise summary of what was discussed and what shifted",
+  "key_takeaways": "3-5 takeaways separated by newlines"
 }
 
 Transcript:
@@ -225,7 +228,7 @@ export function buildGrowthActionPlanPrompt(
   const { additionalTranscript, existingPlan } = options ?? {};
 
   const enhanceInstruction = existingPlan
-    ? `\n\nAn existing Growth Action Plan is provided below (Current Growth Action Plan). Your job is to ENHANCE it, not replace it wholesale: keep whatever is still accurate and relevant, and revise, sharpen, or add items using the additional information provided (especially the Additional Session Transcript, if present). Only drop an existing item if the new material makes it clearly outdated or contradicted. The result should read as an evolution of the same plan, not an unrelated fresh one. IMPORTANT: the constraints below apply to the Current Growth Action Plan too, not just new material — if any existing item violates them (references a third integration session, or frames a one-off remark as a chronic/recurring pattern), rewrite or remove that item as part of this enhancement. Don't preserve a violation just because it was already there.`
+    ? `\n\nAn existing Action Plan is provided below. ENHANCE it rather than replacing it: keep what is still accurate, and revise, sharpen, or add items using the new material (especially the Additional Session Transcript, if present). Only drop an item if the new material makes it clearly outdated or contradicted.`
     : "";
 
   const transcriptSection = additionalTranscript
@@ -233,16 +236,16 @@ export function buildGrowthActionPlanPrompt(
     : "";
 
   const existingPlanSection = existingPlan
-    ? `\n\nCurrent Growth Action Plan (enhance this, don't discard it):\n"""\n${JSON.stringify(existingPlan)}\n"""`
+    ? `\n\nCurrent Action Plan (enhance this, don't discard it):\n"""\n${JSON.stringify(existingPlan)}\n"""`
     : "";
 
   return {
     system: BASE_SYSTEM_FRAME,
-    user: `You are creating a Growth Action Plan for client "${clientName}" following Integration Session Two (must occur within 10 days of the journey). This plan should be practical, achievable, and rooted in what actually emerged in their journey and integration work — not generic advice.${enhanceInstruction}
+    user: `You are building an Action Plan for coaching client "${clientName}". It must be practical, measurable, and rooted in what actually came up in their coaching — not generic leadership advice. The client will see this plan in their portal and be held accountable to it.${enhanceInstruction}
 
 Important constraints:
-- This program has exactly two integration sessions — Integration Session One and Integration Session Two — and this plan follows the second and final one. Do not reference, recommend, or imply a third integration session or any further integration session; if follow-up touchpoints are relevant, describe them in terms of the client's own daily/weekly practices, not another formal integration session.
-- The Prior Journey Context below may include a single, isolated remark from one session (e.g., a client explaining why they've decided not to repeat a substance because of how the after-effects felt). Do not characterize a one-time remark like that as a chronic, ongoing, or recurring pattern — avoid phrasing like "a pattern you're aware of" or "when that familiar dip arrives" for something that only happened once. Only describe something as recurring or chronic if it clearly appears across multiple distinct sessions or entries in the context — otherwise, either leave it out or reflect it as the single, time-bound moment it was. This applies to every item in the final output, including any carried over from an existing plan.
+- Only describe something as a recurring pattern if it clearly appears across multiple sessions in the context. A one-time remark stays a one-time remark.
+- Commitments should be specific enough that the coach can ask "did you do it?" next session.
 
 Produce JSON with exactly these keys, each an array of short strings:
 {
@@ -255,12 +258,12 @@ Produce JSON with exactly these keys, each an array of short strings:
 
 Aim for 2-4 items per array.
 
-Prior Journey Context (brief, summary, themes, memory items):
+Engagement context (brief, summaries, themes, notes):
 """
 ${priorContext}
 """
 
-Updated Post Integration Form:
+Client reflection / review form:
 """
 ${updatedPostIntegrationForm}
 """${existingPlanSection}${transcriptSection}`,
@@ -270,37 +273,36 @@ ${updatedPostIntegrationForm}
 export function buildPrepareMeBriefingPrompt(clientRecordDump: string, clientName: string, sessionTypeLabel: string): PromptPair {
   return {
     system: BASE_SYSTEM_FRAME,
-    user: `The practitioner is about to start a "${sessionTypeLabel}" session with client "${clientName}" and has pressed "Prepare Me For This Session."
+    user: `The coach is about to start a "${sessionTypeLabel}" with client "${clientName}" and has pressed "Prepare Me."
 
-This briefing is for THIS stage of the journey specifically. The record below
-covers the client's entire history to date — earlier sessions with their manual
-notes and transcripts, every summary generated so far, milestones, memory items,
-completed forms and the preparation plan. Read all of it and write a briefing
-that BUILDS ON what has already happened rather than restating the intake:
+The record below covers the client's whole engagement so far — earlier sessions
+with notes and transcripts, every summary, their goals, assessments, action
+items, and completed forms. Write a short, scannable briefing the coach can read
+in two minutes that BUILDS ON what has already happened:
 
 - Weight the most recent sessions most heavily, but carry forward anything
-  still unresolved from earlier ones.
-- Say what has changed or moved since the last session, and what has not.
-- Name concrete specifics — actual events, phrases the client used, named
-  people, dates, doses, commitments. Never write a generic sentence that would
-  be true of any client.
-- Make "focus_for_today" specific to a "${sessionTypeLabel}" session and to the
-  open threads this client is actually carrying into it.
-- If the record genuinely contains nothing for a key (e.g. no prior sessions
-  yet), say so plainly in one short sentence instead of inventing content.
+  still open from earlier ones.
+- Say what has moved since the last session and what has not.
+- Lead with accountability: list what the client committed to last time and
+  whether there is any evidence it got done.
+- Name concrete specifics — real events, names, numbers, phrases the client
+  used. Never write a sentence that would be true of any client.
+- Make "focus_for_today" 2-3 specific priorities for THIS session.
+- If the record has nothing for a key (e.g. first session), say so in one
+  short sentence instead of inventing content.
 
-Produce a Prepare Me Briefing as JSON with exactly these keys (all strings, conversational and practitioner-facing, second person ok):
+Produce a Prepare Me Briefing as JSON with exactly these keys (all strings, coach-facing, second person ok):
 {
-  "who_is_this_client": "",
-  "why_are_they_here": "",
-  "their_intentions": "",
-  "risks_to_hold": "",
-  "insights_so_far": "",
-  "commitments_made": "",
-  "focus_for_today": ""
+  "who_is_this_client": "One or two lines: role, company, what the engagement is about",
+  "why_are_they_here": "What they are working on right now",
+  "their_intentions": "Their goals for the engagement and how they are tracking",
+  "risks_to_hold": "Watch-outs — sensitivities, stalls, avoidance patterns — or leave empty if none",
+  "insights_so_far": "Key insights and shifts across sessions",
+  "commitments_made": "Each open commitment from previous sessions and its status",
+  "focus_for_today": "2-3 specific priorities for this session"
 }
 
-Full Client Record:
+Full client record:
 """
 ${clientRecordDump}
 """`,
@@ -310,18 +312,18 @@ ${clientRecordDump}
 export function buildProspectIntroSummaryPrompt(transcript: string, prospectName: string): PromptPair {
   return {
     system: BASE_SYSTEM_FRAME,
-    user: `Below is a transcript from an introductory call with a prospective client named "${prospectName}". They are exploring psychedelic-assisted preparation and integration work but have not yet committed.
+    user: `Below is a transcript from an introductory call with "${prospectName}", a prospective coaching client who has not yet signed on.
 
-Your job is to extract and synthesize the SPECIFIC content from this transcript — names, situations, life events, exact concerns, direct quotes where useful. Do NOT produce generic, vague summaries. If the transcript contains specific details, include them. If something important was said verbatim, paraphrase it closely. Be concrete and precise.
+Extract the SPECIFIC content — names, companies, situations, numbers, exact concerns, close paraphrases. No generic summaries.
 
 Produce a Prospect Intro Call Summary as JSON with exactly these keys (all strings):
 {
-  "what_they_are_seeking": "Their specific stated goals and what drew them to this work — reference actual things they said, not generic descriptions. Include their core intention in their own words if possible.",
-  "background_context": "Specific personal background they shared: relevant life history, mental health history, prior therapy or plant medicine experience, current life circumstances, relationships, work situation — whatever concrete details came up.",
-  "hesitations_or_concerns": "Specific concerns or hesitations they voiced — fears about the process, logistical barriers, uncertainty about readiness, concerns about safety or legality, financial questions, anything concrete. Quote or closely paraphrase where useful.",
-  "readiness_signals": "Concrete signs of readiness: specific prior inner work they've done, existing support systems, level of motivation they expressed, how much thought they'd already put into this, their timeline or urgency.",
-  "questions_to_explore": "3-5 specific questions tailored to THIS person based on what came up in the call — gaps in understanding, areas to probe, topics to revisit. Make these specific to their situation, not generic.",
-  "practitioner_notes": "How they communicated: their emotional tone, what seemed to resonate, what felt flat, how much they opened up, pace of the conversation, anything to keep in mind about how to work with them effectively."
+  "what_they_are_seeking": "Their stated goals and what prompted them to look for a coach now",
+  "background_context": "Role, company, stage, team, key relationships, prior coaching or development work",
+  "hesitations_or_concerns": "Concerns about fit, time, cost, confidentiality, timing — quoted or closely paraphrased",
+  "readiness_signals": "Signs they are ready: urgency, clarity, commitment, sponsorship from a board or company",
+  "questions_to_explore": "3-5 questions tailored to this person for the next conversation",
+  "practitioner_notes": "How they communicated and what seemed to resonate — notes for the coach on working with them"
 }
 
 Transcript:
@@ -333,32 +335,26 @@ ${transcript}
 
 export function buildProspectClientSummaryPrompt(transcript: string, prospectName: string): PromptPair {
   return {
-    system: `You are an assistant supporting a psychedelic harm reduction specialist,
-preparation coach, or integration coach inside "Richland OS" — a client journey
-management platform. This is explicitly NOT a medical record system and you are
-NOT providing clinical diagnoses, medical advice, or treatment recommendations.
+    system: `You are an assistant supporting an executive and CEO coach inside "Richland OS",
+the coaching operating system for Richland Advisors.
 
-You are writing a summary that will be sent DIRECTLY TO THE PROSPECTIVE CLIENT
-themselves, in second person ("you"), as a warm, human recap of their own intro
-call — not a clinical or practitioner-facing document. Never use practitioner
-jargon, never assess or characterize the person (no "readiness signals," no
-commentary on their tone or psychology). Only reflect back what THEY said and
-what was agreed on, in a friendly, grounded voice.
+You are writing a recap that will be sent DIRECTLY TO THE PROSPECTIVE CLIENT, in
+second person ("you"), as a warm, professional follow-up to their intro call. Never
+assess or characterize the person. Only reflect back what THEY said and what was
+agreed, in a friendly, direct voice.
 
-If something in the transcript suggests a genuine safety concern (suicidality,
-risk of harm to self/others, medical emergency, signs of psychosis), do not
-include it in this client-facing summary — omit it entirely; that is handled
-separately with the practitioner.
+If anything in the transcript suggests a wellbeing or safety concern, leave it out of
+this client-facing recap entirely — the coach handles that separately.
 
 Always respond with valid JSON matching the requested schema exactly. No prose outside JSON.`,
-    user: `Below is a transcript from an introductory call between a practitioner and a prospective client named "${prospectName}". Write a short, warm recap addressed directly to ${prospectName.split(" ")[0]} that they could read themselves after the call — the kind of note a thoughtful practitioner sends as a follow-up.
+    user: `Below is a transcript from an intro call between a coach and a prospective client named "${prospectName}". Write a short recap addressed directly to ${prospectName.split(" ")[0]} that they could read after the call.
 
-Produce a Client-Facing Recap as JSON with exactly these keys (all strings, second person, warm and plain-language — no clinical or practitioner terminology):
+Produce a Client-Facing Recap as JSON with exactly these keys (all strings, second person, plain language):
 {
-  "what_we_talked_about": "A short, warm recap in second person of the main things you discussed and what you shared — grounded in specifics from the call, not generic.",
-  "your_next_steps": "Concrete action items FOR THE CLIENT — anything they agreed to do, decide, or send over. Written as a simple list-in-prose or short lines. If none, write 'Nothing needed from you right now.'",
-  "what_happens_next": "What the practitioner will do next and/or what the client can expect going forward (e.g. follow-up call, materials to expect, next milestone).",
-  "questions_to_sit_with": "2-4 gentle, reflective questions the client might sit with before your next conversation, phrased warmly and directly to them."
+  "what_we_talked_about": "A short recap of what you discussed, grounded in specifics from the call",
+  "your_next_steps": "Anything you agreed to do, decide, or send. If none, write 'Nothing needed from you right now.'",
+  "what_happens_next": "What the coach will do next and what you can expect",
+  "questions_to_sit_with": "2-4 reflective questions to consider before the next conversation"
 }
 
 Transcript:
@@ -371,20 +367,18 @@ ${transcript}
 export function buildSessionCallSummaryPrompt(transcript: string, clientName: string, sessionTypeLabel: string): PromptPair {
   return {
     system: BASE_SYSTEM_FRAME,
-    user: `Below is a transcript from a "${sessionTypeLabel}" session with client "${clientName}".
+    user: `Below is a transcript from a "${sessionTypeLabel}" with coaching client "${clientName}". It may come from Zoom, Fathom, Plaud, or another recorder.
 
-Your ONLY job is to produce a factual record of what was said and what action items were mentioned. This is NOT an analysis or interpretation. Follow these rules strictly:
-- Do NOT draw conclusions about the client's psychology, progress, or internal state
-- Do NOT make inferences or judgments beyond what was explicitly said
-- Do NOT interpret meaning, patterns, or themes unless the client or practitioner stated them directly
-- Do NOT speculate about what something "suggests" or "indicates"
-- DO capture what was actually said, discussed, asked, and decided, using the speaker's own words as closely as possible
-- DO list action items exactly as they were stated in the call, by whoever stated them
+Produce a factual record of what was discussed and decided, and a clean list of action items. Rules:
+- Do NOT draw conclusions about the client's psychology or internal state
+- Do NOT add interpretation beyond what was actually said
+- DO capture what was discussed, asked, and decided, close to the speakers' own words
+- DO list every commitment or next step, with who owns it and any due date mentioned
 
 Produce JSON with exactly these keys (all strings):
 {
-  "summary": "A factual, chronological account of what was discussed in the session. Quote or closely paraphrase what was actually said. No interpretation.",
-  "action_items": "A bulleted list of specific next steps, commitments, or follow-ups that were mentioned during the call — by either the client or practitioner. Include who is responsible if stated. If none were mentioned, write 'None mentioned.'"
+  "summary": "A factual, chronological account of the session in short paragraphs or bullets",
+  "action_items": "One action item per line, formatted '- [Owner] Action (due date if stated)'. If none, write 'None mentioned.'"
 }
 
 Transcript:
@@ -397,18 +391,18 @@ ${transcript}
 export function buildLivingJourneySummaryPrompt(clientRecordDump: string, clientName: string): PromptPair {
   return {
     system: BASE_SYSTEM_FRAME,
-    user: `Maintain a living "Client Journey Summary" for "${clientName}" that synthesizes everything known about them across their entire journey to date — this gets regenerated as new information comes in and should read as a coherent narrative a practitioner could skim before any touchpoint.
+    user: `Maintain a living Client Summary for "${clientName}" that pulls together everything known about them across the whole coaching engagement. It is regenerated as new sessions come in and should read as something the coach can skim before any call.
 
 Produce JSON with exactly these keys (all strings):
 {
-  "narrative_summary": "a 4-6 sentence narrative of their journey so far",
-  "core_intentions": "",
+  "narrative_summary": "4-6 sentences on the engagement so far",
+  "core_intentions": "Their goals for coaching",
   "recurring_themes": "",
-  "growth_observed": "",
-  "open_threads": ""
+  "growth_observed": "Progress against goals, with specifics",
+  "open_threads": "Unresolved topics and open commitments"
 }
 
-Full Client Record:
+Full client record:
 """
 ${clientRecordDump}
 """`,
@@ -423,16 +417,16 @@ export function buildAiConversationPrompt(
 ): PromptPair {
   return {
     system: BASE_SYSTEM_FRAME,
-    user: `You are in an ongoing conversation with a practitioner about their client, "${clientName}".
+    user: `You are in an ongoing conversation with the coach about their client, "${clientName}".
 
-Answer the practitioner's latest message directly and helpfully. Use the client context below when it is relevant, name uncertainty when the record does not contain an answer, and never invent client details. This is a working conversation, not a formal summary, so keep the response focused and practical. The practitioner may ask about preparation, session planning, progress, open threads, forms, or next steps.
+Answer the coach's latest message directly. Use the client record when relevant, say so when the record doesn't contain an answer, and never invent client details. Keep it focused and practical — session planning, progress against goals, accountability, open threads, or next steps.
 
 Return JSON with exactly one key:
 {
   "reply": ""
 }
 
-Client context:
+Client record:
 """
 ${clientRecordDump}
 """
@@ -442,7 +436,7 @@ Conversation so far:
 ${conversationHistory || "No previous conversation."}
 """
 
-Latest practitioner message:
+Latest message from the coach:
 """
 ${practitionerMessage}
 """`,

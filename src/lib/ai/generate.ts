@@ -16,9 +16,10 @@ const apiKey = process.env.ANTHROPIC_API_KEY;
 const anthropic = apiKey ? new Anthropic({ apiKey }) : null;
 const allowMock = process.env.RICHLAND_ALLOW_MOCK_AI === "1";
 
-// claude-haiku-4-5-20251001 — fast and available on all API tiers.
-// Upgrade to "claude-sonnet-4-6" if your API key has access to that model.
-const MODEL = "claude-haiku-4-5-20251001";
+// Prep briefs and session summaries are the heart of Richland OS, so the
+// default is Claude Sonnet. Set ANTHROPIC_MODEL (e.g. "claude-haiku-5-5")
+// to trade some quality for speed and cost.
+const MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-5-5";
 
 export class AiUnavailableError extends Error {}
 

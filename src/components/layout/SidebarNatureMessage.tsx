@@ -32,7 +32,7 @@ export default function SidebarNatureMessage() {
           <path d="M70 39C69 35 73 32 77 31C76 35 73 38 70 39Z" />
         </g>
       </svg>
-      <p className="sidebar-fern-caption">People heal.<br />A kinder tomorrow<br />is possible.</p>
+      <p className="sidebar-fern-caption">Clarity.<br />Commitment.<br />Follow-through.</p>
     </div>
   );
 }

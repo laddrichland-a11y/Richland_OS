@@ -114,7 +114,7 @@ export async function createPortalAccountAction(
   if (!emailLooksValid(email)) return { ok: false, error: "Enter a valid email address." };
   if (password.length < 6) return { ok: false, error: "Password must be at least 6 characters." };
   if (!client.email || client.email.trim().toLowerCase() !== email.trim().toLowerCase()) {
-    return { ok: false, error: "Use the email address your practitioner has on file." };
+    return { ok: false, error: "Use the email address your coach has on file." };
   }
 
   await data.createPortalAccount(clientId, email, password);
@@ -577,7 +577,7 @@ export async function addRecordingAction(
 }
 
 // Recordings for a session OR a stage page (Intake, Preparation, Integration,
-// Growth Plan before a session is on the calendar). One set of actions so
+// Action Plan before a session is on the calendar). One set of actions so
 // every place with an "Upload recording" button stores it the same way.
 type RecordingTarget = { sessionId: string } | { stage: StageNotesKey };
 
@@ -1729,7 +1729,7 @@ export async function createPostJourneyTimelineAction(clientId: string, practiti
     data.addTask({
       client_id: clientId,
       practitioner_id: practitionerId,
-      title: "12-Hour Check-In",
+      title: "Check-In",
       task_type: "form",
       due_at: hrs(12),
       status: "pending",

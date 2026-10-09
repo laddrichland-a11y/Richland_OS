@@ -150,7 +150,7 @@ export default function FormTemplateEditor({
         <div className="space-y-3">
           <label className="block space-y-1">
             <span className="text-sm font-medium text-ink-800">Form name</span>
-            <input className={inputCls} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Post-Journey Body Check" />
+            <input className={inputCls} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. 360 Feedback Summary" />
           </label>
           <label className="block space-y-1">
             <span className="text-sm font-medium text-ink-800">Short description (optional)</span>

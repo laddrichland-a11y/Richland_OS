@@ -384,7 +384,7 @@ export interface AiSummary {
 }
 
 // Notes typed or uploaded on a stage page (Intake, Preparation, Integration,
-// Growth Plan) before a session for that stage is on the calendar. One
+// Action Plan) before a session for that stage is on the calendar. One
 // running record per client per stage, autosaved as the practitioner types.
 export type StageNotesKey =
   | "intake"

@@ -102,7 +102,7 @@ export function StatusDonutChart({ data }: { data: ChartDatum[] }) {
         <div className="status-donut-total"><strong>{total}</strong><span>Total clients</span></div>
       </div>
     </div>
-    <div className="status-breakdown" aria-label="Journey status breakdown">
+    <div className="status-breakdown" aria-label="Engagement status breakdown">
       {data.map((item, index) => {
         const percentage = total ? Math.round(item.value / total * 100) : 0;
         return <div className="status-breakdown-row" key={item.name}>

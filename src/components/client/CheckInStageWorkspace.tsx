@@ -19,7 +19,7 @@ const LEGACY_FIELDS: { key: keyof CheckIn; label: string }[] = [
   { key: "safety_concerns", label: "Safety Concerns" },
 ];
 
-// The 12-Hour Check-In stage, laid out exactly like the other stages:
+// The Check-In stage, laid out exactly like the other stages:
 // Forms for This Session → Session Notes & Transcript (with the Session
 // Recording box) → AI summary with every version kept.
 export default function CheckInStageWorkspace({
@@ -92,8 +92,8 @@ export default function CheckInStageWorkspace({
       </div>
       <div className="card p-5 space-y-4">
         <ActionCardHeader
-          title={<><Sparkles className="h-4 w-4 text-ink-500" />12-Hour Check-In Summary</>}
-          description={`Generated from the check-in form and your notes above. Saves to ${clientName}'s record and completes the 12-Hour Check-In. Each one is kept as a new version.`}
+          title={<><Sparkles className="h-4 w-4 text-ink-500" />Check-In Summary</>}
+          description={`Generated from the check-in form and your notes above. Saves to ${clientName}'s record and completes the Check-In. Each one is kept as a new version.`}
           action={
             <AiGenerateButton
               clientId={clientId}
@@ -111,9 +111,9 @@ export default function CheckInStageWorkspace({
         clientId={clientId}
         summaries={summaries}
         onChange={setSummaries}
-        heading="12-Hour Check-In Summary"
+        heading="Check-In Summary"
         description={`Every check-in summary generated for ${clientName}, newest first.`}
-        cardTitle="12-Hour Check-In Summary"
+        cardTitle="Check-In Summary"
       />
     </div>
   );

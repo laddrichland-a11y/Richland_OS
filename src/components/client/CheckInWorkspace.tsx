@@ -25,7 +25,7 @@ export default function CheckInWorkspace({
   clientName: string;
   existingCheckIn?: CheckIn;
   onSubmitted?: () => void;
-  /** Recordings of the 12-hour check-in call added before it was scheduled. */
+  /** Recordings of the check-in call added before it was scheduled. */
   initialRecordings?: Recording[];
 }) {
   const rec = useRecordings(clientId, { stage: "check_in_12hr" }, initialRecordings);
@@ -39,7 +39,7 @@ export default function CheckInWorkspace({
       <section className="client-surface mb-6 p-5">
         <div>
           <p className="client-eyebrow">Check-in record</p>
-          <h2 className="journey-icon-heading mt-1 text-lg font-semibold text-ink-900"><ClipboardList aria-hidden="true" />12-Hour Check-In Form</h2>
+          <h2 className="journey-icon-heading mt-1 text-lg font-semibold text-ink-900"><ClipboardList aria-hidden="true" />Check-In Form</h2>
           <p className="mt-1.5 text-sm leading-6 text-ink-500">
             For {clientName} — captures how things feel 12 hours after the journey.
           </p>

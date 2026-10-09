@@ -50,8 +50,8 @@ export default function PracticeProfileForm({ profile }: { profile: ProfileField
     <form onSubmit={save} className="settings-profile-form">
       <div className="settings-fields">
         {([
-          ["full_name", "Practitioner name", "text", "Ladd Richland"],
-          ["practice_name", "Practice name", "text", "Stillwater Integration Studio"],
+          ["full_name", "Coach name", "text", "Ladd Richland"],
+          ["practice_name", "Practice name", "text", "Richland Advisors"],
           ["email", "Email", "email", "you@example.com"],
           ["phone", "Phone", "tel", "(555) 555-0100"],
         ] as const).map(([key, label, type, placeholder]) => (
