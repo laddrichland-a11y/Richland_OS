@@ -1025,7 +1025,7 @@ function PortalMobileTabBar({
     Home: "Home",
     Appointments: "Appointments",
     "Forms & Check-Ins": "Forms",
-    "Action Plan": "Growth",
+    "Action Plan": "Plan",
     Messages: "Messages",
   };
   return (

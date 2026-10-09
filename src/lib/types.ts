@@ -60,6 +60,7 @@ export type JourneyPhase =
 
 export type DocumentType =
   | "participant_screening_form"
+  | "leadership_self_assessment"
   | "informed_consent"
   | "harm_reduction_services_agreement"
   | "client_services_agreement"
@@ -561,6 +562,7 @@ export interface Payment {
 
 export const DOCUMENT_LABELS: Record<DocumentType, string> = {
   participant_screening_form: "Client Intake Questionnaire",
+  leadership_self_assessment: "Leadership Self-Assessment",
   informed_consent: "Confidentiality & Consent",
   harm_reduction_services_agreement: "Coaching Engagement Agreement",
   client_services_agreement: "Client Services Agreement",

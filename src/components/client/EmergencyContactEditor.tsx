@@ -50,7 +50,7 @@ export default function EmergencyContactEditor({
         <div className="flex items-center justify-between mb-1">
           <span className="text-xs font-medium text-ink-700 flex items-center gap-1.5">
             <ShieldAlert className="h-3.5 w-3.5 text-clay-500" />
-            Emergency Contact
+            Assistant / Point of Contact
           </span>
           <button
             onClick={() => {
@@ -74,7 +74,7 @@ export default function EmergencyContactEditor({
           <input
             value={relationship}
             onChange={(e) => setRelationship(e.target.value)}
-            placeholder="Relationship (e.g. spouse)"
+            placeholder="Role (e.g. executive assistant)"
             className="w-full border border-ink-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-clay-200"
           />
           <input
@@ -113,7 +113,7 @@ export default function EmergencyContactEditor({
     return (
       <div className="wn-emergency-overview">
         <div className="min-w-0">
-          <span>Emergency contact</span>
+          <span>Assistant / point of contact</span>
           {hasContact ? (
             <strong>
               {displayName}{displayRelationship && ` (${displayRelationship})`}{displayPhone && ` — ${displayPhone}`}
@@ -125,8 +125,8 @@ export default function EmergencyContactEditor({
         <button
           onClick={() => setEditing(true)}
           className="wn-emergency-edit"
-          title="Edit emergency contact"
-          aria-label="Edit emergency contact"
+          title="Edit assistant or point of contact"
+          aria-label="Edit assistant or point of contact"
         >
           <Pencil className="h-3.5 w-3.5" />
         </button>
@@ -149,7 +149,7 @@ export default function EmergencyContactEditor({
       <button
         onClick={() => setEditing(true)}
         className="ml-1 p-0.5 rounded hover:bg-ink-200 text-ink-400 hover:text-ink-600 transition-colors"
-        title="Edit emergency contact"
+        title="Edit assistant or point of contact"
       >
         <Pencil className="h-3 w-3" />
       </button>

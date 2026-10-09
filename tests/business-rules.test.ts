@@ -139,8 +139,8 @@ test("required forms resolve one canonical outstanding count", () => {
     "informed_consent",
     "harm_reduction_services_agreement",
     "client_services_agreement",
+    "leadership_self_assessment",
     "preparation_navigation_plan",
-    "preparation_education_session",
   ];
   const forms = resolveRequiredForms({
     templates: types.map(template),

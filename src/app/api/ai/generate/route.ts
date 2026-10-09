@@ -81,8 +81,9 @@ function formStageOrder(submission: FormSubmission, documents: ClientDocument[],
   if (sessionType) return PREPARE_ME_STAGE_ORDER[sessionType];
 
   const documentType = documents.find((item) => item.id === submission.document_id)?.document_type;
-  if (["participant_screening_form", "informed_consent", "harm_reduction_services_agreement", "client_services_agreement"].includes(documentType ?? "")) return 0;
+  if (["participant_screening_form", "leadership_self_assessment", "informed_consent", "harm_reduction_services_agreement", "client_services_agreement"].includes(documentType ?? "")) return 0;
   if (["preparation_navigation_plan", "preparation_education_session"].includes(documentType ?? "")) return 1;
+  if (["check_in_12hr_form"].includes(documentType ?? "")) return 2;
   if (["integration_session_1", "post_integration_form"].includes(documentType ?? "")) return 4;
   if (["integration_session_2", "post_integration_form_updated"].includes(documentType ?? "")) return 5;
   return 6;

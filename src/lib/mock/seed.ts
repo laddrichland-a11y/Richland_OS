@@ -65,14 +65,14 @@ export const PRACTITIONER: Profile = {
   full_name: "Ladd Richland",
   email: "ladd.richland@gmail.com",
   practice_name: "Richland Advisors",
-  title: "Integration & Harm Reduction Specialist",
+  title: "Executive & CEO Coach",
 };
 
 export const REFERRAL_SOURCES: ReferralSource[] = [
-  { id: "ref_001", practitioner_id: PRACTITIONER.id, name: "Word of Mouth", category: "Returning / Referral" },
-  { id: "ref_002", practitioner_id: PRACTITIONER.id, name: "Psychedelic.support directory", category: "Web" },
-  { id: "ref_003", practitioner_id: PRACTITIONER.id, name: "Instagram / Content", category: "Web" },
-  { id: "ref_004", practitioner_id: PRACTITIONER.id, name: "Local Integration Circle", category: "Community" },
+  { id: "ref_001", practitioner_id: PRACTITIONER.id, name: "Client Referral", category: "Returning / Referral" },
+  { id: "ref_002", practitioner_id: PRACTITIONER.id, name: "Vistage / CEO Peer Group", category: "Community" },
+  { id: "ref_003", practitioner_id: PRACTITIONER.id, name: "LinkedIn", category: "Web" },
+  { id: "ref_004", practitioner_id: PRACTITIONER.id, name: "Board / Investor Introduction", category: "Returning / Referral" },
 ];
 
 function milestonesFor(clientId: string, completedKeys: string[]): JourneyMilestone[] {
@@ -97,15 +97,9 @@ function docSet(
     { type: "harm_reduction_services_agreement", required: true },
     { type: "client_services_agreement", required: true },
     { type: "preparation_navigation_plan", required: true },
-    { type: "preparation_education_session", required: true },
-    { type: "integration_session_1", required: true },
-    { type: "integration_session_2", required: true },
     { type: "post_integration_form", required: false },
-    { type: "post_integration_form_updated", required: false },
     { type: "session_notes", required: false },
     { type: "journey_brief", required: false },
-    { type: "integration_summary_1", required: false },
-    { type: "integration_summary_2", required: false },
     { type: "growth_action_plan", required: false },
   ];
   const docs = base.map(({ type, required }) => {
@@ -194,9 +188,9 @@ export function buildDemoProspects(): Prospect[] {
       full_name: "Jordan Ellis",
       email: "jordan.ellis@example.com",
       phone: "(720) 555-0142",
-      referral_source: "Word of Mouth",
+      referral_source: "Client Referral",
       status: "new",
-      notes: "Referred by a past client. Curious about integration support after a retreat last spring.",
+      notes: "Founder of a 40-person logistics startup. Referred by Sarah Klein. Just raised a Series A and feels stretched thin.",
       created_at: daysAgo(1),
       updated_at: daysAgo(1),
     },
@@ -206,9 +200,9 @@ export function buildDemoProspects(): Prospect[] {
       full_name: "Alana Brooks",
       email: "alana.brooks@example.com",
       phone: "(303) 555-0177",
-      referral_source: "Psychedelic.support directory",
+      referral_source: "Vistage / CEO Peer Group",
       status: "intro_complete",
-      notes: "Found us through the directory listing. Intro call done — wants to explore grief work. Send pricing and next steps.",
+      notes: "CEO of a regional healthcare group, newly promoted from COO. Intro call done — wants help with board relationships. Send proposal and engagement agreement.",
       intro_call_at: daysAgo(2),
       created_at: daysAgo(4),
       updated_at: daysAgo(2),
@@ -218,9 +212,9 @@ export function buildDemoProspects(): Prospect[] {
       id: nextId("prospect"),
       full_name: "Tom Reyes",
       email: "tom.reyes@example.com",
-      referral_source: "Local Integration Circle",
+      referral_source: "LinkedIn",
       status: "considering",
-      notes: "Intro call went well. Thinking it over with his partner; follow up next week.",
+      notes: "Second-generation owner of a family distribution business. Weighing coaching against a COO hire. Follow up next week.",
       intro_call_at: daysAgo(6),
       created_at: daysAgo(9),
       updated_at: daysAgo(6),
@@ -256,24 +250,55 @@ function client(
     id,
     practitioner_id: PRACTITIONER.id,
     portal_user_id: `${id}_portal`,
-    date_of_birth: "1988-04-12",
-    address: "Portland, OR",
-    emergency_contact_name: "Jordan " + partial.full_name.split(" ")[1],
-    emergency_contact_phone: "(503) 555-0192",
-    emergency_contact_relationship: "Partner",
+    date_of_birth: "1978-04-12",
+    address: "Denver, CO",
+    emergency_contact_name: "",
+    emergency_contact_phone: "",
+    emergency_contact_relationship: "",
     referral_source_id: REFERRAL_SOURCES[0].id,
     notes: "",
-    package_name: "Executive Coaching Engagement",
-    package_value: 2400,
-    amount_paid: 1200,
+    package_name: "Executive Coaching — 6 Months",
+    package_value: 12000,
+    amount_paid: 6000,
     created_at: daysAgo(40),
     updated_at: daysAgo(1),
     ...partial,
   };
 }
 
+function coachingSession(
+  clientId: string,
+  scheduledAt: string,
+  status: Session["status"],
+  location = "Zoom",
+): Session {
+  return {
+    id: nextId("sess"),
+    client_id: clientId,
+    practitioner_id: PRACTITIONER.id,
+    session_type: "coaching",
+    scheduled_at: scheduledAt,
+    duration_minutes: 60,
+    status,
+    location,
+  };
+}
+
+function callSummary(clientId: string, session: Session, summary: string, actionItems: string): AiSummary {
+  return {
+    id: nextId("ai"),
+    client_id: clientId,
+    session_id: session.id,
+    summary_type: "session_call_summary",
+    title: "Session Summary",
+    content: { summary, action_items: actionItems },
+    model: "demo",
+    created_at: session.scheduled_at ?? now.toISOString(),
+  };
+}
+
 // ---------------------------------------------------------------------------
-// CLIENT 1 — Maya Chen — early, intake scheduled
+// CLIENT 1 — Maya Chen — new client, intake call scheduled
 // ---------------------------------------------------------------------------
 function buildMaya(): SeedBundle {
   const c = client({
@@ -282,8 +307,9 @@ function buildMaya(): SeedBundle {
     phone: "(415) 555-0102",
     status: "intake_scheduled",
     current_phase: "intake",
-    referral_source_id: REFERRAL_SOURCES[1].id,
-    amount_paid: 400,
+    referral_source_id: REFERRAL_SOURCES[3].id,
+    notes: "CEO, Brightline Health (Series A SaaS, 55 people). Introduced by her lead investor.",
+    amount_paid: 3000,
     created_at: daysAgo(5),
   });
   return {
@@ -302,7 +328,7 @@ function buildMaya(): SeedBundle {
         scheduled_at: daysFromNow(2),
         duration_minutes: 90,
         status: "scheduled",
-        location: "Video Call",
+        location: "Zoom",
       },
     ],
     transcripts: [],
@@ -312,67 +338,23 @@ function buildMaya(): SeedBundle {
     checkIns: [],
     postIntegrationForms: [],
     tasks: [
-      {
-        id: nextId("task"),
-        client_id: c.id,
-        practitioner_id: PRACTITIONER.id,
-        title: "Collect Health History Document",
-        task_type: "form",
-        due_at: daysFromNow(1),
-        status: "pending",
-        assigned_to: "client",
-      },
-      {
-        id: nextId("task"),
-        client_id: c.id,
-        practitioner_id: PRACTITIONER.id,
-        title: "Collect Harm Reduction Services Agreement",
-        task_type: "form",
-        due_at: daysFromNow(1),
-        status: "pending",
-        assigned_to: "client",
-      },
+      { id: nextId("task"), client_id: c.id, practitioner_id: PRACTITIONER.id, title: "Complete Client Intake Questionnaire", task_type: "form", due_at: daysFromNow(1), status: "pending", assigned_to: "client" },
+      { id: nextId("task"), client_id: c.id, practitioner_id: PRACTITIONER.id, title: "Complete DISC assessment", task_type: "form", due_at: daysFromNow(1), status: "pending", assigned_to: "client" },
     ],
     messages: [
-      {
-        id: nextId("msg"),
-        client_id: c.id,
-        sender: "client",
-        body: "Hi! Just submitted my consent forms. Looking forward to our intake session Thursday.",
-        created_at: daysAgo(1),
-      },
-      {
-        id: nextId("msg"),
-        client_id: c.id,
-        sender: "practitioner",
-        body: "Wonderful, Maya — got them. See you Thursday at 10am. Feel free to send any questions before then.",
-        created_at: hoursAgo(20),
-      },
+      { id: nextId("msg"), client_id: c.id, sender: "client", body: "Signed the agreement. Looking forward to Thursday — I'll have the questionnaire done before then.", created_at: daysAgo(1) },
+      { id: nextId("msg"), client_id: c.id, sender: "practitioner", body: "Got it, Maya. The DISC link is in your portal too — about 15 minutes. See you Thursday at 10.", created_at: hoursAgo(20) },
     ],
     portalAssignments: [
-      {
-        id: nextId("pa"),
-        client_id: c.id,
-        assignment_type: "form",
-        title: "Health History Document",
-        status: "pending",
-        due_at: daysFromNow(1),
-      },
-      {
-        id: nextId("pa"),
-        client_id: c.id,
-        assignment_type: "form",
-        title: "Harm Reduction Services Agreement",
-        status: "pending",
-        due_at: daysFromNow(1),
-      },
+      { id: nextId("pa"), client_id: c.id, assignment_type: "form", title: "Client Intake Questionnaire", status: "pending", due_at: daysFromNow(1) },
+      { id: nextId("pa"), client_id: c.id, assignment_type: "form", title: "DISC Assessment", status: "pending", due_at: daysFromNow(1) },
     ],
-    payments: [{ id: nextId("pay"), client_id: c.id, amount: 400, paid_at: daysAgo(5).slice(0, 10), method: "Card" }],
+    payments: [{ id: nextId("pay"), client_id: c.id, amount: 3000, paid_at: daysAgo(5).slice(0, 10), method: "Bank Transfer" }],
   };
 }
 
 // ---------------------------------------------------------------------------
-// CLIENT 2 — Daniel Ortiz — in preparation phase
+// CLIENT 2 — Daniel Ortiz — intake done, setting goals & agreement
 // ---------------------------------------------------------------------------
 function buildDaniel(): SeedBundle {
   const c = client({
@@ -382,147 +364,109 @@ function buildDaniel(): SeedBundle {
     status: "preparation",
     current_phase: "preparation",
     referral_source_id: REFERRAL_SOURCES[1].id,
-    amount_paid: 1200,
+    notes: "Founder & CEO, Ortiz Build Co. (commercial construction, 120 employees).",
     created_at: daysAgo(25),
   });
 
-  const assessmentSummary: AiSummary = {
+  const intakeSummary: AiSummary = {
     id: nextId("ai"),
     client_id: c.id,
     summary_type: "client_assessment_summary",
-    title: "Client Assessment Summary",
+    title: "Client Intake Summary",
     content: {
-      client_goals: "Process grief after losing his father two years ago; explore long-standing anxiety patterns; reconnect with a sense of purpose after a recent career change.",
-      personal_history: "Raised in Chicago, second of three siblings. Describes a close but emotionally reserved family. Strong relationship with long-term partner.",
-      mental_health_history: "Generalized anxiety, managed without medication via therapy (CBT, 2019-2022). No history of psychosis, mania, or hospitalization. Denies current SI/HI.",
-      previous_psychedelic_experience: "Two prior psilocybin experiences in a ceremonial group setting (2021, 2023); reports both as positive but 'unintegrated.' No experience with other psychedelics.",
-      current_challenges: "Difficulty sitting with grief without intellectualizing it; perfectionism at work; sleep disruption during high-stress periods.",
-      potential_risk_factors: "Family history of bipolar disorder (maternal uncle) — no personal diagnosis but worth monitoring mood stability through preparation. No medication interactions reported.",
-      support_resources: "Long-term partner (supportive, briefed on role), weekly therapist, a small men's integration group he attends monthly.",
-      facilitator_concerns: "Tendency to intellectualize emotional material — preparation should include concrete embodiment practices, not just discussion. Watch for minimization of family mental health history.",
-      follow_up_recommendations: "Confirm with his therapist that they're aware of and supportive of this work. Build at least one body-based grounding practice into preparation before the journey session.",
+      client_goals: "Step out of day-to-day project management so he can lead the business; build a leadership team he trusts; get home for dinner three nights a week.",
+      role_and_context: "Founder & CEO of Ortiz Build Co., grown from 8 to 120 people in six years. Three project directors report to him; no COO. Wife (Elena) runs finance part-time.",
+      current_challenges: "Every major decision routes through him. Two project directors are clashing over resources. He is the bottleneck on bids and knows it.",
+      leadership_strengths: "Strong client relationships, high integrity, decisive under pressure. DISC: high D / high I.",
+      development_areas: "Delegation, letting others make mistakes, giving direct feedback without taking over. DISC flags impatience with slower, process-driven people.",
+      assessment_insights: "DISC (D/I) explains both his speed and why his more methodical project director (Luis) feels steamrolled.",
+      watch_outs: "Says he wants to delegate but measures his own worth by being the one who saves the day.",
+      follow_up_recommendations: "Send goals worksheet; in the Goals & Agreement session, define what 'out of the weeds' looks like in measurable terms.",
     },
-    model: "gpt-4o (mock)",
+    model: "demo",
     created_at: daysAgo(20),
   };
 
-  const prepPlan: PreparationPlan = {
+  const goalsPlan: PreparationPlan = {
     id: nextId("prep"),
     client_id: c.id,
-    intentions: "To meet my grief directly instead of thinking my way around it, and to find out what 'purpose' actually feels like in my body rather than as an idea.",
-    desired_outcomes: "A felt sense of having grieved my father, even partially. More trust in my own emotional signals. Less reliance on intellectualizing as a coping strategy.",
-    fears: "Losing control. Crying and not being able to stop. Being judged for being 'too much.'",
-    support_systems: "Partner (Ren) will be on-call by phone during integration window. Therapist aware and supportive. Men's group meets the week after Follow-up Session 2.",
-    preparation_practices: "Daily 10-minute body scan. Journaling on father's voicemail he kept. One embodiment session with a somatic practitioner before the journey.",
-    mindset_considerations: "Practice 'no fixing' — let inquiry replace analysis. Working mantra: 'I don't have to understand it to feel it.'",
-    environmental_considerations: "Bring father's old flannel shirt. Photo of dad in his 30s. Playlist curated with songs from his childhood home.",
-    navigation_strategies: "If grief becomes overwhelming, supported breathing + hand-hold check-in rather than verbal processing. If intellectualizing resurfaces, gentle redirect to body sensation.",
-    integration_priorities: "Grief processing continuity (not a one-time release). Translating insight about purpose into a concrete next career/creative step.",
+    intentions: "1. Hire or promote an operations lead within 90 days.\n2. Stop approving bids under $250k.\n3. Resolve the conflict between Luis and Kara.",
+    desired_outcomes: "Bids under $250k go out without me. Weekly leadership meeting runs on an agenda I didn't write. Home for dinner 3 nights a week.",
+    fears: "Quality slips. Clients notice I'm less available.",
+    support_systems: "Elena (wife, finance). Vistage group meets monthly.",
     updated_at: daysAgo(6),
-  };
-
-  const journeyBrief: AiSummary = {
-    id: nextId("ai"),
-    client_id: c.id,
-    summary_type: "journey_brief",
-    title: "Engagement Brief",
-    content: {
-      client_summary: "Daniel is preparing to process unresolved grief for his father (d. 2024) and explore a sense of post-career-change purpose. He intellectualizes readily and is actively practicing staying embodied.",
-      intentions: "Meet grief directly; locate a felt (not conceptual) sense of purpose.",
-      themes: "Grief, control vs. surrender, the gap between thinking and feeling, identity after loss.",
-      potential_challenges: "May retreat into narration/analysis under emotional intensity. Family history of bipolar disorder warrants gentle mood monitoring, not alarm.",
-      navigation_reminders: "Offer grounding touch/breath before verbal processing. Use his own language ('don't have to understand it to feel it') to redirect intellectualization.",
-      support_recommendations: "Keep partner Ren reachable per his support plan. Have his flannel shirt and photo accessible in the space.",
-      integration_focus_areas: "Continuity of grief work post-journey; concrete translation of any purpose-insight into a real next step, not just a feeling.",
-    },
-    model: "gpt-4o (mock)",
-    created_at: daysAgo(6),
   };
 
   return {
     client: c,
     milestones: milestonesFor(c.id, ["intake_complete"]),
     documents: docSet(c.id, {
-
+      participant_screening_form: "reviewed",
       informed_consent: "signed",
-      harm_reduction_services_agreement: "signed",
+      harm_reduction_services_agreement: "uploaded",
       client_services_agreement: "signed",
       preparation_navigation_plan: "uploaded",
-      journey_brief: "uploaded",
     }),
     sessions: [
-      { id: nextId("sess"), client_id: c.id, practitioner_id: PRACTITIONER.id, session_type: "intake_assessment", scheduled_at: daysAgo(20), duration_minutes: 90, status: "completed" },
-      { id: nextId("sess"), client_id: c.id, practitioner_id: PRACTITIONER.id, session_type: "preparation", scheduled_at: daysAgo(6), duration_minutes: 90, status: "completed" },
-      { id: nextId("sess"), client_id: c.id, practitioner_id: PRACTITIONER.id, session_type: "harm_reduction_support", scheduled_at: daysFromNow(4), duration_minutes: 480, status: "scheduled", location: "Journey Space — Sunroom" },
+      { id: nextId("sess"), client_id: c.id, practitioner_id: PRACTITIONER.id, session_type: "intake_assessment", scheduled_at: daysAgo(20), duration_minutes: 90, status: "completed", location: "Zoom" },
+      { id: nextId("sess"), client_id: c.id, practitioner_id: PRACTITIONER.id, session_type: "preparation", scheduled_at: daysFromNow(3), duration_minutes: 90, status: "scheduled", location: "Ortiz Build Co. office" },
     ],
     transcripts: [
-      { id: nextId("tr"), client_id: c.id, source: "paste", raw_text: "[Intake transcript excerpt — Daniel discusses his father's passing, work transition, and prior psilocybin experiences...]", created_at: daysAgo(20) },
+      { id: nextId("tr"), client_id: c.id, source: "paste", raw_text: "[Intake call — Daniel describes growing the company, the bid bottleneck, and the tension between Luis and Kara...]", created_at: daysAgo(20) },
     ],
-    aiSummaries: [assessmentSummary, journeyBrief],
+    aiSummaries: [intakeSummary],
     memory: [
-      { id: nextId("mem"), client_id: c.id, item_type: "intention", content: "Meet grief directly rather than intellectualizing it.", phase: "preparation", status: "carried_forward", created_at: daysAgo(6) },
-      { id: nextId("mem"), client_id: c.id, item_type: "intention", content: "Locate a felt, embodied sense of purpose after career change.", phase: "preparation", status: "carried_forward", created_at: daysAgo(6) },
-      { id: nextId("mem"), client_id: c.id, item_type: "theme", content: "Tendency toward intellectualization as an emotional defense.", phase: "intake", status: "open", created_at: daysAgo(20) },
-      { id: nextId("mem"), client_id: c.id, item_type: "challenge", content: "Family history of bipolar disorder — monitor mood stability, not a diagnosis.", phase: "intake", status: "open", created_at: daysAgo(20) },
+      { id: nextId("mem"), client_id: c.id, item_type: "intention", content: "Get out of day-to-day project management and lead the business.", phase: "intake", status: "carried_forward", created_at: daysAgo(20) },
+      { id: nextId("mem"), client_id: c.id, item_type: "theme", content: "Measures his value by being the one who saves the day.", phase: "intake", status: "open", created_at: daysAgo(20) },
+      { id: nextId("mem"), client_id: c.id, item_type: "challenge", content: "Conflict between project directors Luis and Kara over crews and equipment.", phase: "intake", status: "open", created_at: daysAgo(20) },
     ],
     sessionNotes: [],
-    preparationPlan: prepPlan,
+    preparationPlan: goalsPlan,
     checkIns: [],
     postIntegrationForms: [],
     tasks: [
-      { id: nextId("task"), client_id: c.id, practitioner_id: PRACTITIONER.id, title: "Confirm Ren's phone availability for journey day", task_type: "follow_up", due_at: daysFromNow(2), status: "pending", assigned_to: "practitioner" },
-      { id: nextId("task"), client_id: c.id, practitioner_id: PRACTITIONER.id, title: "Bring grounding objects (flannel shirt, photo) to journey space", task_type: "reminder", due_at: daysFromNow(4), status: "pending", assigned_to: "practitioner" },
+      { id: nextId("task"), client_id: c.id, practitioner_id: PRACTITIONER.id, title: "Send coaching engagement agreement for signature", task_type: "follow_up", due_at: daysFromNow(1), status: "pending", assigned_to: "practitioner" },
+      { id: nextId("task"), client_id: c.id, practitioner_id: PRACTITIONER.id, title: "Finish goals worksheet", task_type: "form", due_at: daysFromNow(2), status: "pending", assigned_to: "client" },
     ],
     messages: [
-      { id: nextId("msg"), client_id: c.id, sender: "client", body: "Did the body scan every day this week — noticed I clench my jaw a lot when I think about Dad.", created_at: daysAgo(2) },
-      { id: nextId("msg"), client_id: c.id, sender: "practitioner", body: "That's a great catch, and exactly the kind of noticing we want more of. Bring that observation with you Saturday.", created_at: daysAgo(2) },
+      { id: nextId("msg"), client_id: c.id, sender: "client", body: "Started the goals worksheet. Writing 'stop approving small bids' down made me nervous, which probably means it's the right one.", created_at: daysAgo(2) },
+      { id: nextId("msg"), client_id: c.id, sender: "practitioner", body: "That's exactly the signal. Bring that nervousness to our session Monday — we'll make it concrete.", created_at: daysAgo(2) },
     ],
     portalAssignments: [
-      { id: nextId("pa"), client_id: c.id, assignment_type: "journaling_prompt", title: "Write to your father as if he could read it", status: "completed", completed_at: daysAgo(3) },
-      { id: nextId("pa"), client_id: c.id, assignment_type: "homework", title: "Daily 10-minute body scan", status: "in_progress" },
+      { id: nextId("pa"), client_id: c.id, assignment_type: "form", title: "DISC Assessment", status: "completed", completed_at: daysAgo(21) },
+      { id: nextId("pa"), client_id: c.id, assignment_type: "homework", title: "Goals & Vision Worksheet", status: "in_progress" },
     ],
     payments: [
-      { id: nextId("pay"), client_id: c.id, amount: 800, paid_at: daysAgo(25).slice(0, 10), method: "Bank Transfer" },
-      { id: nextId("pay"), client_id: c.id, amount: 400, paid_at: daysAgo(6).slice(0, 10), method: "Card" },
+      { id: nextId("pay"), client_id: c.id, amount: 6000, paid_at: daysAgo(25).slice(0, 10), method: "Bank Transfer" },
     ],
   };
 }
 
 // ---------------------------------------------------------------------------
-// CLIENT 3 — Priya Patel — journey complete, awaiting 12hr check-in
+// CLIENT 3 — Priya Patel — active coaching, check-in overdue
 // ---------------------------------------------------------------------------
 function buildPriya(): SeedBundle {
   const c = client({
     full_name: "Priya Patel",
     email: "priya.patel@example.com",
     phone: "(206) 555-0143",
-    status: "journey_complete",
-    current_phase: "post_journey_check_in",
-    referral_source_id: REFERRAL_SOURCES[0].id,
-    amount_paid: 2000,
-    created_at: daysAgo(35),
+    status: "journey_scheduled",
+    current_phase: "harm_reduction_session",
+    referral_source_id: REFERRAL_SOURCES[2].id,
+    notes: "COO, Ledgerly (fintech, 200 people). Being groomed for CEO in 18 months.",
+    amount_paid: 12000,
+    created_at: daysAgo(60),
   });
 
-  const journeySummary: AiSummary = {
-    id: nextId("ai"),
-    client_id: c.id,
-    summary_type: "journey_summary",
-    title: "Journey Summary",
-    content: {
-      major_themes: "Self-worth independent of achievement; relationship to her mother; reconnecting with creativity she abandoned in her 20s.",
-      important_events: "Extended period (~90 min) of nonverbal crying around hour 3, followed by a felt sense of relief. Spontaneously hummed a song her grandmother used to sing.",
-      potential_breakthroughs: "Vivid recognition that 'I have been performing being okay since I was 11' — described as landing in her chest, not just as a thought.",
-      suggested_integration_topics: "Differentiating self-worth from productivity; reopening a creative practice (she mentioned painting unprompted); exploring the grandmother memory further.",
-    },
-    model: "gpt-4o (mock)",
-    created_at: hoursAgo(30),
-  };
+  const s1 = coachingSession(c.id, daysAgo(28), "completed");
+  const s2 = coachingSession(c.id, daysAgo(14), "completed");
+  const s3 = coachingSession(c.id, daysFromNow(2), "scheduled");
 
   return {
     client: c,
-    milestones: milestonesFor(c.id, ["intake_complete", "preparation_complete", "journey_complete"]),
+    milestones: milestonesFor(c.id, ["intake_complete", "preparation_complete"]),
     documents: docSet(c.id, {
-
+      participant_screening_form: "reviewed",
       informed_consent: "signed",
       harm_reduction_services_agreement: "signed",
       client_services_agreement: "signed",
@@ -531,145 +475,121 @@ function buildPriya(): SeedBundle {
       session_notes: "uploaded",
     }),
     sessions: [
-      { id: nextId("sess"), client_id: c.id, practitioner_id: PRACTITIONER.id, session_type: "intake_assessment", scheduled_at: daysAgo(34), duration_minutes: 90, status: "completed" },
-      { id: nextId("sess"), client_id: c.id, practitioner_id: PRACTITIONER.id, session_type: "preparation", scheduled_at: daysAgo(20), duration_minutes: 90, status: "completed" },
-      { id: nextId("sess"), client_id: c.id, practitioner_id: PRACTITIONER.id, session_type: "harm_reduction_support", scheduled_at: hoursAgo(30), duration_minutes: 480, status: "completed", location: "Journey Space — Garden Room" },
+      { id: nextId("sess"), client_id: c.id, practitioner_id: PRACTITIONER.id, session_type: "intake_assessment", scheduled_at: daysAgo(58), duration_minutes: 90, status: "completed", location: "Zoom" },
+      { id: nextId("sess"), client_id: c.id, practitioner_id: PRACTITIONER.id, session_type: "preparation", scheduled_at: daysAgo(44), duration_minutes: 90, status: "completed", location: "Zoom" },
+      s1,
+      s2,
+      s3,
     ],
     transcripts: [],
-    aiSummaries: [journeySummary],
+    aiSummaries: [
+      callSummary(c.id, s1, "Reviewed the first two weeks against her goals. Priya presented the Q3 ops plan to the CEO; she felt she over-explained and lost the room. Discussed leading with the decision, then the reasoning. She raised frustration that the CFO keeps reopening decisions after exec meetings.", "- [Priya] Open each exec update with the decision in one sentence\n- [Priya] Ask the CFO for a 1:1 to agree how decisions get closed\n- [Coach] Send article on decision rights (RAPID)"),
+      callSummary(c.id, s2, "Priya had the 1:1 with the CFO — it went better than expected; they agreed decisions are final once logged in the exec notes. Board prep is next: she presents to the board for the first time in five weeks. Talked through her habit of saying yes to every escalation from her team.", "- [Priya] Draft board narrative outline and share before next session\n- [Priya] Push back on two escalations this week and log what happened\n- [Coach] Share board presentation template"),
+    ],
     memory: [
-      { id: nextId("mem"), client_id: c.id, item_type: "breakthrough", content: "'I have been performing being okay since I was 11' — felt, not just cognitive.", phase: "harm_reduction_session", status: "open", created_at: hoursAgo(30) },
-      { id: nextId("mem"), client_id: c.id, item_type: "theme", content: "Self-worth entangled with achievement and performance.", phase: "harm_reduction_session", status: "open", created_at: hoursAgo(30) },
-      { id: nextId("mem"), client_id: c.id, item_type: "insight", content: "Spontaneous reconnection to grandmother's memory and a long-dormant interest in painting.", phase: "harm_reduction_session", status: "open", created_at: hoursAgo(30) },
+      { id: nextId("mem"), client_id: c.id, item_type: "intention", content: "Be ready to step into the CEO role within 18 months.", phase: "preparation", status: "carried_forward", created_at: daysAgo(44) },
+      { id: nextId("mem"), client_id: c.id, item_type: "insight", content: "Leads with the reasoning instead of the decision — loses senior audiences.", phase: "harm_reduction_session", status: "in_progress", created_at: daysAgo(28) },
+      { id: nextId("mem"), client_id: c.id, item_type: "commitment", content: "First board presentation in five weeks — outline due before next session.", phase: "harm_reduction_session", status: "open", created_at: daysAgo(14) },
     ],
-    sessionNotes: [
-      { id: nextId("sn"), session_id: "sess_priya_journey", client_id: c.id, field_type: "significant_moment", note_timestamp: hoursAgo(33), elapsed_minutes: 165, content: "Extended nonverbal crying, approx 90 min, visible relief afterward." },
-      { id: nextId("sn"), session_id: "sess_priya_journey", client_id: c.id, field_type: "observation", note_timestamp: hoursAgo(32), elapsed_minutes: 220, content: "Spontaneously humming — later identified as grandmother's lullaby." },
-      { id: nextId("sn"), session_id: "sess_priya_journey", client_id: c.id, field_type: "safety_note", note_timestamp: hoursAgo(34), elapsed_minutes: 30, content: "Vitals/affect check at onset — stable, oriented, consented to continue." },
-      { id: nextId("sn"), session_id: "sess_priya_journey", client_id: c.id, field_type: "integration_theme", note_timestamp: hoursAgo(29), elapsed_minutes: 260, content: "Mentioned wanting to paint again — flag strongly for integration." },
-    ],
+    sessionNotes: [],
     checkIns: [],
     postIntegrationForms: [],
     tasks: [
-      { id: nextId("task"), client_id: c.id, practitioner_id: PRACTITIONER.id, title: "Check-In", task_type: "form", due_at: hoursAgo(6), status: "overdue", assigned_to: "client" },
-      { id: nextId("task"), client_id: c.id, practitioner_id: PRACTITIONER.id, title: "48-Hour Reflection Reminder", task_type: "reflection", due_at: hoursFromNow(18), status: "pending", assigned_to: "client" },
-      { id: nextId("task"), client_id: c.id, practitioner_id: PRACTITIONER.id, title: "Schedule Follow-up Session (within 72 hrs)", task_type: "session_prep", due_at: hoursFromNow(42), status: "pending", assigned_to: "practitioner" },
+      { id: nextId("task"), client_id: c.id, practitioner_id: PRACTITIONER.id, title: "Between-session check-in", task_type: "form", due_at: hoursAgo(6), status: "overdue", assigned_to: "client" },
+      { id: nextId("task"), client_id: c.id, practitioner_id: PRACTITIONER.id, title: "Board narrative outline", task_type: "reflection", due_at: daysFromNow(1), status: "pending", assigned_to: "client" },
     ],
     messages: [
-      { id: nextId("msg"), client_id: c.id, sender: "practitioner", body: "Checking in — how are you feeling this morning? No rush to respond fully, just want to know you're safe and resting.", created_at: hoursAgo(10) },
+      { id: nextId("msg"), client_id: c.id, sender: "practitioner", body: "Quick nudge on the check-in form — and how did pushing back on those escalations go?", created_at: hoursAgo(10) },
     ],
     portalAssignments: [
-      { id: nextId("pa"), client_id: c.id, assignment_type: "form", title: "Check-In", status: "pending", due_at: hoursAgo(6) },
+      { id: nextId("pa"), client_id: c.id, assignment_type: "form", title: "Between-Session Check-In", status: "pending", due_at: hoursAgo(6) },
+      { id: nextId("pa"), client_id: c.id, assignment_type: "action_item", title: "Draft board narrative outline", status: "in_progress", due_at: daysFromNow(1) },
     ],
     payments: [
-      { id: nextId("pay"), client_id: c.id, amount: 1000, paid_at: daysAgo(34).slice(0, 10), method: "Bank Transfer" },
-      { id: nextId("pay"), client_id: c.id, amount: 1000, paid_at: daysAgo(5).slice(0, 10), method: "Bank Transfer" },
+      { id: nextId("pay"), client_id: c.id, amount: 12000, paid_at: daysAgo(58).slice(0, 10), method: "Bank Transfer" },
     ],
   };
 }
 
 // ---------------------------------------------------------------------------
-// CLIENT 4 — Marcus Webb — Follow-up Session in progress
+// CLIENT 4 — Marcus Webb — active coaching, session tomorrow
 // ---------------------------------------------------------------------------
 function buildMarcus(): SeedBundle {
   const c = client({
     full_name: "Marcus Webb",
     email: "marcus.webb@example.com",
     phone: "(720) 555-0177",
-    status: "integration_1",
-    current_phase: "integration_1",
-    referral_source_id: REFERRAL_SOURCES[2].id,
-    amount_paid: 2000,
-    created_at: daysAgo(20),
+    status: "journey_scheduled",
+    current_phase: "harm_reduction_session",
+    referral_source_id: REFERRAL_SOURCES[1].id,
+    notes: "CEO, Webb Precision (third-generation family manufacturer, 85 people). Took over from his father 18 months ago.",
+    created_at: daysAgo(45),
   });
+
+  const s1 = coachingSession(c.id, daysAgo(21), "completed");
+  const s2 = coachingSession(c.id, daysAgo(7), "completed");
+  const s3 = coachingSession(c.id, daysFromNow(1), "scheduled");
 
   const checkIn: CheckIn = {
     id: nextId("ci"),
     client_id: c.id,
-    check_in_type: "12_hour",
-    emotional_state: "Calm, a little tender. Some waves of unexpected tearfulness, but not distressing.",
-    physical_state: "Tired but not depleted. Mild headache, resolved with water and food.",
-    immediate_insights: "Realized how much energy I spend anticipating other people's disappointment in me.",
-    support_needs: "Just want quiet and my partner around today. No big plans.",
-    safety_concerns: "None.",
+    check_in_type: "48_hour_reflection",
+    immediate_insights: "Held the line with Dad on the equipment decision. He wasn't happy but didn't override me.",
+    support_needs: "Want to talk about how to keep him involved without him running things.",
     submitted_by: "client",
-    submitted_at: daysAgo(4),
-  };
-
-  const checkInSummary: AiSummary = {
-    id: nextId("ai"),
-    client_id: c.id,
-    summary_type: "check_in_12hr_summary",
-    title: "Check-In Summary",
-    content: {
-      summary: "Marcus reports a stable, integrating nervous system 12 hours post-journey — appropriate fatigue, no safety concerns, and an early insight about anticipatory people-pleasing that aligns with his pre-journey intentions around authenticity. Recommend light-touch follow-up; no escalation needed.",
-      flags: "None requiring immediate practitioner outreach.",
-    },
-    model: "gpt-4o (mock)",
-    created_at: daysAgo(4),
+    submitted_at: daysAgo(3),
   };
 
   return {
     client: c,
-    milestones: milestonesFor(c.id, ["intake_complete", "preparation_complete", "journey_complete", "check_in_12hr_complete"]),
+    milestones: milestonesFor(c.id, ["intake_complete", "preparation_complete"]),
     documents: docSet(c.id, {
-
+      participant_screening_form: "reviewed",
       informed_consent: "signed",
       harm_reduction_services_agreement: "signed",
       client_services_agreement: "signed",
       preparation_navigation_plan: "reviewed",
       journey_brief: "reviewed",
-      session_notes: "uploaded",
-      post_integration_form: "uploaded",
-      check_in_12hr_form: "reviewed",
     }),
     sessions: [
-      { id: nextId("sess"), client_id: c.id, practitioner_id: PRACTITIONER.id, session_type: "intake_assessment", scheduled_at: daysAgo(19), duration_minutes: 90, status: "completed" },
-      { id: nextId("sess"), client_id: c.id, practitioner_id: PRACTITIONER.id, session_type: "preparation", scheduled_at: daysAgo(10), duration_minutes: 90, status: "completed" },
-      { id: nextId("sess"), client_id: c.id, practitioner_id: PRACTITIONER.id, session_type: "harm_reduction_support", scheduled_at: daysAgo(5), duration_minutes: 480, status: "completed" },
-      { id: nextId("sess"), client_id: c.id, practitioner_id: PRACTITIONER.id, session_type: "integration_1", scheduled_at: daysFromNow(1), duration_minutes: 60, status: "scheduled" },
-      { id: nextId("sess"), client_id: c.id, practitioner_id: PRACTITIONER.id, session_type: "integration_2", scheduled_at: daysFromNow(9), duration_minutes: 60, status: "scheduled" },
+      { id: nextId("sess"), client_id: c.id, practitioner_id: PRACTITIONER.id, session_type: "intake_assessment", scheduled_at: daysAgo(44), duration_minutes: 90, status: "completed", location: "Zoom" },
+      { id: nextId("sess"), client_id: c.id, practitioner_id: PRACTITIONER.id, session_type: "preparation", scheduled_at: daysAgo(35), duration_minutes: 90, status: "completed", location: "Webb Precision" },
+      s1,
+      s2,
+      s3,
     ],
     transcripts: [],
-    aiSummaries: [checkInSummary],
+    aiSummaries: [
+      callSummary(c.id, s1, "Marcus described his father (former CEO, still chairman) walking the floor daily and giving direction to supervisors. Employees aren't sure who is in charge. Marcus wants to keep his father's respect but needs clear authority.", "- [Marcus] Write down the three decisions that are his alone as CEO\n- [Marcus] Schedule a sit-down with his father about roles"),
+      callSummary(c.id, s2, "Marcus had the roles conversation; his father agreed in principle but overrode him on a $400k equipment purchase two days later. Marcus did not push back in the moment. Worked on a script for holding the decision.", "- [Marcus] Revisit the equipment decision with his father using the script\n- [Marcus] Announce the decision to the plant managers himself\n- [Coach] Send succession governance examples"),
+    ],
     memory: [
-      { id: nextId("mem"), client_id: c.id, item_type: "insight", content: "Spends significant energy anticipating others' disappointment — pattern of people-pleasing.", phase: "post_journey_check_in", status: "open", created_at: daysAgo(4) },
-      { id: nextId("mem"), client_id: c.id, item_type: "intention", content: "Live more authentically, even when it risks others' approval.", phase: "preparation", status: "carried_forward", created_at: daysAgo(10) },
+      { id: nextId("mem"), client_id: c.id, item_type: "intention", content: "Establish clear CEO authority while keeping his father engaged as chairman.", phase: "preparation", status: "carried_forward", created_at: daysAgo(35) },
+      { id: nextId("mem"), client_id: c.id, item_type: "theme", content: "Avoids conflict with his father in the moment, then resents it later.", phase: "harm_reduction_session", status: "in_progress", created_at: daysAgo(21) },
+      { id: nextId("mem"), client_id: c.id, item_type: "commitment", content: "Revisit the equipment decision with his father.", phase: "harm_reduction_session", status: "resolved", created_at: daysAgo(7) },
     ],
     sessionNotes: [],
     checkIns: [checkIn],
-    postIntegrationForms: [
-      {
-        id: nextId("pif"),
-        client_id: c.id,
-        integration_session: 1,
-        responses: {
-          "What feels most alive right now?": "A strange lightness — like I put down a bag I didn't know I was carrying.",
-          "What are you noticing in your body?": "Shoulders looser. Sleeping deeper than usual.",
-          "What's coming up that you want to explore?": "The people-pleasing pattern. Also curiosity about why I avoid conflict with my brother specifically.",
-        },
-        submitted_at: daysAgo(3),
-      },
-    ],
+    postIntegrationForms: [],
     tasks: [
-      { id: nextId("task"), client_id: c.id, practitioner_id: PRACTITIONER.id, title: "Follow-up Session (within 72 hrs)", task_type: "session_prep", due_at: daysFromNow(1), status: "pending", assigned_to: "practitioner" },
+      { id: nextId("task"), client_id: c.id, practitioner_id: PRACTITIONER.id, title: "Review Marcus's check-in before tomorrow", task_type: "session_prep", due_at: daysFromNow(1), status: "pending", assigned_to: "practitioner" },
     ],
     messages: [
-      { id: nextId("msg"), client_id: c.id, sender: "client", body: "Submitted the post-integration form. The people-pleasing thing keeps coming up everywhere I look this week.", created_at: daysAgo(3) },
-      { id: nextId("msg"), client_id: c.id, sender: "practitioner", body: "That's really common right after — the insight wants to get tested in real life. Let's dig into it tomorrow.", created_at: daysAgo(3) },
+      { id: nextId("msg"), client_id: c.id, sender: "client", body: "Did it. Used the script almost word for word. Talk tomorrow.", created_at: daysAgo(3) },
+      { id: nextId("msg"), client_id: c.id, sender: "practitioner", body: "Huge step, Marcus. We'll look at what made it work so you can do it again.", created_at: daysAgo(3) },
     ],
     portalAssignments: [
-      { id: nextId("pa"), client_id: c.id, assignment_type: "form", title: "Post Integration Form", status: "completed", completed_at: daysAgo(3) },
-      { id: nextId("pa"), client_id: c.id, assignment_type: "journaling_prompt", title: "Notice one moment today you people-pleased — what did it cost you?", status: "in_progress" },
+      { id: nextId("pa"), client_id: c.id, assignment_type: "action_item", title: "Revisit equipment decision with Dad", status: "completed", completed_at: daysAgo(3) },
+      { id: nextId("pa"), client_id: c.id, assignment_type: "action_item", title: "Announce decision to plant managers", status: "in_progress" },
     ],
     payments: [
-      { id: nextId("pay"), client_id: c.id, amount: 2000, paid_at: daysAgo(19).slice(0, 10), method: "Bank Transfer" },
+      { id: nextId("pay"), client_id: c.id, amount: 6000, paid_at: daysAgo(44).slice(0, 10), method: "Bank Transfer" },
     ],
   };
 }
 
 // ---------------------------------------------------------------------------
-// CLIENT 5 — Sarah Klein — full journey complete, journey closed
+// CLIENT 5 — Sarah Klein — engagement complete, 30-day follow-up booked
 // ---------------------------------------------------------------------------
 function buildSarah(): SeedBundle {
   const c = client({
@@ -678,46 +598,46 @@ function buildSarah(): SeedBundle {
     phone: "(512) 555-0166",
     status: "journey_closed",
     current_phase: "closed",
-    referral_source_id: REFERRAL_SOURCES[3].id,
-    amount_paid: 2400,
-    package_value: 2400,
-    created_at: daysAgo(60),
+    referral_source_id: REFERRAL_SOURCES[0].id,
+    notes: "Founder & CEO, Kiln & Co. (consumer brand, 30 people). Completed a 6-month engagement.",
+    amount_paid: 12000,
+    created_at: daysAgo(200),
   });
 
-  const gap: GrowthActionPlan = {
+  const plan: GrowthActionPlan = {
     id: nextId("gap"),
     client_id: c.id,
     thirty_day_commitments: [
-      "Hold one weekly 'undefended conversation' with my sister — no deflecting with humor.",
-      "Keep a 3-line nightly journal tracking moments I chose honesty over comfort.",
-      "Resume pottery class on Thursdays — non-negotiable calendar block.",
+      "Run the monthly leadership review without stepping in to solve problems.",
+      "Finalize the VP of Sales hire by the end of the month.",
+      "Take the full Friday off every other week.",
     ],
     behavioral_experiments: [
-      "Say 'I need a minute to think' instead of immediately agreeing to requests, for one week.",
-      "Sit with one uncomfortable email for 24 hours before responding, instead of firing back same-day.",
+      "In every 1:1, ask 'What do you recommend?' before offering an answer.",
+      "Hold one decision for 24 hours instead of deciding in the meeting.",
     ],
     daily_practices: [
-      "5-minute morning check-in: 'What am I actually feeling right now?'",
-      "Evening body scan before bed.",
+      "15-minute planning block before opening email.",
+      "Write the day's one most important outcome on a sticky note.",
     ],
     reflection_questions: [
-      "Where did I shrink myself today to keep the peace?",
-      "What would it look like to take up the right amount of space, not too little or too much?",
+      "Where did I rescue someone today instead of coaching them?",
+      "What am I doing that someone on my team should own?",
     ],
     accountability_commitments: [
-      "Weekly text check-in with integration buddy from men's/women's circle.",
-      "30-day follow-up call with practitioner scheduled.",
+      "Monthly check-in with her Vistage chair on the plan.",
+      "30-day follow-up call with the coach.",
     ],
     created_at: daysAgo(8),
   };
 
-  const growthPlanSummary: AiSummary = {
+  const planSummary: AiSummary = {
     id: nextId("ai"),
     client_id: c.id,
     summary_type: "growth_action_plan",
     title: "Action Plan",
-    content: gap as unknown as Record<string, unknown>,
-    model: "gpt-4o (mock)",
+    content: plan as unknown as Record<string, unknown>,
+    model: "demo",
     created_at: daysAgo(8),
   };
 
@@ -727,14 +647,11 @@ function buildSarah(): SeedBundle {
       "intake_complete",
       "preparation_complete",
       "journey_complete",
-      "check_in_12hr_complete",
-      "integration_1_complete",
-      "integration_2_complete",
       "growth_action_plan_complete",
       "journey_closed",
     ]),
     documents: docSet(c.id, {
-
+      participant_screening_form: "reviewed",
       informed_consent: "signed",
       harm_reduction_services_agreement: "signed",
       client_services_agreement: "signed",
@@ -742,52 +659,48 @@ function buildSarah(): SeedBundle {
       journey_brief: "reviewed",
       session_notes: "uploaded",
       post_integration_form: "reviewed",
-      post_integration_form_updated: "reviewed",
-      check_in_12hr_form: "reviewed",
-      integration_summary_1: "uploaded",
-      integration_summary_2: "uploaded",
       growth_action_plan: "uploaded",
     }),
     sessions: [
-      { id: nextId("sess"), client_id: c.id, practitioner_id: PRACTITIONER.id, session_type: "intake_assessment", scheduled_at: daysAgo(58), duration_minutes: 90, status: "completed" },
-      { id: nextId("sess"), client_id: c.id, practitioner_id: PRACTITIONER.id, session_type: "preparation", scheduled_at: daysAgo(45), duration_minutes: 90, status: "completed" },
-      { id: nextId("sess"), client_id: c.id, practitioner_id: PRACTITIONER.id, session_type: "harm_reduction_support", scheduled_at: daysAgo(35), duration_minutes: 480, status: "completed" },
-      { id: nextId("sess"), client_id: c.id, practitioner_id: PRACTITIONER.id, session_type: "integration_1", scheduled_at: daysAgo(33), duration_minutes: 60, status: "completed" },
-      { id: nextId("sess"), client_id: c.id, practitioner_id: PRACTITIONER.id, session_type: "integration_2", scheduled_at: daysAgo(25), duration_minutes: 60, status: "completed" },
-      { id: nextId("sess"), client_id: c.id, practitioner_id: PRACTITIONER.id, session_type: "other", scheduled_at: daysFromNow(3), duration_minutes: 45, status: "scheduled" },
+      { id: nextId("sess"), client_id: c.id, practitioner_id: PRACTITIONER.id, session_type: "intake_assessment", scheduled_at: daysAgo(195), duration_minutes: 90, status: "completed", location: "Zoom" },
+      { id: nextId("sess"), client_id: c.id, practitioner_id: PRACTITIONER.id, session_type: "preparation", scheduled_at: daysAgo(180), duration_minutes: 90, status: "completed", location: "Zoom" },
+      coachingSession(c.id, daysAgo(150), "completed"),
+      coachingSession(c.id, daysAgo(120), "completed"),
+      coachingSession(c.id, daysAgo(90), "completed"),
+      coachingSession(c.id, daysAgo(60), "completed"),
+      coachingSession(c.id, daysAgo(30), "completed"),
+      coachingSession(c.id, daysAgo(10), "completed"),
+      { id: nextId("sess"), client_id: c.id, practitioner_id: PRACTITIONER.id, session_type: "other", scheduled_at: daysFromNow(3), duration_minutes: 45, status: "scheduled", location: "Zoom" },
     ],
     transcripts: [
-      { id: nextId("transcript"), client_id: c.id, source: "upload", raw_text: "Follow-up integration transcript uploaded for practitioner review.", created_at: daysAgo(24) },
+      { id: nextId("transcript"), client_id: c.id, source: "upload", raw_text: "Final session transcript (Fathom) uploaded for coach review.", created_at: daysAgo(10) },
     ],
-    aiSummaries: [growthPlanSummary],
+    aiSummaries: [planSummary],
     memory: [
-      { id: nextId("mem"), client_id: c.id, item_type: "theme", content: "Pattern of self-shrinking to maintain harmony, especially with family.", phase: "harm_reduction_session", status: "resolved", created_at: daysAgo(35) },
-      { id: nextId("mem"), client_id: c.id, item_type: "commitment", content: "Resume pottery practice as an act of self-expression.", phase: "integration_2", status: "in_progress", created_at: daysAgo(8) },
-      { id: nextId("mem"), client_id: c.id, item_type: "integration_outcome", content: "Reported having her first 'undefended conversation' with her sister 12 days post-journey.", phase: "integration_2", status: "resolved", created_at: daysAgo(8) },
+      { id: nextId("mem"), client_id: c.id, item_type: "theme", content: "Rescues her team instead of coaching them.", phase: "harm_reduction_session", status: "resolved", created_at: daysAgo(120) },
+      { id: nextId("mem"), client_id: c.id, item_type: "commitment", content: "Hire a VP of Sales so she can step back from deals.", phase: "harm_reduction_session", status: "in_progress", created_at: daysAgo(30) },
+      { id: nextId("mem"), client_id: c.id, item_type: "integration_outcome", content: "Leadership team now runs the monthly review; she attends as a participant.", phase: "closed", status: "resolved", created_at: daysAgo(10) },
     ],
     sessionNotes: [],
-    checkIns: [
-      { id: nextId("ci"), client_id: c.id, check_in_type: "12_hour", emotional_state: "Open, soft, occasionally overwhelmed by gratitude.", physical_state: "Good — well rested.", immediate_insights: "I don't have to earn rest.", support_needs: "Just check-ins, nothing more.", safety_concerns: "None.", submitted_by: "client", submitted_at: daysAgo(34) },
-    ],
+    checkIns: [],
     postIntegrationForms: [
-      { id: nextId("pif"), client_id: c.id, integration_session: 1, responses: { "What feels most alive right now?": "A new tenderness toward myself.", "What's coming up?": "Old story that I have to earn rest and love." }, submitted_at: daysAgo(33) },
-      { id: nextId("pif"), client_id: c.id, integration_session: 2, responses: { "What's shifted in the last week?": "I told my sister something true instead of deflecting with a joke — first time ever.", "What feels unresolved?": "Still nervous about how my mother will react if I keep being this honest." }, submitted_at: daysAgo(25) },
+      { id: nextId("pif"), client_id: c.id, integration_session: 2, responses: { "What has changed since we started?": "I'm no longer in every decision. The team is making calls I would have made — and some better ones.", "What still feels unresolved?": "Sales still leans on me for big deals. The VP hire should fix that." }, submitted_at: daysAgo(12) },
     ],
-    growthActionPlan: gap,
+    growthActionPlan: plan,
     tasks: [
       { id: nextId("task"), client_id: c.id, practitioner_id: PRACTITIONER.id, title: "30-Day Follow-Up Call", task_type: "follow_up", due_at: daysFromNow(3), status: "pending", assigned_to: "practitioner" },
     ],
     messages: [
-      { id: nextId("msg"), client_id: c.id, sender: "client", body: "Wanted to say thank you — the pottery class restart has been such a small, good thing. Feels symbolic.", created_at: daysAgo(3) },
-      { id: nextId("msg"), client_id: c.id, sender: "practitioner", body: "I love hearing that. Small, chosen things add up. See you on the 30-day call!", created_at: daysAgo(3) },
+      { id: nextId("msg"), client_id: c.id, sender: "client", body: "Signed the VP of Sales offer today. Two Fridays off so far — the business didn't fall apart.", created_at: daysAgo(3) },
+      { id: nextId("msg"), client_id: c.id, sender: "practitioner", body: "That's the whole engagement in two sentences. Proud of you — see you on the 30-day call.", created_at: daysAgo(3) },
     ],
     portalAssignments: [
-      { id: nextId("pa"), client_id: c.id, assignment_type: "integration_exercise", title: "Weekly undefended conversation practice", status: "in_progress" },
-      { id: nextId("pa"), client_id: c.id, assignment_type: "homework", title: "Resume pottery class on Thursdays", status: "completed", completed_at: daysAgo(10) },
+      { id: nextId("pa"), client_id: c.id, assignment_type: "action_item", title: "Finalize VP of Sales hire", status: "completed", completed_at: daysAgo(3) },
+      { id: nextId("pa"), client_id: c.id, assignment_type: "homework", title: "Every-other-Friday off", status: "in_progress" },
     ],
     payments: [
-      { id: nextId("pay"), client_id: c.id, amount: 1200, paid_at: daysAgo(58).slice(0, 10), method: "Bank Transfer" },
-      { id: nextId("pay"), client_id: c.id, amount: 1200, paid_at: daysAgo(35).slice(0, 10), method: "Bank Transfer" },
+      { id: nextId("pay"), client_id: c.id, amount: 6000, paid_at: daysAgo(195).slice(0, 10), method: "Bank Transfer" },
+      { id: nextId("pay"), client_id: c.id, amount: 6000, paid_at: daysAgo(100).slice(0, 10), method: "Bank Transfer" },
     ],
   };
 }

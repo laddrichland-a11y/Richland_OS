@@ -15,18 +15,14 @@ export interface RequiredFormDefinition {
   sessionTypes: SessionType[];
 }
 
-// One canonical map owns which digital form belongs to each journey stage.
-// Legacy upload-only document types such as post_integration_form are not
-// requirements: Follow-up Session/2 are the current editable templates.
+// One canonical map owns which digital form belongs to each coaching stage.
 export const REQUIRED_FORM_DEFINITIONS: readonly RequiredFormDefinition[] = [
   { documentType: "participant_screening_form", phase: "intake", sessionTypes: ["intake_assessment"] },
   { documentType: "informed_consent", phase: "intake", sessionTypes: ["intake_assessment"] },
   { documentType: "harm_reduction_services_agreement", phase: "intake", sessionTypes: ["intake_assessment"] },
   { documentType: "client_services_agreement", phase: "intake", sessionTypes: ["intake_assessment"] },
+  { documentType: "leadership_self_assessment", phase: "intake", sessionTypes: ["intake_assessment"] },
   { documentType: "preparation_navigation_plan", phase: "preparation", sessionTypes: ["preparation"] },
-  { documentType: "preparation_education_session", phase: "preparation", sessionTypes: ["preparation"] },
-  { documentType: "integration_session_1", phase: "integration_1", sessionTypes: ["integration_1"] },
-  { documentType: "integration_session_2", phase: "integration_2", sessionTypes: ["integration_2"] },
 ];
 
 const PHASE_ORDER: JourneyPhase[] = [

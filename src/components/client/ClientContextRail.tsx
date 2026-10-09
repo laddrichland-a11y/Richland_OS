@@ -186,7 +186,7 @@ export default function ClientContextRail({
           className="wn-rail-text-link"
           href={`/clients/${client.id}?tab=${encodeURIComponent("Journey & AI")}`}
         >
-          View journey <ChevronRight aria-hidden="true" />
+          View stages <ChevronRight aria-hidden="true" />
         </a>
       </section>
 
