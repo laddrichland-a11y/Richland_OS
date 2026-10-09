@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus, Trash2 } from "@/components/ui/HeartfulIcon";
+import { Plus, Trash2 } from "@/components/ui/RichlandIcon";
 import { updatePractitionerAction } from "@/lib/actions";
 import type { PaymentMethod, PaymentMethodKind } from "@/lib/types";
 

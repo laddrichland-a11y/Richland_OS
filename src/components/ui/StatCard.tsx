@@ -1,4 +1,4 @@
-import type { HeartfulIcon } from "@/components/ui/HeartfulIcon";
+import type { RichlandIcon } from "@/components/ui/RichlandIcon";
 import Link from "next/link";
 import { cx } from "@/lib/utils";
 
@@ -12,7 +12,7 @@ export default function StatCard({
 }: {
   label: string;
   value: string | number;
-  icon: HeartfulIcon;
+  icon: RichlandIcon;
   accent?: "clay" | "sage" | "plum" | "ink";
   sub?: string;
   href?: string;

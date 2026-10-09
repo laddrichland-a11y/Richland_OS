@@ -129,10 +129,10 @@ class MockStore {
 }
 
 // Use a global to survive Next.js dev-server hot reload of this module.
-const globalForStore = globalThis as unknown as { __heartfulStore?: MockStore };
+const globalForStore = globalThis as unknown as { __richlandStore?: MockStore };
 
 export const store: MockStore =
-  globalForStore.__heartfulStore ?? (globalForStore.__heartfulStore = new MockStore());
+  globalForStore.__richlandStore ?? (globalForStore.__richlandStore = new MockStore());
 
 // Self-heal: if this file gets edited to add a new array field (like
 // formTemplates/formSubmissions were) while the dev server is already

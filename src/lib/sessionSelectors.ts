@@ -78,7 +78,7 @@ export function selectActiveSession<T extends SessionSelectionInput>(
 }
 
 /**
- * Heartful's canonical appointment choice: the current live session when one
+ * Richland's canonical appointment choice: the current live session when one
  * exists, otherwise the nearest valid future scheduled session.
  */
 export function selectCurrentOrNextSession<T extends SessionSelectionInput>(

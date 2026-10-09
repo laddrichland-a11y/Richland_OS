@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { PanelLeftClose, PanelLeftOpen } from "@/components/ui/HeartfulIcon";
+import { PanelLeftClose, PanelLeftOpen } from "@/components/ui/RichlandIcon";
 
-const CONTEXT_RAIL_COLLAPSED_KEY = "heartful-client-context-collapsed";
+const CONTEXT_RAIL_COLLAPSED_KEY = "richland-client-context-collapsed";
 
 export default function ClientWorkspace({ children, rail }: { children: ReactNode; rail: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);

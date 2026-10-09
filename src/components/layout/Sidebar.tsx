@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import HeartfulBrand from "@/components/ui/HeartfulBrand";
+import RichlandBrand from "@/components/ui/RichlandBrand";
 import SidebarNatureMessage from "@/components/layout/SidebarNatureMessage";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -15,7 +15,7 @@ import {
   ListChecks,
   PanelLeftClose,
   PanelLeftOpen,
-} from "@/components/ui/HeartfulIcon";
+} from "@/components/ui/RichlandIcon";
 import { cx } from "@/lib/utils";
 import { getActiveClientCountAction } from "@/lib/actions";
 
@@ -31,7 +31,7 @@ const NAV = [
 
 // Keep the navigation count aligned with the dashboard's active-client total.
 const ACTIVE_CLIENT_POLL_MS = 20_000;
-const SIDEBAR_COLLAPSED_KEY = "heartful-sidebar-collapsed";
+const SIDEBAR_COLLAPSED_KEY = "richland-sidebar-collapsed";
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -97,9 +97,9 @@ export default function Sidebar() {
       <Link
         href="/dashboard"
         className="sidebar-brand flex items-center gap-2 px-5 py-5 transition-colors hover:bg-ink-50"
-        aria-label="Heartful dashboard"
+        aria-label="Richland dashboard"
       >
-        <HeartfulBrand />
+        <RichlandBrand />
       </Link>
       <nav id="primary-sidebar-navigation" className="sidebar-nav flex-1 px-3 py-4 space-y-1">
         {NAV.map((item) => {

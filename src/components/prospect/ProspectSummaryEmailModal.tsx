@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { X, Mail, Copy, Check } from "@/components/ui/HeartfulIcon";
+import { X, Mail, Copy, Check } from "@/components/ui/RichlandIcon";
 import { buildProspectSummaryEmail } from "@/lib/emailTemplates";
 
 export default function ProspectSummaryEmailModal({
@@ -77,7 +77,7 @@ export default function ProspectSummaryEmailModal({
           </div>
         </div>
         <p className="text-xs text-ink-400 mt-3">
-          Heartful OS doesn&apos;t send email itself — open it in your mail app, or copy the text below to send it yourself.
+          Richland OS doesn&apos;t send email itself — open it in your mail app, or copy the text below to send it yourself.
         </p>
         <div className="flex justify-end gap-2 pt-3">
           <button

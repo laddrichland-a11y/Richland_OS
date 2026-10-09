@@ -19,7 +19,7 @@ const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI;
 
 export const isGoogleOAuthConfigured = Boolean(CLIENT_ID && CLIENT_SECRET && REDIRECT_URI);
 
-export const HEARTFUL_CALENDAR_NAME = "Heartful OS";
+export const RICHLAND_CALENDAR_NAME = "Richland OS";
 export const PRIMARY_CALENDAR_ID = "primary";
 
 const SCOPES = ["https://www.googleapis.com/auth/calendar"];
@@ -116,28 +116,28 @@ function calendarClient(auth: InstanceType<typeof google.auth.OAuth2>) {
   return google.calendar({ version: "v3", auth });
 }
 
-// Finds (or creates, on first connect) the dedicated "Heartful OS" calendar
+// Finds (or creates, on first connect) the dedicated "Richland OS" calendar
 // in the practitioner's Google account. Sessions and ProspectCalls are
 // mirrored here so they don't clutter their personal/primary calendar.
-export async function ensureHeartfulCalendar(auth: InstanceType<typeof google.auth.OAuth2>): Promise<string> {
+export async function ensureRichlandCalendar(auth: InstanceType<typeof google.auth.OAuth2>): Promise<string> {
   const settings = await data.getGoogleCalendarSettings();
-  if (settings.heartful_calendar_id) return settings.heartful_calendar_id;
+  if (settings.richland_calendar_id) return settings.richland_calendar_id;
 
   const cal = calendarClient(auth);
   const list = await cal.calendarList.list();
-  const existing = list.data.items?.find((c) => c.summary === HEARTFUL_CALENDAR_NAME);
+  const existing = list.data.items?.find((c) => c.summary === RICHLAND_CALENDAR_NAME);
   let calendarId: string;
   if (existing?.id) {
     calendarId = existing.id;
   } else {
-    const created = await cal.calendars.insert({ requestBody: { summary: HEARTFUL_CALENDAR_NAME } });
+    const created = await cal.calendars.insert({ requestBody: { summary: RICHLAND_CALENDAR_NAME } });
     calendarId = created.data.id!;
   }
-  await data.saveGoogleCalendarSettings({ heartful_calendar_id: calendarId });
+  await data.saveGoogleCalendarSettings({ richland_calendar_id: calendarId });
   return calendarId;
 }
 
-export interface HeartfulEventInput {
+export interface RichlandEventInput {
   title: string;
   description?: string;
   startIso: string;
@@ -150,10 +150,10 @@ export interface HeartfulEventInput {
 // with the local record's id in extendedProperties so the pull side of sync
 // can recognize it as ours (vs. an event the practitioner created directly
 // in Google) and avoid re-importing our own writes.
-export async function upsertHeartfulEvent(
+export async function upsertRichlandEvent(
   auth: InstanceType<typeof google.auth.OAuth2>,
   calendarId: string,
-  input: HeartfulEventInput,
+  input: RichlandEventInput,
   existingEventId?: string
 ): Promise<calendar_v3.Schema$Event> {
   const cal = calendarClient(auth);
@@ -166,8 +166,8 @@ export async function upsertHeartfulEvent(
     end: { dateTime: end.toISOString() },
     extendedProperties: {
       private: {
-        heartfulId: input.localId,
-        heartfulKind: input.kind,
+        richlandId: input.localId,
+        richlandKind: input.kind,
       },
     },
   };
@@ -191,7 +191,7 @@ export async function upsertHeartfulEvent(
   return res.data;
 }
 
-export async function deleteHeartfulEvent(
+export async function deleteRichlandEvent(
   auth: InstanceType<typeof google.auth.OAuth2>,
   calendarId: string,
   eventId: string
@@ -207,7 +207,7 @@ export async function deleteHeartfulEvent(
   }
 }
 
-// Removes every event on the Heartful calendar tagged with this local record
+// Removes every event on the Richland calendar tagged with this local record
 // id, whether or not we have its event id stored locally.
 //
 // Why the lookup rather than just deleting google_event_id: the push helpers
@@ -216,9 +216,9 @@ export async function deleteHeartfulEvent(
 // cancel-push reads the record before the create-push has written
 // google_event_id back, it has no id to delete and the event is orphaned on
 // Google forever — the exact "I cancelled it but it's still on my calendar"
-// symptom. Sweeping by the heartfulId tag catches that event regardless of
+// symptom. Sweeping by the richlandId tag catches that event regardless of
 // what the local record knows about it.
-export async function deleteHeartfulEventsByLocalId(
+export async function deleteRichlandEventsByLocalId(
   auth: InstanceType<typeof google.auth.OAuth2>,
   calendarId: string,
   localId: string
@@ -227,13 +227,13 @@ export async function deleteHeartfulEventsByLocalId(
   try {
     const res = await cal.events.list({
       calendarId,
-      privateExtendedProperty: [`heartfulId=${localId}`],
+      privateExtendedProperty: [`richlandId=${localId}`],
       showDeleted: false,
       singleEvents: true,
       maxResults: 50,
     });
     for (const event of res.data.items ?? []) {
-      if (event.id) await deleteHeartfulEvent(auth, calendarId, event.id);
+      if (event.id) await deleteRichlandEvent(auth, calendarId, event.id);
     }
   } catch (err) {
     console.error(`Failed to sweep Google Calendar events for ${localId}:`, err);

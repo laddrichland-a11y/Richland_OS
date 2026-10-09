@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { X, MessageSquare, Copy, Check } from "@/components/ui/HeartfulIcon";
+import { X, MessageSquare, Copy, Check } from "@/components/ui/RichlandIcon";
 import { buildJourneySummaryReadyText } from "@/lib/smsTemplates";
 import { logJourneySummaryTextAction } from "@/lib/actions";
 
@@ -70,7 +70,7 @@ export default function JourneySummaryTextModal({
           </div>
         </div>
         <p className="text-xs text-ink-400 mt-3">
-          Heartful OS doesn&apos;t send texts itself yet — open it in Messages, or copy the text below to send it yourself.
+          Richland OS doesn&apos;t send texts itself yet — open it in Messages, or copy the text below to send it yourself.
         </p>
         <div className="flex justify-end gap-2 pt-3">
           <button

@@ -10,7 +10,7 @@ import {
   ShieldCheck,
   ArrowRight,
   Loader2,
-} from "@/components/ui/HeartfulIcon";
+} from "@/components/ui/RichlandIcon";
 import { Profile } from "@/lib/types";
 
 // ---------------------------------------------------------------------------

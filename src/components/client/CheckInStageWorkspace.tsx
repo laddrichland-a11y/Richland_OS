@@ -8,7 +8,7 @@ import SummaryVersions from "@/components/ai/SummaryVersions";
 import { useStageNotes } from "@/components/ai/useStageNotes";
 import ActionCardHeader from "@/components/client/ActionCardHeader";
 import StageFormsCard from "@/components/client/StageFormsCard";
-import { ScrollText, Sparkles } from "@/components/ui/HeartfulIcon";
+import { ScrollText, Sparkles } from "@/components/ui/RichlandIcon";
 import { formatDateTime } from "@/lib/utils";
 
 const LEGACY_FIELDS: { key: keyof CheckIn; label: string }[] = [

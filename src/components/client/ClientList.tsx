@@ -2,7 +2,7 @@
 
 import ClientAvatarImage from "@/components/client/ClientAvatarImage";
 import Link from "next/link";
-import { Search, SlidersHorizontal } from "@/components/ui/HeartfulIcon";
+import { Search, SlidersHorizontal } from "@/components/ui/RichlandIcon";
 import JourneyProgressBar from "@/components/JourneyProgressBar";
 import FilterSelect from "@/components/client/FilterSelect";
 import { Client, ClientStatus, JourneyMilestone, Session } from "@/lib/types";

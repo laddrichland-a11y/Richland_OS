@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import { CalendarClock, Check, CheckCircle2, CircleDot, Loader2, Sparkles, X } from "@/components/ui/HeartfulIcon";
+import { CalendarClock, Check, CheckCircle2, CircleDot, Loader2, Sparkles, X } from "@/components/ui/RichlandIcon";
 import AiGenerateButton from "@/components/ai/AiGenerateButton";
 import { SessionBriefContent } from "@/components/ai/SummaryCard";
 import { AiSummary } from "@/lib/types";

@@ -1,4 +1,4 @@
-// Plain-text templates for client-facing emails. Heartful OS has no
+// Plain-text templates for client-facing emails. Richland OS has no
 // outbound mail server wired up (no SMTP/Resend/etc. credentials — see
 // Settings), so these are composed here and handed off to the user's own
 // email client via a mailto: link, or copied to the clipboard. No email is

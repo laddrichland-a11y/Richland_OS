@@ -8,13 +8,13 @@ import { PromptPair } from "./prompts";
 // was missing or the call failed — which produced generic briefs that looked
 // real but ignored everything the practitioner had typed. Now a missing key
 // or a failed call is a clear error the UI shows ("nothing was generated").
-// The canned answers are only used when HEARTFUL_ALLOW_MOCK_AI=1 is set
+// The canned answers are only used when RICHLAND_ALLOW_MOCK_AI=1 is set
 // deliberately (e.g. recording a demo with no key).
 // ---------------------------------------------------------------------------
 
 const apiKey = process.env.ANTHROPIC_API_KEY;
 const anthropic = apiKey ? new Anthropic({ apiKey }) : null;
-const allowMock = process.env.HEARTFUL_ALLOW_MOCK_AI === "1";
+const allowMock = process.env.RICHLAND_ALLOW_MOCK_AI === "1";
 
 // claude-haiku-4-5-20251001 — fast and available on all API tiers.
 // Upgrade to "claude-sonnet-4-6" if your API key has access to that model.

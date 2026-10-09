@@ -6,17 +6,17 @@ import { ThemeBootstrap } from "@/components/settings/ThemeSettings";
 import { getPractitioner } from "@/lib/data";
 
 export const metadata: Metadata = {
-  title: "Heartful OS",
+  title: "Richland OS",
   description: "Client journey management for psychedelic harm reduction and integration practitioners.",
   manifest: "/manifest.webmanifest",
   // Lets clients "Add to Home Screen" on iOS with the real logo (via
   // apple-icon.tsx) and open as a standalone app rather than a browser tab.
   // apple-mobile-web-app-title also keeps the home-screen label as
-  // "Heartful OS" regardless of which page happened to be open when they
+  // "Richland OS" regardless of which page happened to be open when they
   // added it (inner pages set their own dynamic <title>).
   appleWebApp: {
     capable: true,
-    title: "Heartful OS",
+    title: "Richland OS",
     statusBarStyle: "default",
   },
 };
@@ -29,11 +29,11 @@ const themeBootstrapScript = `(() => {
   const root = document.documentElement;
   let theme = "golden-canopy";
   try {
-    const saved = window.localStorage.getItem("heartful-theme");
+    const saved = window.localStorage.getItem("richland-theme");
     if (saved === "golden-canopy" || saved === "mushroom-grove" || saved === "original" || saved === "dark") {
       theme = saved;
     } else if (saved === "light") {
-      window.localStorage.setItem("heartful-theme", "golden-canopy");
+      window.localStorage.setItem("richland-theme", "golden-canopy");
     } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
       theme = "dark";
     }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "@/components/ui/HeartfulIcon";
+import { ArrowLeft } from "@/components/ui/RichlandIcon";
 
 export default function BackButton({ label = "Back" }: { label?: string }) {
   const router = useRouter();

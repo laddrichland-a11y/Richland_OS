@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { X, LayoutDashboard, Users, CalendarDays, BarChart3, Settings, HeartHandshake, UserPlus, ListChecks } from "@/components/ui/HeartfulIcon";
+import { X, LayoutDashboard, Users, CalendarDays, BarChart3, Settings, HeartHandshake, UserPlus, ListChecks } from "@/components/ui/RichlandIcon";
 import { cx } from "@/lib/utils";
 import { useRole } from "@/components/RoleContext";
 
@@ -30,7 +30,7 @@ export default function MobileNav({ open, onClose }: { open: boolean; onClose: (
             <div className="h-8 w-8 rounded-lg bg-clay-500 text-white flex items-center justify-center">
               <HeartHandshake className="h-4.5 w-4.5" />
             </div>
-            <span className="font-semibold text-ink-900">Heartful OS</span>
+            <span className="font-semibold text-ink-900">Richland OS</span>
           </div>
           <button onClick={onClose} className="mobile-nav-close p-1.5 rounded-lg hover:bg-ink-50" aria-label="Close navigation">
             <X className="h-5 w-5" />

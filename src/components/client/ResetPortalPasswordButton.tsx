@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { KeyRound } from "@/components/ui/HeartfulIcon";
+import { KeyRound } from "@/components/ui/RichlandIcon";
 import { resetPortalPasswordAction } from "@/lib/actions";
 
 // Lets the practitioner clear a client's forgotten portal password — there's

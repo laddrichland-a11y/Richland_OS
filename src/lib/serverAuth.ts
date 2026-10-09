@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import * as data from "@/lib/data";
 import type { Client, Profile, Prospect } from "@/lib/types";
 
-const AUTH_COOKIE = "heartful_auth";
+const AUTH_COOKIE = "richland_auth";
 const PORTAL_UNLOCK_PREFIX = "portal_unlock_";
 
 export class AuthorizationError extends Error {

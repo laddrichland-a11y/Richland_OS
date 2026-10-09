@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import ClientAvatarImage from "@/components/client/ClientAvatarImage";
 import MonthYearPicker from "@/components/calendar/MonthYearPicker";
 import Link from "next/link";
-import { CalendarDays, ChevronLeft, ChevronRight, Plus, Clock3, ArrowRight } from "@/components/ui/HeartfulIcon";
+import { CalendarDays, ChevronLeft, ChevronRight, Plus, Clock3, ArrowRight } from "@/components/ui/RichlandIcon";
 import type { Session } from "@/lib/types";
 import { clientAvatarSrc, formatDateTime, initials, SESSION_TYPE_LABELS } from "@/lib/utils";
 import { selectSessionTimeline } from "@/lib/sessionSelectors";

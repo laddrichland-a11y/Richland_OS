@@ -11,7 +11,7 @@ import {
   startLiveSessionAction,
   endLiveSessionAction,
 } from "@/lib/actions";
-import { Users, Pencil, Radio, Loader2, StopCircle } from "@/components/ui/HeartfulIcon";
+import { Users, Pencil, Radio, Loader2, StopCircle } from "@/components/ui/RichlandIcon";
 
 export default function FullPageForm({
   clientId,

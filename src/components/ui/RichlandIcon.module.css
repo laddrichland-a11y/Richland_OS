@@ -28,12 +28,12 @@
 }
 
 .line {
-  mask-image: var(--heartful-icon-line);
+  mask-image: var(--richland-icon-line);
   opacity: 1;
 }
 
 .filled {
-  mask-image: var(--heartful-icon-filled);
+  mask-image: var(--richland-icon-filled);
   opacity: 0;
 }
 

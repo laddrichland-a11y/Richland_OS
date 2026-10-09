@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Loader2, StickyNote, X } from "@/components/ui/HeartfulIcon";
+import { CheckCircle2, Loader2, StickyNote, X } from "@/components/ui/RichlandIcon";
 import { addClientQuickNoteAction } from "@/lib/actions";
 import { formatDateTime } from "@/lib/utils";
 

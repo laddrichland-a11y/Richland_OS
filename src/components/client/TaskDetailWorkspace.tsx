@@ -4,7 +4,7 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Task } from "@/lib/types";
 import { cx, formatDate } from "@/lib/utils";
-import { CheckCircle2, Clock, User, Tag, Loader2, Pencil, Save } from "@/components/ui/HeartfulIcon";
+import { CheckCircle2, Clock, User, Tag, Loader2, Pencil, Save } from "@/components/ui/RichlandIcon";
 import { completeTaskAction, updateTaskAction } from "@/lib/actions";
 
 const TASK_TYPE_LABELS: Record<string, string> = {

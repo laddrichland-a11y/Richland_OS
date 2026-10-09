@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import ClientAvatarImage from "@/components/client/ClientAvatarImage";
 import Link from "next/link";
-import { Sparkles, Loader2, CalendarClock, ArrowRight, ChevronRight, ListChecks, IntegrationLink } from "@/components/ui/HeartfulIcon";
+import { Sparkles, Loader2, CalendarClock, ArrowRight, ChevronRight, ListChecks, IntegrationLink } from "@/components/ui/RichlandIcon";
 import SummaryCard from "@/components/ai/SummaryCard";
 import FilterSelect from "@/components/client/FilterSelect";
 import { clientAvatarSrc, formatDateTime, initials } from "@/lib/utils";

@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, Sparkles } from "@/components/ui/HeartfulIcon";
+import { Check, Sparkles } from "@/components/ui/RichlandIcon";
 
-const THEME_KEY = "heartful-theme";
+const THEME_KEY = "richland-theme";
 export type Theme = "golden-canopy" | "mushroom-grove" | "original" | "dark";
 
 export const THEMES: { value: Theme; label: string }[] = [
@@ -117,7 +117,7 @@ export default function ThemeSettings() {
       <div className="settings-row settings-theme-row">
         <div className="settings-theme-intro">
           <h3 className="settings-heading"><Sparkles aria-hidden="true" />Theme</h3>
-          <p className="settings-description">Choose how Heartful looks across your workspace.</p>
+          <p className="settings-description">Choose how Richland looks across your workspace.</p>
         </div>
         <ThemeOptions theme={theme} onSelect={selectTheme} />
       </div>

@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { disconnectGoogleCalendarAction, syncGoogleCalendarNowAction } from "@/lib/actions";
 import { formatDateTime } from "@/lib/utils";
-import { CalendarDays } from "@/components/ui/HeartfulIcon";
+import { CalendarDays } from "@/components/ui/RichlandIcon";
 
 export default function GoogleCalendarSettings({
   configured, connected, connectedEmail, lastSyncedAt, lastSyncError, flash,
@@ -54,7 +54,7 @@ export default function GoogleCalendarSettings({
               {connected ? "Connected" : "Not connected"}
             </span>
           </div>
-          <p className="settings-description">Keep Heartful sessions and your Google Calendar in sync.</p>
+          <p className="settings-description">Keep Richland sessions and your Google Calendar in sync.</p>
           {connected && connectedEmail && <p className="settings-connected-email">{connectedEmail}</p>}
         </div>
         <div className="settings-calendar-controls">

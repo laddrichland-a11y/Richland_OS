@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ListChecks } from "@/components/ui/HeartfulIcon";
+import { ListChecks } from "@/components/ui/RichlandIcon";
 import { getClient, getMilestones, getSessions } from "@/lib/data";
 import { getClientJourneyProgress } from "@/lib/utils";
 import { JourneyStageNav, PhaseNavKey } from "@/components/client/JourneyStageNav";

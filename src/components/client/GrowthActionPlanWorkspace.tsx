@@ -7,7 +7,7 @@ import SummaryVersions from "@/components/ai/SummaryVersions";
 import { useStageNotes } from "@/components/ai/useStageNotes";
 import AiGenerateButton from "@/components/ai/AiGenerateButton";
 import ActionCardHeader from "@/components/client/ActionCardHeader";
-import { ScrollText, Trash2 } from "@/components/ui/HeartfulIcon";
+import { ScrollText, Trash2 } from "@/components/ui/RichlandIcon";
 import { deleteGrowthActionPlanAction } from "@/lib/actions";
 
 // Standalone Growth Action Plan step — pulled out of IntegrationWorkspace so

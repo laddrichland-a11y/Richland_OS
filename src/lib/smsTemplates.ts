@@ -1,4 +1,4 @@
-// Plain-text templates for client-facing SMS. Heartful OS has no outbound
+// Plain-text templates for client-facing SMS. Richland OS has no outbound
 // SMS/email server wired up yet (no Twilio/etc. credentials — a dedicated
 // email + SMS server is a planned future addition), so these are composed
 // here and handed off to the practitioner's own phone via an sms: link, or

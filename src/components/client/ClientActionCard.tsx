@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CalendarClock, FileWarning, ClipboardList, BookOpen } from "@/components/ui/HeartfulIcon";
+import { CalendarClock, FileWarning, ClipboardList, BookOpen } from "@/components/ui/RichlandIcon";
 import { Session, ClientDocument, Task, PortalAssignment, FormSubmission, FormTemplate, JourneyPhase } from "@/lib/types";
 import { SESSION_TYPE_LABELS, formatDateTime, formatDate } from "@/lib/utils";
 import { isSessionActive, selectSessionTimeline } from "@/lib/sessionSelectors";

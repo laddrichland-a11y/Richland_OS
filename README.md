@@ -1,6 +1,6 @@
-# Heartful OS
+# Richland OS
 
-Client journey management for psychedelic harm reduction specialists, preparation coaches, integration coaches, and transformational practitioners. Heartful OS tracks the full arc of a client's journey — intake, preparation, the supported session itself, post-journey check-ins, and integration — with AI-generated summaries at every milestone.
+Client journey management for psychedelic harm reduction specialists, preparation coaches, integration coaches, and transformational practitioners. Richland OS tracks the full arc of a client's journey — intake, preparation, the supported session itself, post-journey check-ins, and integration — with AI-generated summaries at every milestone.
 
 **This is not an EMR or medical records system.** It does not store diagnoses, treatment plans, or clinical documentation. It is built around transformation, preparation, support, integration, and accountability.
 

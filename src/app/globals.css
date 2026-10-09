@@ -16,7 +16,7 @@
 @import "@fontsource/geist/latin-700.css";
 
 :root {
-  /* Core Heartful palette. Keep these three primitives authoritative so the
+  /* Core Richland palette. Keep these three primitives authoritative so the
      compatibility ramps below cannot drift from the product colors. */
   --color-maritime-blue: #27293d;
   --color-coral-rose: #f3774d;
@@ -98,7 +98,7 @@
   --warning-surface: var(--status-warning-bg);
   --warning-text: var(--status-warning-text);
 
-  /* Heartful visual system: product colors and supporting tonal ramps. */
+  /* Richland visual system: product colors and supporting tonal ramps. */
   --color-petrol-50: #f6f6f8;
   --color-petrol-100: #ececf0;
   --color-petrol-200: #d7d8df;
@@ -251,11 +251,11 @@
   --journey-complete-line: #909888;
 }
 
-:root[data-theme="mushroom-grove"] .heartful-site-shell .sidebar-nav a[data-active="true"] {
+:root[data-theme="mushroom-grove"] .richland-site-shell .sidebar-nav a[data-active="true"] {
   background: var(--primary-action);
   color: white;
 }
-:root[data-theme="mushroom-grove"] .heartful-site-shell .sidebar-nav a[data-active="true"] :is(.sidebar-label, .sidebar-icon-box, svg) {
+:root[data-theme="mushroom-grove"] .richland-site-shell .sidebar-nav a[data-active="true"] :is(.sidebar-label, .sidebar-icon-box, svg) {
   color: white;
 }
 :root[data-theme="mushroom-grove"] .badge.client-status--preparation {
@@ -327,7 +327,7 @@
   --sidebar-light-surface: #fff6e5;
 }
 
-/* Original keeps the early Heartful palette, while using the current shared
+/* Original keeps the early Richland palette, while using the current shared
    workspace treatment: a white navigation frame and our soft content gradient. */
 :root[data-theme="original"] {
   --color-maritime-blue: #292b3b;
@@ -453,7 +453,7 @@
 .prospect-list-meta { display: flex; min-width: 0; align-items: center; gap: .25rem .8rem; margin-top: .2rem; color: var(--text-muted); font-size: .75rem; line-height: 1.25; }
 .prospect-list-meta span { display: inline-flex; min-width: 0; align-items: center; gap: .22rem; white-space: nowrap; }
 .prospect-list-meta svg { width: 12px; height: 12px; flex: 0 0 auto; color: var(--icon-color); }
-.prospects-section-title .heartful-icon { width: 18px; height: 18px; }
+.prospects-section-title .richland-icon { width: 18px; height: 18px; }
 .prospect-list-item-side { display: flex; flex: 0 0 auto; align-items: center; justify-content: flex-end; gap: .85rem; }
 .prospect-list-view { display: inline-flex; align-items: center; gap: .3rem; color: var(--text-secondary); font-size: var(--font-size-meta); font-weight: 600; white-space: nowrap; transition: color .18s ease; }
 .prospect-list-view svg { width: 14px; height: 14px; transition: transform .18s ease; }
@@ -730,7 +730,7 @@
   .dashboard-row-action { grid-column: 3; grid-row: 2; }
 }
 @media (max-width: 520px) {
-  .heartful-site-shell:not(.wellnest-client-screen) .app-page-title { display: none; }
+  .richland-site-shell:not(.wellnest-client-screen) .app-page-title { display: none; }
   .dashboard-metric { min-height: 62px; padding: .6rem; }
   .dashboard-metric-icon { width: 40px; height: 40px; flex-basis: 40px; }
   .dashboard-metric-arrow { display: none; }
@@ -1175,7 +1175,7 @@ main:has(.client-workspace-content) textarea {
   cursor: default;
 }
 
-/* Keep every button on the shared Heartful control radius. Explicit rounded
+/* Keep every button on the shared Richland control radius. Explicit rounded
    utilities still win for pills, circles, and other intentionally shaped controls. */
 button:not([class~="rounded"]):not([class*="rounded-"]) {
   border-radius: var(--radius-control);
@@ -2926,9 +2926,9 @@ button:not([class~="rounded"]):not([class*="rounded-"]) {
 .calendar-session-complete-action:disabled,
 .wn-session-complete-action:disabled,
 .session-complete-action:disabled { cursor: default; opacity: .55; }
-.calendar-session-complete-action .heartful-icon,
-.wn-session-complete-action .heartful-icon,
-.session-complete-action .heartful-icon { width: 14px; height: 14px; }
+.calendar-session-complete-action .richland-icon,
+.wn-session-complete-action .richland-icon,
+.session-complete-action .richland-icon { width: 14px; height: 14px; }
 .wellnest-client-screen .wn-session-complete-action {
   display: inline-grid;
   width: 30px;
@@ -2953,7 +2953,7 @@ button:not([class~="rounded"]):not([class*="rounded-"]) {
 .wellnest-client-screen .wn-session-cancel-action:hover:not(:disabled) { border-color: var(--danger-text); background: var(--danger-surface); color: var(--danger-text); }
 .wellnest-client-screen .wn-session-cancel-action:focus-visible { outline: 2px solid var(--brand-accent); outline-offset: 2px; }
 .wellnest-client-screen .wn-session-cancel-action:disabled { cursor: default; opacity: .55; }
-.wellnest-client-screen .wn-session-cancel-action .heartful-icon { width: 14px; height: 14px; }
+.wellnest-client-screen .wn-session-cancel-action .richland-icon { width: 14px; height: 14px; }
 .calendar-session-cancel-action,
 .session-cancel-action { min-height: 30px; padding: .3rem .45rem; border-radius: var(--radius-control); background: transparent; color: var(--text-muted); font-size: .75rem; font-weight: 650; line-height: 1.2; transition: background-color 150ms ease, color 150ms ease; }
 .calendar-session-cancel-action:hover:not(:disabled),
@@ -3398,7 +3398,7 @@ button:not([class~="rounded"]):not([class*="rounded-"]) {
   outline-offset: 2px;
 }
 
-.wellnest-client-screen .wn-task-add-button .heartful-icon {
+.wellnest-client-screen .wn-task-add-button .richland-icon {
   width: 13px;
   height: 13px;
 }
@@ -3859,7 +3859,7 @@ button:not([class~="rounded"]):not([class*="rounded-"]) {
 }
 
 /* --------------------------------------------------------------------------
-   Heartful brand hierarchy
+   Richland brand hierarchy
    These final rules are the single authority for shared navigation, brand,
    priority actions, and the experimental client-workspace theme above.
    -------------------------------------------------------------------------- */
@@ -4034,7 +4034,7 @@ textarea:focus-visible {
   color: #fff;
 }
 
-.wellnest-client-screen .journey-stage-nav li:is([data-active="true"], [data-completed="true"], [data-state="current"], [data-viewing="true"]) .journey-stage-marker :is(svg, .heartful-icon) {
+.wellnest-client-screen .journey-stage-nav li:is([data-active="true"], [data-completed="true"], [data-state="current"], [data-viewing="true"]) .journey-stage-marker :is(svg, .richland-icon) {
   color: currentColor;
 }
 
@@ -4312,12 +4312,12 @@ textarea:focus-visible {
   display: block;
 }
 
-:root[data-theme="dark"] .heartful-site-shell .app-sidebar,
-:root[data-theme="dark"] .heartful-site-shell .app-sidebar .sidebar-brand,
-:root[data-theme="dark"] .heartful-site-shell .app-sidebar .sidebar-footer {
+:root[data-theme="dark"] .richland-site-shell .app-sidebar,
+:root[data-theme="dark"] .richland-site-shell .app-sidebar .sidebar-brand,
+:root[data-theme="dark"] .richland-site-shell .app-sidebar .sidebar-footer {
   background: var(--app-background);
 }
-:root[data-theme="dark"] .heartful-site-shell .sidebar-collapse-button {
+:root[data-theme="dark"] .richland-site-shell .sidebar-collapse-button {
   background: var(--app-background);
 }
 :root[data-theme="dark"] .sidebar-brand:hover,
@@ -4851,7 +4851,7 @@ textarea {
   transition: width 180ms ease, padding 180ms ease, border-color 140ms ease, background-color 140ms ease, color 140ms ease;
 }
 
-.wellnest-client-screen .wn-context-rail-toggle .heartful-icon {
+.wellnest-client-screen .wn-context-rail-toggle .richland-icon {
   width: 16px;
   height: 16px;
   flex: 0 0 16px;
@@ -5855,7 +5855,7 @@ textarea {
 }
 
 .wellnest-client-screen .wn-overview-toggle svg,
-.wellnest-client-screen .wn-overview-toggle .heartful-icon {
+.wellnest-client-screen .wn-overview-toggle .richland-icon {
   width: 16px;
   height: 16px;
   color: var(--color-orange-600);
@@ -6516,44 +6516,44 @@ textarea {
 }
 
 /* --------------------------------------------------------------------------
-   Site-wide application of the Heartful design system
+   Site-wide application of the Richland design system
    --------------------------------------------------------------------------
    The client workspace established the final visual language: a quiet ink
    frame, compact navigation, warm action colour, flat layered surfaces, and
    thin structural rules. Keep this layer scoped to shared shells so every
    route inherits the same hierarchy without coupling page-specific layouts.
 */
-.heartful-site-shell:not(.wellnest-client-screen) > .app-sidebar {
+.richland-site-shell:not(.wellnest-client-screen) > .app-sidebar {
   width: 196px;
   border-right: 0;
   background: var(--surface-card);
 }
 
-.heartful-site-shell:not(.wellnest-client-screen) > .app-sidebar[data-collapsed="true"] {
+.richland-site-shell:not(.wellnest-client-screen) > .app-sidebar[data-collapsed="true"] {
   width: 72px;
 }
 
-.heartful-site-shell:not(.wellnest-client-screen) .sidebar-brand {
+.richland-site-shell:not(.wellnest-client-screen) .sidebar-brand {
   min-height: 68px;
   padding: 14px 16px;
   background: var(--surface-card);
 }
 
-.heartful-site-shell:not(.wellnest-client-screen) .sidebar-nav {
+.richland-site-shell:not(.wellnest-client-screen) .sidebar-nav {
   padding: 12px 13px;
 }
 
-.heartful-site-shell:not(.wellnest-client-screen) .app-sidebar[data-collapsed="true"] .sidebar-brand {
+.richland-site-shell:not(.wellnest-client-screen) .app-sidebar[data-collapsed="true"] .sidebar-brand {
   justify-content: center;
   padding: 14px 12px;
 }
 
-.heartful-site-shell:not(.wellnest-client-screen) .app-sidebar[data-collapsed="true"] .sidebar-nav {
+.richland-site-shell:not(.wellnest-client-screen) .app-sidebar[data-collapsed="true"] .sidebar-nav {
   padding-right: 10px;
   padding-left: 10px;
 }
 
-.heartful-site-shell:not(.wellnest-client-screen) .sidebar-nav a {
+.richland-site-shell:not(.wellnest-client-screen) .sidebar-nav a {
   min-height: 38px;
   gap: 8px;
   margin-bottom: 3px;
@@ -6562,14 +6562,14 @@ textarea {
   font-size: var(--font-size-control);
 }
 
-.heartful-site-shell:not(.wellnest-client-screen) .app-sidebar[data-collapsed="true"] .sidebar-nav a {
+.richland-site-shell:not(.wellnest-client-screen) .app-sidebar[data-collapsed="true"] .sidebar-nav a {
   justify-content: center;
   gap: 0;
   padding-right: 8px;
   padding-left: 8px;
 }
 
-.heartful-site-shell:not(.wellnest-client-screen) .sidebar-icon-box {
+.richland-site-shell:not(.wellnest-client-screen) .sidebar-icon-box {
   display: inline-flex;
   width: 28px;
   height: 28px;
@@ -6581,70 +6581,70 @@ textarea {
   transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
 }
 
-.heartful-site-shell:not(.wellnest-client-screen) .sidebar-nav a:hover {
+.richland-site-shell:not(.wellnest-client-screen) .sidebar-nav a:hover {
   background: var(--surface-hover);
   color: var(--text-primary);
 }
 
 /* Keep navigation feedback distinct from the sidebar surface in every theme. */
-.heartful-site-shell:not(.wellnest-client-screen) .sidebar-nav a:not([data-active="true"]):hover {
+.richland-site-shell:not(.wellnest-client-screen) .sidebar-nav a:not([data-active="true"]):hover {
   background: color-mix(in srgb, var(--brand-accent) 10%, transparent);
   color: var(--text-primary);
 }
-.heartful-site-shell:not(.wellnest-client-screen) .sidebar-nav a[data-active="true"]:hover {
+.richland-site-shell:not(.wellnest-client-screen) .sidebar-nav a[data-active="true"]:hover {
   background: var(--surface-selected);
 }
-:root[data-theme="mushroom-grove"] .heartful-site-shell:not(.wellnest-client-screen) .sidebar-nav a[data-active="true"]:hover {
+:root[data-theme="mushroom-grove"] .richland-site-shell:not(.wellnest-client-screen) .sidebar-nav a[data-active="true"]:hover {
   background: var(--primary-action);
   color: white;
 }
 
 /* A stationary pointer must not paint a stale hover state during hydration. */
-html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-nav a:not([data-active="true"]):hover {
+html:not([data-interaction-ready]) .richland-site-shell .app-sidebar .sidebar-nav a:not([data-active="true"]):hover {
   background: transparent;
   color: inherit;
 }
-html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-nav a:hover .sidebar-icon-box {
+html:not([data-interaction-ready]) .richland-site-shell .app-sidebar .sidebar-nav a:hover .sidebar-icon-box {
   transform: none;
 }
 
-.heartful-site-shell:not(.wellnest-client-screen) .sidebar-nav a:hover .sidebar-icon-box {
+.richland-site-shell:not(.wellnest-client-screen) .sidebar-nav a:hover .sidebar-icon-box {
   transform: translateX(1px);
 }
 
-.heartful-site-shell:not(.wellnest-client-screen) .sidebar-nav a[data-active="true"] {
+.richland-site-shell:not(.wellnest-client-screen) .sidebar-nav a[data-active="true"] {
   border-color: transparent;
   background: var(--surface-selected);
   color: var(--color-petrol-500);
   font-weight: 650;
 }
 
-.heartful-site-shell:not(.wellnest-client-screen) .sidebar-nav a[data-active="true"] .sidebar-icon-box,
-.heartful-site-shell:not(.wellnest-client-screen) .sidebar-nav a[data-active="true"] svg {
+.richland-site-shell:not(.wellnest-client-screen) .sidebar-nav a[data-active="true"] .sidebar-icon-box,
+.richland-site-shell:not(.wellnest-client-screen) .sidebar-nav a[data-active="true"] svg {
   color: var(--brand-accent);
 }
 
-.heartful-site-shell .app-sidebar .sidebar-nav a svg {
+.richland-site-shell .app-sidebar .sidebar-nav a svg {
   width: 20px;
   height: 20px;
   flex-shrink: 0;
   stroke-width: 1.9;
 }
 
-.heartful-site-shell .app-sidebar .sidebar-nav a .heartful-icon {
+.richland-site-shell .app-sidebar .sidebar-nav a .richland-icon {
   width: 20px;
   height: 20px;
 }
 
-.heartful-site-shell .app-sidebar .sidebar-nav a,
-.heartful-site-shell .app-sidebar .sidebar-nav a .sidebar-label {
+.richland-site-shell .app-sidebar .sidebar-nav a,
+.richland-site-shell .app-sidebar .sidebar-nav a .sidebar-label {
   font-family: "Manrope", var(--font-sans);
   font-size: 16px;
   font-weight: 600;
   line-height: 1.35;
 }
-.heartful-site-shell .app-sidebar .sidebar-nav a[data-active="true"],
-.heartful-site-shell .app-sidebar .sidebar-nav a[data-active="true"] .sidebar-label {
+.richland-site-shell .app-sidebar .sidebar-nav a[data-active="true"],
+.richland-site-shell .app-sidebar .sidebar-nav a[data-active="true"] .sidebar-label {
   font-weight: 700;
 }
 
@@ -6654,16 +6654,16 @@ html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-na
 .wellnest-client-screen .wn-avatar--editable.is-busy { cursor: wait; opacity: .65; }
 .wellnest-client-screen .wn-avatar-error { position: absolute; top: calc(100% + .4rem); left: 0; z-index: 21; width: 190px; margin: 0; color: var(--danger-text); font-size: var(--font-size-meta); line-height: 1.35; }
 
-:root[data-theme="dark"] .heartful-site-shell .app-sidebar .sidebar-nav a[data-active="true"],
-:root[data-theme="dark"] .heartful-site-shell .app-sidebar .sidebar-nav a[data-active="true"] :is(.sidebar-label, .sidebar-icon-box, svg) {
+:root[data-theme="dark"] .richland-site-shell .app-sidebar .sidebar-nav a[data-active="true"],
+:root[data-theme="dark"] .richland-site-shell .app-sidebar .sidebar-nav a[data-active="true"] :is(.sidebar-label, .sidebar-icon-box, svg) {
   color: var(--text-secondary);
 }
-:root[data-theme="dark"] .heartful-site-shell .app-sidebar .sidebar-nav .sidebar-count {
+:root[data-theme="dark"] .richland-site-shell .app-sidebar .sidebar-nav .sidebar-count {
   background: var(--text-secondary);
   color: #382a4c;
 }
 
-.heartful-site-shell:not(.wellnest-client-screen) .sidebar-footer {
+.richland-site-shell:not(.wellnest-client-screen) .sidebar-footer {
   margin: 0 12px 12px;
   padding: 14px 8px;
   border: 0;
@@ -6672,7 +6672,7 @@ html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-na
   color: var(--text-muted);
 }
 
-.heartful-site-shell:not(.wellnest-client-screen) .app-workspace-frame {
+.richland-site-shell:not(.wellnest-client-screen) .app-workspace-frame {
   min-height: calc(100vh - 24px);
   margin: 12px 12px 12px 0;
   border: 0;
@@ -6682,7 +6682,7 @@ html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-na
   background-attachment: fixed;
 }
 
-.heartful-site-shell:not(.wellnest-client-screen) .app-topbar {
+.richland-site-shell:not(.wellnest-client-screen) .app-topbar {
   min-height: 62px;
   border-color: var(--divider);
   border-radius: var(--radius-workspace) var(--radius-workspace) 0 0;
@@ -6690,7 +6690,7 @@ html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-na
   backdrop-filter: none;
 }
 
-.heartful-site-shell:not(.wellnest-client-screen) .app-workspace {
+.richland-site-shell:not(.wellnest-client-screen) .app-workspace {
   max-width: 1360px;
   padding: 1.25rem clamp(1rem, 2.2vw, 2rem) 2.5rem;
 }
@@ -6943,11 +6943,11 @@ html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-na
   color: var(--text-secondary);
   font-size: 1.125rem;
 }
-.heartful-site-shell:not(.wellnest-client-screen) .app-workspace.app-workspace--wide {
+.richland-site-shell:not(.wellnest-client-screen) .app-workspace.app-workspace--wide {
   max-width: none;
 }
 
-.heartful-site-shell:not(.wellnest-client-screen) .card,
+.richland-site-shell:not(.wellnest-client-screen) .card,
 .portal-shell .card,
 .auth-shell .card {
   /* Content surfaces use the shared low-contrast divider so their boundaries
@@ -6958,8 +6958,8 @@ html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-na
   box-shadow: none;
 }
 
-.heartful-site-shell:not(.wellnest-client-screen) .card > h2,
-.heartful-site-shell:not(.wellnest-client-screen) .card > h3,
+.richland-site-shell:not(.wellnest-client-screen) .card > h2,
+.richland-site-shell:not(.wellnest-client-screen) .card > h3,
 .portal-shell .card > h2,
 .portal-shell .card > h3,
 .auth-shell .card > h2,
@@ -6968,9 +6968,9 @@ html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-na
   line-height: var(--line-height-heading);
 }
 
-.heartful-site-shell:not(.wellnest-client-screen) input:not([type="checkbox"]):not([type="radio"]),
-.heartful-site-shell:not(.wellnest-client-screen) select,
-.heartful-site-shell:not(.wellnest-client-screen) textarea,
+.richland-site-shell:not(.wellnest-client-screen) input:not([type="checkbox"]):not([type="radio"]),
+.richland-site-shell:not(.wellnest-client-screen) select,
+.richland-site-shell:not(.wellnest-client-screen) textarea,
 .portal-shell input:not([type="checkbox"]):not([type="radio"]),
 .portal-shell select,
 .portal-shell textarea,
@@ -6985,8 +6985,8 @@ html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-na
   font-size: var(--font-size-control);
 }
 
-.heartful-site-shell:not(.wellnest-client-screen) input::placeholder,
-.heartful-site-shell:not(.wellnest-client-screen) textarea::placeholder,
+.richland-site-shell:not(.wellnest-client-screen) input::placeholder,
+.richland-site-shell:not(.wellnest-client-screen) textarea::placeholder,
 .portal-shell input::placeholder,
 .portal-shell textarea::placeholder,
 .auth-shell input::placeholder,
@@ -6994,9 +6994,9 @@ html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-na
   color: var(--text-muted);
 }
 
-.heartful-site-shell:not(.wellnest-client-screen) input:focus,
-.heartful-site-shell:not(.wellnest-client-screen) select:focus,
-.heartful-site-shell:not(.wellnest-client-screen) textarea:focus,
+.richland-site-shell:not(.wellnest-client-screen) input:focus,
+.richland-site-shell:not(.wellnest-client-screen) select:focus,
+.richland-site-shell:not(.wellnest-client-screen) textarea:focus,
 .portal-shell input:focus,
 .portal-shell select:focus,
 .portal-shell textarea:focus,
@@ -7009,7 +7009,7 @@ html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-na
 }
 
 /* The client-list search field sits inside a shared control shell. */
-.heartful-site-shell:not(.wellnest-client-screen) .clients-typography input.client-list-search-input {
+.richland-site-shell:not(.wellnest-client-screen) .clients-typography input.client-list-search-input {
   min-height: 0;
   border: 0;
   border-radius: 0;
@@ -7018,14 +7018,14 @@ html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-na
   padding: 0;
 }
 
-.heartful-site-shell:not(.wellnest-client-screen) .clients-typography input.client-list-search-input:focus {
+.richland-site-shell:not(.wellnest-client-screen) .clients-typography input.client-list-search-input:focus {
   border-color: transparent;
   box-shadow: none;
 }
 
-.heartful-site-shell:not(.wellnest-client-screen) .btn-primary,
-.heartful-site-shell:not(.wellnest-client-screen) .btn-secondary,
-.heartful-site-shell:not(.wellnest-client-screen) .btn-ghost,
+.richland-site-shell:not(.wellnest-client-screen) .btn-primary,
+.richland-site-shell:not(.wellnest-client-screen) .btn-secondary,
+.richland-site-shell:not(.wellnest-client-screen) .btn-ghost,
 .portal-shell .btn-primary,
 .portal-shell .btn-secondary,
 .portal-shell .btn-ghost,
@@ -7036,13 +7036,13 @@ html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-na
   transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
 }
 
-.heartful-site-shell:not(.wellnest-client-screen) .btn-primary:hover,
+.richland-site-shell:not(.wellnest-client-screen) .btn-primary:hover,
 .portal-shell .btn-primary:hover,
 .auth-shell .btn-primary:hover {
   transform: translateY(-1px);
 }
 
-.heartful-site-shell:not(.wellnest-client-screen) table thead th,
+.richland-site-shell:not(.wellnest-client-screen) table thead th,
 .portal-shell table thead th {
   border-bottom: 1px solid var(--divider);
   color: var(--text-muted);
@@ -7052,12 +7052,12 @@ html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-na
   text-transform: uppercase;
 }
 
-.heartful-site-shell:not(.wellnest-client-screen) table tbody tr,
+.richland-site-shell:not(.wellnest-client-screen) table tbody tr,
 .portal-shell table tbody tr {
   border-bottom: 1px solid var(--divider);
 }
 
-.heartful-site-shell:not(.wellnest-client-screen) table tbody tr:last-child,
+.richland-site-shell:not(.wellnest-client-screen) table tbody tr:last-child,
 .portal-shell table tbody tr:last-child {
   border-bottom: 0;
 }
@@ -7139,7 +7139,7 @@ html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-na
 .portal-onboarding-step-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .55rem; }
 .portal-onboarding-step { margin: 0; color: var(--brand-accent); font-size: .75rem; font-weight: 750; letter-spacing: .055em; text-transform: uppercase; }
 .portal-onboarding-return { display: inline-flex; min-height: 30px; align-items: center; gap: .4rem; padding: .35rem .6rem; border: 1px solid var(--divider); border-radius: var(--radius-control); background: color-mix(in srgb, var(--workspace-background) 82%, transparent); color: var(--text-muted); font-size: .75rem; font-weight: 650; line-height: 1; white-space: nowrap; }
-.portal-onboarding-return .heartful-icon { width: 14px; height: 14px; }
+.portal-onboarding-return .richland-icon { width: 14px; height: 14px; }
 .portal-onboarding-return:hover { background: var(--surface-hover); color: var(--text-secondary); }
 .portal-onboarding-return:focus-visible { outline: 2px solid var(--brand-accent-muted); outline-offset: 3px; }
 .portal-onboarding-intro h1 { margin: 0; color: var(--text-primary); font-family: var(--font-serif-warm); font-size: clamp(1.8rem, 4vw, 2.25rem); font-weight: 600; letter-spacing: -.035em; line-height: 1.13; }
@@ -7158,7 +7158,7 @@ html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-na
 .portal-agreement-row__summary:focus-visible, .portal-agreement-action:focus-visible, .portal-preview-skip:focus-visible, .portal-agreements-support a:focus-visible { outline: 2px solid var(--brand-accent); outline-offset: 3px; }
 .portal-agreement-row__icon { display: grid; width: 31px; height: 31px; flex: 0 0 auto; place-items: center; border-radius: 8px; background: var(--surface-selected); color: var(--brand-accent); }
 .portal-agreement-row__icon svg { width: 15px; height: 15px; }
-.portal-agreement-row__icon .heartful-icon { width: 15px; height: 15px; }
+.portal-agreement-row__icon .richland-icon { width: 15px; height: 15px; }
 .portal-agreement-row__copy { display: grid; min-width: 0; gap: .15rem; }
 .portal-agreement-row__title { display: flex; min-width: 0; flex-wrap: wrap; align-items: center; gap: .3rem .45rem; }
 .portal-agreement-row__copy strong { color: var(--text-primary); font-size: .8125rem; font-weight: 700; line-height: 1.4; }
@@ -7178,7 +7178,7 @@ html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-na
 .portal-agreements-support strong { color: var(--text-secondary); font-weight: 700; }
 .portal-agreements-support a { display: inline-flex; width: fit-content; align-items: center; gap: .35rem; color: var(--brand-accent); font-weight: 700; text-decoration: none; }
 .portal-agreements-support a svg { width: 18px; height: 18px; }
-.portal-agreements-support a .heartful-icon { width: 16px; height: 16px; }
+.portal-agreements-support a .richland-icon { width: 16px; height: 16px; }
 .portal-agreements-support a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .portal-preview-skip { display: inline-flex; min-height: 34px; align-items: center; gap: .35rem; padding: .45rem .4rem; border: 0; border-radius: .55rem; background: transparent; color: var(--text-muted); font-size: .75rem; font-weight: 500; }
 .portal-preview-skip:hover { background: var(--surface-hover); color: var(--text-secondary); }
@@ -7213,11 +7213,11 @@ html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-na
 
 /* Client portal: the same stable sidebar rhythm as the practitioner shell,
    with client-specific destinations and a compact mobile header. */
-.portal-shell.heartful-site-shell > .portal-sidebar {
+.portal-shell.richland-site-shell > .portal-sidebar {
   border-right: 1px solid var(--divider);
 }
 
-.portal-shell.heartful-site-shell > .portal-sidebar .sidebar-brand {
+.portal-shell.richland-site-shell > .portal-sidebar .sidebar-brand {
   width: 100%;
   min-height: 76px;
   border-bottom: 0;
@@ -7283,7 +7283,7 @@ html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-na
   color: currentColor;
 }
 
-.portal-sidebar-nav-item .sidebar-icon-box :is(svg, .heartful-icon) { width: 20px; height: 20px; }
+.portal-sidebar-nav-item .sidebar-icon-box :is(svg, .richland-icon) { width: 20px; height: 20px; }
 .portal-sidebar-nav-item .sidebar-label { min-width: 0; }
 
 .portal-sidebar-footer {
@@ -7387,7 +7387,7 @@ html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-na
   background: transparent;
   color: var(--brand-accent);
 }
-.portal-settings-icon :is(svg, .heartful-icon) { width: 1.05rem; height: 1.05rem; }
+.portal-settings-icon :is(svg, .richland-icon) { width: 1.05rem; height: 1.05rem; }
 .portal-settings-card h2 {
   margin: .05rem 0 0;
   color: var(--text-primary);
@@ -7452,7 +7452,7 @@ html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-na
 .portal-settings-actions { display: grid; gap: .35rem; margin-top: .9rem; }
 .portal-settings-actions button { display: flex; align-items: center; gap: .55rem; min-height: 2.35rem; padding: .45rem .2rem; color: var(--text-secondary); font-size: .78rem; font-weight: 650; text-align: left; }
 .portal-settings-actions button:hover { color: var(--brand-accent); }
-.portal-settings-actions :is(svg, .heartful-icon) { width: 1rem; height: 1rem; }
+.portal-settings-actions :is(svg, .richland-icon) { width: 1rem; height: 1rem; }
 .portal-settings-actions .portal-settings-logout { color: var(--danger-text, #a44935); }
 
 @media (max-width: 720px) {
@@ -7621,7 +7621,7 @@ html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-na
 .portal-heading-with-icon { display: inline-flex; align-items: center; gap: .125rem; min-width: 0; }
 .portal-heading-with-icon h2 { margin: 0; color: var(--brand-accent); font-size: 1.2rem; line-height: 1.2; }
 .portal-heading-icon { display: grid; width: 32px; height: 32px; flex: 0 0 auto; place-items: center; color: var(--brand-accent); }
-.portal-heading-icon .heartful-icon { width: 20px; height: 20px; }
+.portal-heading-icon .richland-icon { width: 20px; height: 20px; }
 .portal-eyebrow { color: var(--brand-accent); font-size: .6875rem; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
 .portal-phase-label, .portal-count {
   display: inline-flex;
@@ -7657,7 +7657,7 @@ html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-na
 .portal-action-list > li > div > span { color: var(--text-muted); font-size: .72rem; }
 .portal-action-list > li > button, .portal-view-all-tasks, .portal-next-session-content > button, .portal-continue-card > button, .portal-journey-continue { display: inline-flex; flex: 0 0 auto; align-items: center; gap: .3rem; color: var(--brand-accent); font-size: .75rem; font-weight: 750; white-space: nowrap; }
 .portal-action-list > li > button:hover, .portal-view-all-tasks:hover, .portal-next-session-content > button:hover, .portal-continue-card > button:hover, .portal-journey-continue:hover { color: var(--text-primary); }
-.portal-action-list > li > button .heartful-icon, .portal-view-all-tasks .heartful-icon, .portal-next-session-content > button .heartful-icon, .portal-continue-card > button .heartful-icon, .portal-journey-continue .heartful-icon { width: .8rem; height: .8rem; }
+.portal-action-list > li > button .richland-icon, .portal-view-all-tasks .richland-icon, .portal-next-session-content > button .richland-icon, .portal-continue-card > button .richland-icon, .portal-journey-continue .richland-icon { width: .8rem; height: .8rem; }
 .portal-action-overdue { display: inline-flex; width: fit-content; color: var(--status-warning-text) !important; font-weight: 700; }
 .portal-view-all-tasks { margin-top: .7rem; }
 .portal-journey-summary { display: flex; align-items: end; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
@@ -7687,12 +7687,12 @@ html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-na
 .portal-next-session-content > div { display: grid; min-width: 0; gap: .15rem; margin: 0; padding: .6rem .75rem; border: 1px solid var(--divider-inner); border-radius: var(--radius-control); transition: background-color 150ms ease, color 150ms ease; }
 .portal-next-session-content > div:hover { background: var(--surface-hover); }
 .portal-next-session-content > div:hover strong,
-.portal-next-session-content > div:hover .heartful-icon { color: var(--brand-accent); }
+.portal-next-session-content > div:hover .richland-icon { color: var(--brand-accent); }
 .portal-next-session-date { display: inline-flex; align-items: center; gap: .4rem; }
-.portal-next-session-date .heartful-icon { width: .9rem; height: .9rem; flex: 0 0 auto; color: var(--brand-accent); }
+.portal-next-session-date .richland-icon { width: .9rem; height: .9rem; flex: 0 0 auto; color: var(--brand-accent); }
 .portal-next-session-content strong { color: var(--text-primary); font-size: .875rem; }
 .portal-forms-section-title { display: inline-flex; align-items: center; gap: .45rem; }
-.portal-forms-section-title .heartful-icon { width: 1rem; height: 1rem; flex: 0 0 auto; color: var(--brand-accent); }
+.portal-forms-section-title .richland-icon { width: 1rem; height: 1rem; flex: 0 0 auto; color: var(--brand-accent); }
 .portal-assignment-list { margin: 0; padding: 0; list-style: none; }
 .portal-assignment-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; min-height: 62px; padding: .55rem 0; border-bottom: 1px solid var(--divider); }
 .portal-assignment-row:first-child { padding-top: .1rem; }
@@ -7706,11 +7706,11 @@ html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-na
 .portal-assignment-status.is-complete { background: var(--journey-complete-bg, var(--positive-surface)); color: var(--journey-complete-text, var(--positive-text)); }
 .portal-assignment-form-action, .portal-assignment-view-all { display: inline-flex; flex: 0 0 auto; align-items: center; gap: .25rem; color: var(--brand-accent); font-size: .72rem; font-weight: 750; white-space: nowrap; }
 .portal-assignment-form-action:hover, .portal-assignment-view-all:hover { color: var(--text-primary); }
-.portal-assignment-form-action .heartful-icon, .portal-assignment-view-all .heartful-icon { width: .75rem; height: .75rem; }
+.portal-assignment-form-action .richland-icon, .portal-assignment-view-all .richland-icon { width: .75rem; height: .75rem; }
 .portal-assignment-complete { display: inline-flex; flex: 0 0 auto; align-items: center; gap: .32rem; min-height: 29px; padding: .35rem .5rem; font-size: .68rem; }
-.portal-assignment-complete .heartful-icon { width: .75rem; height: .75rem; }
+.portal-assignment-complete .richland-icon { width: .75rem; height: .75rem; }
 .portal-assignment-completed { display: inline-flex; flex: 0 0 auto; align-items: center; gap: .3rem; color: var(--journey-complete-text, var(--positive-text)); font-size: .68rem; font-weight: 700; white-space: nowrap; }
-.portal-assignment-completed .heartful-icon { width: .8rem; height: .8rem; }
+.portal-assignment-completed .richland-icon { width: .8rem; height: .8rem; }
 .portal-assignment-view-all { margin-top: .45rem; }
 .portal-next-session-content span, .portal-next-session-content small { color: var(--text-secondary); font-size: .75rem; line-height: 1.45; }
 .portal-next-session-content > button { justify-self: start; margin-top: .2rem; }
@@ -7765,12 +7765,12 @@ html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-na
   box-shadow: none;
 }
 
-:root[data-theme="dark"] .heartful-site-shell:not(.wellnest-client-screen) .app-topbar,
+:root[data-theme="dark"] .richland-site-shell:not(.wellnest-client-screen) .app-topbar,
 :root[data-theme="dark"] .portal-shell > header {
   background: var(--workspace-background);
 }
 
-:root[data-theme="dark"] .heartful-site-shell:not(.wellnest-client-screen) .card,
+:root[data-theme="dark"] .richland-site-shell:not(.wellnest-client-screen) .card,
 :root[data-theme="dark"] .portal-shell .card,
 :root[data-theme="dark"] .auth-shell .card {
   box-shadow: none;
@@ -7784,7 +7784,7 @@ html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-na
 
 :root:not([data-theme="dark"]) .app-frame > .app-sidebar,
 :root:not([data-theme="dark"]) .wellnest-client-screen > .app-sidebar,
-:root:not([data-theme="dark"]) .heartful-site-shell:not(.wellnest-client-screen) > .app-sidebar,
+:root:not([data-theme="dark"]) .richland-site-shell:not(.wellnest-client-screen) > .app-sidebar,
 :root:not([data-theme="dark"]) .app-sidebar .sidebar-brand,
 :root:not([data-theme="dark"]) .app-sidebar .sidebar-footer {
   background: var(--sidebar-light-surface);
@@ -7792,7 +7792,7 @@ html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-na
 
 .app-frame > .app-sidebar,
 .wellnest-client-screen > .app-sidebar,
-.heartful-site-shell:not(.wellnest-client-screen) > .app-sidebar {
+.richland-site-shell:not(.wellnest-client-screen) > .app-sidebar {
   width: var(--sidebar-width);
 }
 
@@ -7872,19 +7872,19 @@ html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-na
 }
 
 @media (max-width: 767px) {
-  .heartful-site-shell:not(.wellnest-client-screen) .app-workspace-frame {
+  .richland-site-shell:not(.wellnest-client-screen) .app-workspace-frame {
     min-height: 100vh;
     margin: 0;
     border: 0;
     border-radius: 0;
   }
 
-  .heartful-site-shell:not(.wellnest-client-screen) .app-topbar {
+  .richland-site-shell:not(.wellnest-client-screen) .app-topbar {
     top: 0;
     border-radius: 0;
   }
 
-  .heartful-site-shell:not(.wellnest-client-screen) .app-workspace {
+  .richland-site-shell:not(.wellnest-client-screen) .app-workspace {
     padding: 1rem 1rem 2rem;
   }
 
@@ -8115,7 +8115,7 @@ html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-na
   border-radius: 9px;
 }
 .report-metric-icon svg { width: 17px; height: 17px; stroke-width: 1.9; }
-.report-metric-icon .heartful-icon { display: block; width: 18px; height: 18px; align-self: center; justify-self: center; vertical-align: 0; }
+.report-metric-icon .richland-icon { display: block; width: 18px; height: 18px; align-self: center; justify-self: center; vertical-align: 0; }
 .report-metric-icon--clay { background: var(--color-orange-100); color: var(--color-orange-600); }
 .report-metric-icon--sage { background: var(--color-green-100); color: var(--color-green-600); }
 .report-metric-icon--vanilla { background: var(--color-vanilla-100); color: var(--color-orange-600); }
@@ -8271,7 +8271,7 @@ html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-na
   .report-metric { padding-inline: .75rem; }
   .report-metric--with-icon { gap: .6rem; }
   .report-metric-icon { width: 32px; height: 32px; }
-  .report-metric-icon .heartful-icon { width: 18px; height: 18px; }
+  .report-metric-icon .richland-icon { width: 18px; height: 18px; }
   .status-chart-layout { grid-template-columns: 1fr; }
   .status-donut { max-width: 260px; margin-inline: auto; }
   .journey-performance-grid { grid-template-columns: 1fr; }
@@ -8422,7 +8422,7 @@ html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-na
   font-size: .75rem;
 }
 
-/* Larger reference-style attention module, using Heartful surfaces and color. */
+/* Larger reference-style attention module, using Richland surfaces and color. */
 @media (min-width: 1101px) {
   .dashboard-layout {
     grid-template-columns: minmax(0, 1.55fr) minmax(370px, 1fr);
@@ -8464,38 +8464,38 @@ html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-na
 /* Iconstica dashboard glyphs need a little more presence than the compact
    body copy around them. Keep the heading icons strongest, then scale the
    supporting row/action icons proportionally. */
-.dashboard-panel .heartful-icon {
+.dashboard-panel .richland-icon {
   width: 15px;
   height: 15px;
 }
 
-.dashboard-section-icon .heartful-icon {
+.dashboard-section-icon .richland-icon {
   width: 22px;
   height: 22px;
 }
 
-.dashboard-session-time .heartful-icon,
-.dashboard-add-action .heartful-icon,
-.dashboard-month-navigation .heartful-icon,
-.dashboard-date-arrow .heartful-icon,
-.dashboard-attention-marker .heartful-icon {
+.dashboard-session-time .richland-icon,
+.dashboard-add-action .richland-icon,
+.dashboard-month-navigation .richland-icon,
+.dashboard-date-arrow .richland-icon,
+.dashboard-attention-marker .richland-icon {
   width: 16px;
   height: 16px;
 }
 
-.dashboard-section-icon .heartful-icon > svg,
-.dashboard-add-action .heartful-icon > svg,
-.dashboard-month-navigation .heartful-icon > svg,
-.dashboard-date-arrow .heartful-icon > svg {
+.dashboard-section-icon .richland-icon > svg,
+.dashboard-add-action .richland-icon > svg,
+.dashboard-month-navigation .richland-icon > svg,
+.dashboard-date-arrow .richland-icon > svg {
   inset: 0;
   width: 100%;
   height: 100%;
 }
 
-.dashboard-agreement-status .heartful-icon,
-.dashboard-row-action .heartful-icon,
-.dashboard-text-action .heartful-icon,
-.dashboard-list-action .heartful-icon {
+.dashboard-agreement-status .richland-icon,
+.dashboard-row-action .richland-icon,
+.dashboard-text-action .richland-icon,
+.dashboard-list-action .richland-icon {
   width: 14px;
   height: 14px;
 }
@@ -8630,7 +8630,7 @@ html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-na
   outline-offset: 2px;
 }
 
-.dashboard-attention-action .heartful-icon {
+.dashboard-attention-action .richland-icon {
   width: 13px;
   height: 13px;
 }
@@ -8657,7 +8657,7 @@ html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-na
   color: var(--status-warning-text);
   transform: none;
 }
-.dashboard-attention-marker .heartful-icon {
+.dashboard-attention-marker .richland-icon {
   display: block;
   line-height: 1;
   vertical-align: 0;
@@ -8671,7 +8671,7 @@ html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-na
   color: var(--danger-text);
 }
 
-.dashboard-attention-marker .heartful-icon > svg {
+.dashboard-attention-marker .richland-icon > svg {
   inset: 0;
   width: 100%;
   height: 100%;
@@ -8705,12 +8705,12 @@ html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-na
 }
 /* Prep Center follows the shared surface, control and accent tokens. */
 .prep-center { display: grid; width: 100%; gap: .875rem; }
-.heartful-site-shell:not(.wellnest-client-screen) .prep-section { padding: 1rem 1.1rem; border: 1px solid var(--divider); }
+.richland-site-shell:not(.wellnest-client-screen) .prep-section { padding: 1rem 1.1rem; border: 1px solid var(--divider); }
 .prep-primary { scroll-margin-top: 1rem; }
 .prep-heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .25rem 1rem; margin-bottom: .75rem; }
 .prep-heading h2 { display: flex; align-items: center; gap: .5rem; margin: 0; color: var(--text-primary); font-size: var(--font-size-card-title); font-weight: 700; }
 .prep-heading h2 svg { color: var(--brand-accent); }
-.prep-heading h2 .heartful-icon { width: 18px; height: 18px; color: var(--brand-accent); }
+.prep-heading h2 .richland-icon { width: 18px; height: 18px; color: var(--brand-accent); }
 .prep-heading p { margin: 0; color: var(--text-secondary); font-size: var(--font-size-meta); line-height: var(--line-height-meta); }
 .prep-empty { margin: 0; color: var(--text-secondary); font-size: var(--font-size-control); }
 .prep-session-list { border-top: 1px solid var(--divider); }
@@ -8729,7 +8729,7 @@ html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-na
 .prep-controls { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr) auto; align-items: end; gap: .75rem; }
 .prep-field { display: grid; min-width: 0; gap: .3rem; color: var(--text-primary); font-size: var(--font-size-label); font-weight: 650; }
 .prep-select { width: 100%; }
-.heartful-site-shell:not(.wellnest-client-screen) .prep-select > button {
+.richland-site-shell:not(.wellnest-client-screen) .prep-select > button {
   width: 100%;
   height: 44px;
   min-height: 44px;
@@ -8815,9 +8815,9 @@ html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-na
 .dashboard-sessions-panel > .dashboard-text-action { padding-left: 1.125rem; }
 .dashboard-date { cursor: pointer; }
 .dashboard-date:focus-visible { outline: 2px solid var(--text-secondary); outline-offset: 2px; }
-.heartful-site-shell:not(.wellnest-client-screen) .prep-select > button:hover:not(:disabled),
-.heartful-site-shell:not(.wellnest-client-screen) .prep-select > button[aria-expanded="true"] { border-color: var(--brand-accent-muted); }
-.heartful-site-shell:not(.wellnest-client-screen) .prep-select > button:focus-visible { border-color: var(--brand-accent); box-shadow: 0 0 0 3px var(--color-orange-100); }
+.richland-site-shell:not(.wellnest-client-screen) .prep-select > button:hover:not(:disabled),
+.richland-site-shell:not(.wellnest-client-screen) .prep-select > button[aria-expanded="true"] { border-color: var(--brand-accent-muted); }
+.richland-site-shell:not(.wellnest-client-screen) .prep-select > button:focus-visible { border-color: var(--brand-accent); box-shadow: 0 0 0 3px var(--color-orange-100); }
 .prep-select > button:disabled { opacity: .55; cursor: not-allowed; }
 .prep-select > button svg { color: var(--icon-color); }
 .prep-select-menu {
@@ -8834,7 +8834,7 @@ html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-na
 .prep-select-menu [role="option"]:hover { background: var(--surface-hover); }
 .prep-select-menu [role="option"][aria-selected="true"] { background: var(--surface-selected); font-weight: 650; }
 .prep-select-menu [role="option"] svg { color: var(--brand-accent); }
-.heartful-site-shell:not(.wellnest-client-screen) .prep-action { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; gap: .5rem; padding: .6rem 1rem; border-radius: var(--radius-control); white-space: nowrap; }
+.richland-site-shell:not(.wellnest-client-screen) .prep-action { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; gap: .5rem; padding: .6rem 1rem; border-radius: var(--radius-control); white-space: nowrap; }
 .prep-action:disabled { opacity: .55; }
 .prep-summary-controls { grid-template-columns: minmax(0, 1fr) auto; }
 .prep-secondary .prep-heading h2 { font-weight: 650; }
@@ -8849,7 +8849,7 @@ html:not([data-interaction-ready]) .heartful-site-shell .app-sidebar .sidebar-na
   .prep-session-time { grid-column: 1; text-align: left; }
   .prep-session-chevron { grid-column: 2; grid-row: 1 / 4; }
   .prep-controls, .prep-summary-controls { grid-template-columns: minmax(0, 1fr); }
-  .heartful-site-shell:not(.wellnest-client-screen) .prep-action { width: 100%; }
+  .richland-site-shell:not(.wellnest-client-screen) .prep-action { width: 100%; }
 }
 
 /* Native dropdowns share a consistent chevron with a clear right gutter. */
@@ -8946,14 +8946,14 @@ select:not([multiple]):not([size]) {
 
 /* Shared typography: Manrope carries functional UI and reading text; Lora is
    reserved for the editorial hierarchy rather than controls or form fields. */
-.heartful-site-shell,
+.richland-site-shell,
 .portal-shell,
 .auth-shell {
   font-family: var(--font-sans);
 }
 
-.heartful-site-shell .app-page-title,
-.heartful-site-shell .app-workspace :is(h1, h2, h3),
+.richland-site-shell .app-page-title,
+.richland-site-shell .app-workspace :is(h1, h2, h3),
 .portal-shell :is(h1, h2, h3),
 .auth-shell :is(h1, h2, h3) {
   font-family: var(--font-serif-warm);
@@ -8962,8 +8962,8 @@ select:not([multiple]):not([size]) {
   line-height: 1.2;
 }
 
-/* Shared Heartful branding and client workspace components. */
-.heartful-brand-subtitle { margin-top: .2rem; color: var(--text-muted); font-family: "Manrope", sans-serif; font-size: .75rem; font-weight: 500; line-height: 1.2; }
+/* Shared Richland branding and client workspace components. */
+.richland-brand-subtitle { margin-top: .2rem; color: var(--text-muted); font-family: "Manrope", sans-serif; font-size: .75rem; font-weight: 500; line-height: 1.2; }
 .sidebar-brand-mark,
 .wellnest-client-screen .sidebar-brand-mark,
 .portal-brand .sidebar-brand-mark,
@@ -9067,7 +9067,7 @@ select:not([multiple]):not([size]) {
   gap: .5rem;
   white-space: nowrap;
 }
-.journey-ai-summary-generate .heartful-icon { flex: 0 0 auto; }
+.journey-ai-summary-generate .richland-icon { flex: 0 0 auto; }
 .journey-ai-summaries-header button:disabled {
   cursor: not-allowed;
   opacity: .55;
@@ -9192,7 +9192,7 @@ select:not([multiple]):not([size]) {
   gap: .625rem;
   vertical-align: middle;
 }
-.wellnest-client-screen .journey-icon-heading > .heartful-icon {
+.wellnest-client-screen .journey-icon-heading > .richland-icon {
   width: 18px;
   height: 18px;
   flex: 0 0 18px;
@@ -9299,7 +9299,7 @@ select:not([multiple]):not([size]) {
 .session-assessment-actions .session-assessment-delete { color: var(--danger-text); }
 .session-assessment-actions .session-assessment-delete:hover { background: var(--danger-surface); color: var(--danger-text); }
 .session-assessment-actions button:disabled { cursor: not-allowed; opacity: .55; }
-.session-assessment-actions .heartful-icon { width: 15px; height: 15px; }
+.session-assessment-actions .richland-icon { width: 15px; height: 15px; }
 .session-assessment-menu { position: relative; }
 .session-assessment-menu > summary { min-width: 30px; min-height: 30px; list-style: none; }
 .session-assessment-menu > summary::-webkit-details-marker { display: none; }

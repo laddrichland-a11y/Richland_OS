@@ -32,7 +32,7 @@ import {
   Sparkles,
   MessageSquareText,
   Music,
-} from "@/components/ui/HeartfulIcon";
+} from "@/components/ui/RichlandIcon";
 import { RecordingsSection, } from "@/components/ai/RecordingsPanel";
 import StageFormsCard from "@/components/client/StageFormsCard";
 

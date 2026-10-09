@@ -1,5 +1,5 @@
 -- ============================================================================
--- HEARTFUL OS — Core Database Schema
+-- RICHLAND OS — Core Database Schema
 -- A client journey management platform for psychedelic harm reduction
 -- specialists, preparation coaches, integration coaches, and
 -- transformational practitioners.

@@ -1,18 +1,18 @@
 # Google Calendar Sync — Setup
 
-Heartful OS can sync Sessions and Prospect Calls two-ways with your Google Calendar. This only needs to be set up once. It requires creating a free OAuth client in Google Cloud Console — takes about 10 minutes.
+Richland OS can sync Sessions and Prospect Calls two-ways with your Google Calendar. This only needs to be set up once. It requires creating a free OAuth client in Google Cloud Console — takes about 10 minutes.
 
 ## What this actually does
 
-- Creates a new calendar in your Google account called **"Heartful OS"**. Every Session and Prospect Call scheduled in the app is mirrored there as an event.
-- Watches your **primary** Google Calendar read-only, purely to know when you're busy — anything on it shows up in Heartful OS as a "Busy" block and is checked for conflicts when you schedule something new. Nothing is ever written to your primary calendar.
-- Syncs both ways, near real-time: reschedule or cancel a session in Heartful OS and it updates on Google within seconds; move or delete the mirrored event directly in Google Calendar and it updates back in Heartful OS the same way.
+- Creates a new calendar in your Google account called **"Richland OS"**. Every Session and Prospect Call scheduled in the app is mirrored there as an event.
+- Watches your **primary** Google Calendar read-only, purely to know when you're busy — anything on it shows up in Richland OS as a "Busy" block and is checked for conflicts when you schedule something new. Nothing is ever written to your primary calendar.
+- Syncs both ways, near real-time: reschedule or cancel a session in Richland OS and it updates on Google within seconds; move or delete the mirrored event directly in Google Calendar and it updates back in Richland OS the same way.
 - A daily background job keeps the sync connection alive so it doesn't quietly go stale.
 
 ## 1. Create a Google Cloud project
 
 1. Go to [console.cloud.google.com](https://console.cloud.google.com) and sign in with the Google account whose calendar you want to sync (your own).
-2. Click the project dropdown at the top → **New Project**. Name it something like "Heartful OS" → **Create**.
+2. Click the project dropdown at the top → **New Project**. Name it something like "Richland OS" → **Create**.
 3. Make sure the new project is selected in the dropdown before continuing.
 
 ## 2. Enable the Calendar API
@@ -24,7 +24,7 @@ Heartful OS can sync Sessions and Prospect Calls two-ways with your Google Calen
 
 1. Go to **APIs & Services → OAuth consent screen**.
 2. User type: **External** (this is fine for personal use — Google will show an "unverified app" warning when you connect, which is expected and safe to click through since you're the only user).
-3. Fill in the required fields (app name "Heartful OS", your email for support/developer contact).
+3. Fill in the required fields (app name "Richland OS", your email for support/developer contact).
 4. Under **Scopes**, add: `https://www.googleapis.com/auth/calendar`.
 5. Under **Test users**, add your own Google account email.
 6. Save through the remaining steps. You can leave the app in "Testing" status — no need to submit for verification.
@@ -37,7 +37,7 @@ Heartful OS can sync Sessions and Prospect Calls two-ways with your Google Calen
    ```
    https://<your-site-domain>/api/integrations/google/callback
    ```
-   Replace `<your-site-domain>` with your actual Netlify site URL (e.g. `heartful-os.netlify.app`, or your custom domain if you have one). For local testing, also add `http://localhost:3000/api/integrations/google/callback`.
+   Replace `<your-site-domain>` with your actual Netlify site URL (e.g. `richland-os.netlify.app`, or your custom domain if you have one). For local testing, also add `http://localhost:3000/api/integrations/google/callback`.
 4. Click **Create**. Copy the **Client ID** and **Client Secret** shown — you'll need them next.
 
 ## 5. Set environment variables
@@ -57,9 +57,9 @@ Add these wherever you set the app's other environment variables (Netlify: **Sit
 ## 6. Deploy, then connect
 
 1. Deploy the site (or restart your local dev server) so the new environment variables take effect.
-2. In Heartful OS, go to **Settings** → **Google Calendar Sync** → **Connect Google Calendar**.
-3. Google will show a consent screen (with an "unverified app" warning — click **Advanced → Go to Heartful OS (unsafe)**, this is expected for a personal-use app you own). Approve calendar access.
-4. You'll land back on Settings with "Google Calendar connected." The "Heartful OS" calendar is created automatically and an initial sync runs right away.
+2. In Richland OS, go to **Settings** → **Google Calendar Sync** → **Connect Google Calendar**.
+3. Google will show a consent screen (with an "unverified app" warning — click **Advanced → Go to Richland OS (unsafe)**, this is expected for a personal-use app you own). Approve calendar access.
+4. You'll land back on Settings with "Google Calendar connected." The "Richland OS" calendar is created automatically and an initial sync runs right away.
 
 ## Troubleshooting
 

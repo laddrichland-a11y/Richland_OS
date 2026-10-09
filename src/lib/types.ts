@@ -1,4 +1,4 @@
-// Core domain types for Heartful OS.
+// Core domain types for Richland OS.
 // These mirror the Supabase schema in supabase/migrations/0001_init.sql.
 // When wiring up real Supabase, these types should match `Database` codegen
 // (npx supabase gen types typescript) — kept hand-written for now so the
@@ -701,8 +701,8 @@ export const STATUS_LABELS: Record<ClientStatus, string> = {
 };
 
 // ---------------------------------------------------------------------------
-// GOOGLE CALENDAR SYNC — two-way sync between Heartful OS and a practitioner's
-// Google Calendar. A dedicated "Heartful OS" calendar is created in the
+// GOOGLE CALENDAR SYNC — two-way sync between Richland OS and a practitioner's
+// Google Calendar. A dedicated "Richland OS" calendar is created in the
 // practitioner's Google account on connect, so Sessions/ProspectCalls are
 // mirrored there without cluttering their primary calendar. Their primary
 // calendar is watched read-only (busy blocks only) purely for double-booking
@@ -716,17 +716,17 @@ export interface GoogleCalendarSettings {
   access_token?: string;
   refresh_token?: string;
   token_expiry?: number; // epoch ms
-  /** The dedicated "Heartful OS" calendar we create and push Sessions/ProspectCalls to */
-  heartful_calendar_id?: string;
+  /** The dedicated "Richland OS" calendar we create and push Sessions/ProspectCalls to */
+  richland_calendar_id?: string;
   /** The practitioner's primary calendar — watched read-only for conflict checks */
   primary_calendar_id?: string;
   /** Incremental sync tokens, one per watched calendar */
-  heartful_sync_token?: string;
+  richland_sync_token?: string;
   primary_sync_token?: string;
   /** Push notification channel bookkeeping, one per watched calendar */
-  heartful_channel_id?: string;
-  heartful_channel_resource_id?: string;
-  heartful_channel_expiration?: number; // epoch ms
+  richland_channel_id?: string;
+  richland_channel_resource_id?: string;
+  richland_channel_expiration?: number; // epoch ms
   primary_channel_id?: string;
   primary_channel_resource_id?: string;
   primary_channel_expiration?: number; // epoch ms
@@ -738,7 +738,7 @@ export interface GoogleCalendarSettings {
 
 /**
  * A busy block mirrored from the practitioner's primary Google Calendar that
- * did NOT originate in Heartful OS (i.e. a personal/other-app event). Used
+ * did NOT originate in Richland OS (i.e. a personal/other-app event). Used
  * to show "Busy" chips on the Calendar and to catch double-bookings when
  * scheduling a Session or ProspectCall — never linked to a client.
  */

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { X, Mail, Copy, Check } from "@/components/ui/HeartfulIcon";
+import { X, Mail, Copy, Check } from "@/components/ui/RichlandIcon";
 import { buildJourneyPrepEmail } from "@/lib/emailTemplates";
 import { logJourneyPrepEmailAction } from "@/lib/actions";
 
@@ -85,7 +85,7 @@ export default function JourneyPrepEmailModal({
           </div>
         </div>
         <p className="text-xs text-ink-400 mt-3">
-          Heartful OS doesn&apos;t send email itself — open it in your mail app, or copy the text below to send it yourself.
+          Richland OS doesn&apos;t send email itself — open it in your mail app, or copy the text below to send it yourself.
         </p>
         <div className="flex justify-end gap-2 pt-3">
           <button

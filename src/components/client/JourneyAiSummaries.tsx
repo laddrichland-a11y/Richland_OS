@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import AiGenerateButton from "@/components/ai/AiGenerateButton";
-import { MoreHorizontal, Sparkles, Trash2 } from "@/components/ui/HeartfulIcon";
+import { MoreHorizontal, Sparkles, Trash2 } from "@/components/ui/RichlandIcon";
 import { deleteAiSummaryAction } from "@/lib/actions";
 import { AiSummary } from "@/lib/types";
 import { formatDateTime } from "@/lib/utils";

@@ -5,7 +5,7 @@ import SummaryCard from "@/components/ai/SummaryCard";
 import { deleteAiSummaryAction, updateAiSummaryAction } from "@/lib/actions";
 import type { AiSummary } from "@/lib/types";
 import { formatDateTime } from "@/lib/utils";
-import { ChevronDown, ChevronUp, Clock, MessageSquareText } from "@/components/ui/HeartfulIcon";
+import { ChevronDown, ChevronUp, Clock, MessageSquareText } from "@/components/ui/RichlandIcon";
 
 // Every AI version generated for one stage, newest first. The newest is open;
 // older ones are one click away. Each version shows the notes it came from,

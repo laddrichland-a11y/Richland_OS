@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useRef, useState, useTransition } from "react";
-import HeartfulBrand from "@/components/ui/HeartfulBrand";
+import RichlandBrand from "@/components/ui/RichlandBrand";
 import { useRole } from "@/components/RoleContext";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -42,7 +42,7 @@ import {
   Session,
   Recording,
 } from "@/lib/types";
-import { AlertCircle, Check, CheckCircle2, Send, Sparkles, FileText, ChevronDown, ChevronUp, CalendarDays, MapPin, Clock, Pencil, Trash2, MessageSquareText, Mail, Music, UserRound, LayoutDashboard, ListChecks, Sprout, PanelLeftClose, PanelLeftOpen, Settings, ArrowRight } from "@/components/ui/HeartfulIcon";
+import { AlertCircle, Check, CheckCircle2, Send, Sparkles, FileText, ChevronDown, ChevronUp, CalendarDays, MapPin, Clock, Pencil, Trash2, MessageSquareText, Mail, Music, UserRound, LayoutDashboard, ListChecks, Sprout, PanelLeftClose, PanelLeftOpen, Settings, ArrowRight } from "@/components/ui/RichlandIcon";
 import { formatDate, formatDateTime, getClientJourneyProgress, journeyStageStatusLabel, relativeDueLabel, cx, isGeneralPaperwork, phaseForStatus } from "@/lib/utils";
 import { selectCurrentOrNextSession, selectSessionTimeline } from "@/lib/sessionSelectors";
 import JourneyProgressBar from "@/components/JourneyProgressBar";
@@ -135,7 +135,7 @@ function formAssignmentActionLabel(status: PortalAssignment["status"]) {
   return "Start";
 }
 
-const PORTAL_SIDEBAR_COLLAPSED_KEY = "heartful-portal-sidebar-collapsed";
+const PORTAL_SIDEBAR_COLLAPSED_KEY = "richland-portal-sidebar-collapsed";
 
 export default function PortalPage() {
   return (
@@ -376,7 +376,7 @@ function PortalPageInner() {
     return (
       <div className="auth-shell min-h-screen flex items-center justify-center bg-[var(--background)] px-4">
         <div className="card p-8 max-w-md w-full text-center space-y-4">
-          <div className="portal-auth-brand"><HeartfulBrand subtitle="Your Journey Portal" /></div>
+          <div className="portal-auth-brand"><RichlandBrand subtitle="Your Journey Portal" /></div>
           {isPractitioner ? (
             <>
               <h1 className="text-lg font-semibold text-ink-900">That client link is out of date</h1>
@@ -426,7 +426,7 @@ function PortalPageInner() {
     return (
       <div className="portal-shell min-h-screen flex items-center justify-center bg-[var(--background)] px-4">
         <div className="card p-8 max-w-md w-full text-center space-y-4">
-          <div className="portal-auth-brand"><HeartfulBrand subtitle="Your Journey Portal" /></div>
+          <div className="portal-auth-brand"><RichlandBrand subtitle="Your Journey Portal" /></div>
           <h1 className="text-lg font-semibold text-ink-900">Welcome to your Client Portal</h1>
           <p className="text-sm text-ink-500">For this demo, choose which client account to view.</p>
           <div className="space-y-2 text-left">
@@ -553,7 +553,7 @@ function PortalPageInner() {
     const practitionerName = bundle.practitioner?.full_name ?? "your practitioner";
     const practitionerEmail = bundle.practitioner?.email;
     return (
-      <div className="portal-shell portal-onboarding app-frame heartful-site-shell flex min-h-screen bg-[var(--background)]">
+      <div className="portal-shell portal-onboarding app-frame richland-site-shell flex min-h-screen bg-[var(--background)]">
         <PortalSidebar
           activeTab={tab}
           collapsed={portalSidebarCollapsed}
@@ -565,7 +565,7 @@ function PortalPageInner() {
         <header className="portal-onboarding-header portal-mobile-header">
           <div className="portal-onboarding-header__inner justify-between gap-4">
             <div className="portal-onboarding-brand">
-              <HeartfulBrand subtitle="Your Journey Portal" />
+              <RichlandBrand subtitle="Your Journey Portal" />
             </div>
             {canUsePortalPreviewControls && <PractitionerViewReturn onReturn={returnToPractitionerView} />}
           </div>
@@ -660,7 +660,7 @@ function PortalPageInner() {
         <header className="bg-white border-b border-ink-100">
           <div className="portal-onboarding-header__inner justify-between gap-4">
             <div className="portal-onboarding-brand">
-              <HeartfulBrand subtitle="Your Journey Portal" />
+              <RichlandBrand subtitle="Your Journey Portal" />
             </div>
             {canUsePortalPreviewControls && <PractitionerViewReturn onReturn={returnToPractitionerView} />}
           </div>
@@ -686,7 +686,7 @@ function PortalPageInner() {
   }
 
   return (
-    <div className="portal-shell app-frame heartful-site-shell flex min-h-screen bg-[var(--background)]">
+    <div className="portal-shell app-frame richland-site-shell flex min-h-screen bg-[var(--background)]">
       <PortalSidebar
         activeTab={tab}
         collapsed={portalSidebarCollapsed}
@@ -1081,8 +1081,8 @@ function PortalSidebar({
         {collapsed ? <PanelLeftOpen aria-hidden="true" /> : <PanelLeftClose aria-hidden="true" />}
       </button>
 
-      <button type="button" onClick={() => !agreementMode && onTabChange("Home")} className="sidebar-brand flex items-center gap-2 px-5 py-5 transition-colors" aria-label="Heartful client portal home">
-        <HeartfulBrand subtitle="Your Journey Portal" />
+      <button type="button" onClick={() => !agreementMode && onTabChange("Home")} className="sidebar-brand flex items-center gap-2 px-5 py-5 transition-colors" aria-label="Richland client portal home">
+        <RichlandBrand subtitle="Your Journey Portal" />
       </button>
 
       <nav id="client-portal-navigation" className="sidebar-nav flex-1 px-3 py-4 space-y-1" aria-label="Client portal navigation">
@@ -1830,7 +1830,7 @@ function PortalAuthGate({
   return (
     <div className="auth-shell min-h-screen flex items-center justify-center bg-[var(--background)] px-4">
       <div className="card p-6 w-full max-w-sm space-y-4 text-center">
-        <div className="portal-auth-brand"><HeartfulBrand subtitle="Your Journey Portal" /></div>
+        <div className="portal-auth-brand"><RichlandBrand subtitle="Your Journey Portal" /></div>
         {accountExists ? (
           <PortalLoginForm clientId={clientId} clientEmail={clientEmail} onUnlocked={onUnlocked} />
         ) : (

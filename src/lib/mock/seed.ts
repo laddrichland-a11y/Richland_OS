@@ -33,12 +33,12 @@ import {
 // The counter is already kept on globalThis for hot reload safety; a fixed demo
 // namespace keeps the generated seed graph deterministic in every worker.
 const DEMO_ID_NAMESPACE = "demo";
-const globalForId = globalThis as unknown as { __heartfulIdCounter?: number };
-if (globalForId.__heartfulIdCounter === undefined) {
-  globalForId.__heartfulIdCounter = 1;
+const globalForId = globalThis as unknown as { __richlandIdCounter?: number };
+if (globalForId.__richlandIdCounter === undefined) {
+  globalForId.__richlandIdCounter = 1;
 }
 export function nextId(prefix: string) {
-  const n = globalForId.__heartfulIdCounter!++;
+  const n = globalForId.__richlandIdCounter!++;
   return `${prefix}_${DEMO_ID_NAMESPACE}${n.toString().padStart(4, "0")}`;
 }
 

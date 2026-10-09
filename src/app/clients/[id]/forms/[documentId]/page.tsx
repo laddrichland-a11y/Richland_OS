@@ -9,7 +9,7 @@ import {
 import { notFound } from "next/navigation";
 import FullPageForm from "@/components/forms/FullPageForm";
 import Link from "next/link";
-import { ArrowLeft } from "@/components/ui/HeartfulIcon";
+import { ArrowLeft } from "@/components/ui/RichlandIcon";
 import { DOCUMENT_LABELS } from "@/lib/types";
 import { buildFormPrefill } from "@/lib/formPrefill";
 

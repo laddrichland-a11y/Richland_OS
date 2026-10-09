@@ -13,7 +13,7 @@ import AiGenerateButton from "@/components/ai/AiGenerateButton";
 import ActionCardHeader from "@/components/client/ActionCardHeader";
 import SummaryVersions from "@/components/ai/SummaryVersions";
 import { useStageNotes } from "@/components/ai/useStageNotes";
-import { ScrollText } from "@/components/ui/HeartfulIcon";
+import { ScrollText } from "@/components/ui/RichlandIcon";
 import StageFormsCard from "@/components/client/StageFormsCard";
 
 export default function PreparationWorkspace({

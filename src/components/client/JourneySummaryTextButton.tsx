@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MessageSquare } from "@/components/ui/HeartfulIcon";
+import { MessageSquare } from "@/components/ui/RichlandIcon";
 import JourneySummaryTextModal from "./JourneySummaryTextModal";
 
 export default function JourneySummaryTextButton({

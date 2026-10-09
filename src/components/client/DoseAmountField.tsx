@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2 } from "@/components/ui/HeartfulIcon";
+import { Loader2 } from "@/components/ui/RichlandIcon";
 
 type DoseUnit = "mg" | "g" | "mL" | "other";
 

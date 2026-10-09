@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Trash2 } from "@/components/ui/HeartfulIcon";
+import { Trash2 } from "@/components/ui/RichlandIcon";
 import { deleteClientAction } from "@/lib/actions";
 
 export default function DeleteClientButton({ clientId, clientName }: { clientId: string; clientName: string }) {

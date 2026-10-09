@@ -5,7 +5,7 @@ import { cx, isActiveClient, isCompletedClient } from "@/lib/utils";
 import { selectCurrentOrNextSession } from "@/lib/sessionSelectors";
 import ClientList from "@/components/client/ClientList";
 import NewClientButton from "@/components/client/NewClientButton";
-import { PauseCircle } from "@/components/ui/HeartfulIcon";
+import { PauseCircle } from "@/components/ui/RichlandIcon";
 
 export const dynamic = "force-dynamic";
 

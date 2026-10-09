@@ -55,9 +55,9 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    const storedRole = readStored("heartful_role");
-    const storedClientId = readStored("heartful_portal_client_id");
-    const storedIsPreview = readStored("heartful_is_preview");
+    const storedRole = readStored("richland_role");
+    const storedClientId = readStored("richland_portal_client_id");
+    const storedIsPreview = readStored("richland_is_preview");
     // One-time hydration of persisted demo state from localStorage on mount.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (storedRole === "client" || storedRole === "practitioner") setRoleState(storedRole);
@@ -71,15 +71,15 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
   // fresh context object) silently refires any effect that lists them.
   const setRole = useCallback((r: "practitioner" | "client") => {
     setRoleState(r);
-    writeStored("heartful_role", r);
+    writeStored("richland_role", r);
   }, []);
   const setPortalClientId = useCallback((id: string) => {
     setPortalClientIdState(id);
-    writeStored("heartful_portal_client_id", id);
+    writeStored("richland_portal_client_id", id);
   }, []);
   const setIsPreview = useCallback((v: boolean) => {
     setIsPreviewState(v);
-    writeStored("heartful_is_preview", String(v));
+    writeStored("richland_is_preview", String(v));
   }, []);
 
   const value = useMemo(

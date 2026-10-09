@@ -17,10 +17,10 @@ import {
   requireProspectAccess as authorizeProspectAccess,
 } from "@/lib/serverAuth";
 
-const AUTH_COOKIE = "heartful_auth";
+const AUTH_COOKIE = "richland_auth";
 const PORTAL_UNLOCK_PREFIX = "portal_unlock_";
 // Must match middleware.ts, which writes this on every deep-link hit.
-const PORTAL_CLIENT_COOKIE = "heartful_portal_client";
+const PORTAL_CLIENT_COOKIE = "richland_portal_client";
 const ONE_MONTH_SECONDS = 60 * 60 * 24 * 30;
 
 function emailLooksValid(email: string): boolean {
@@ -1520,7 +1520,7 @@ export async function deleteProspectCallAction(callId: string, prospectId: strin
 
 // ---------------------------------------------------------------------------
 // Fire-and-forget Google Calendar push helpers. Deliberately not awaited by
-// callers above — scheduling inside Heartful OS should never wait on a
+// callers above — scheduling inside Richland OS should never wait on a
 // network round trip to Google. Each push function already catches its own
 // errors internally (see lib/googleCalendarSync.ts), so a Google outage
 // never surfaces as a broken save here; the .catch below is just a second
@@ -1541,18 +1541,18 @@ function syncProspectCallToGoogleInBackground(callId: string) {
 
 // Used when the local record is *deleted* outright (rather than cancelled),
 // so there's nothing left to push. Takes the local id as well as the stored
-// event id and sweeps by the heartfulId tag, because a record deleted moments
+// event id and sweeps by the richlandId tag, because a record deleted moments
 // after being created may not have had google_event_id written back yet —
 // without the sweep that event is orphaned on Google. Same reasoning as
 // removeSessionFromGoogle in lib/googleCalendarSync.ts.
 function deleteProspectCallFromGoogleInBackground(localId: string, googleEventId?: string) {
   import("@/lib/googleCalendar")
-    .then(async ({ getAuthorizedClient, ensureHeartfulCalendar, deleteHeartfulEvent, deleteHeartfulEventsByLocalId }) => {
+    .then(async ({ getAuthorizedClient, ensureRichlandCalendar, deleteRichlandEvent, deleteRichlandEventsByLocalId }) => {
       const auth = await getAuthorizedClient();
       if (!auth) return;
-      const calendarId = await ensureHeartfulCalendar(auth);
-      if (googleEventId) await deleteHeartfulEvent(auth, calendarId, googleEventId);
-      await deleteHeartfulEventsByLocalId(auth, calendarId, localId);
+      const calendarId = await ensureRichlandCalendar(auth);
+      if (googleEventId) await deleteRichlandEvent(auth, calendarId, googleEventId);
+      await deleteRichlandEventsByLocalId(auth, calendarId, localId);
     })
     .catch((err) => console.error("Failed to delete prospect call from Google Calendar:", err));
 }

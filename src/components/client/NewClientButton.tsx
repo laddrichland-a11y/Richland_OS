@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, X } from "@/components/ui/HeartfulIcon";
+import { Plus, X } from "@/components/ui/RichlandIcon";
 import { createClientAction, createReferralSourceAction } from "@/lib/actions";
 import { ReferralSource } from "@/lib/types";
 

@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { FileText, Sparkles, Loader2 } from "@/components/ui/HeartfulIcon";
+import { FileText, Sparkles, Loader2 } from "@/components/ui/RichlandIcon";
 import { AiSummaryType } from "@/lib/types";
 
 export default function AiGenerateButton({

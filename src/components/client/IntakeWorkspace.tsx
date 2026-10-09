@@ -13,7 +13,7 @@ import {
   FormSubmission,
   FormTemplate,
 } from "@/lib/types";
-import { ScrollText } from "@/components/ui/HeartfulIcon";
+import { ScrollText } from "@/components/ui/RichlandIcon";
 import StageFormsCard from "@/components/client/StageFormsCard";
 
 export default function IntakeWorkspace({

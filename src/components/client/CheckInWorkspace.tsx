@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { CheckIn, Recording } from "@/lib/types";
 import { RecordingsSection, useRecordings } from "@/components/ai/RecordingsPanel";
 import { submitCheckInAction } from "@/lib/actions";
-import { ClipboardList, Send } from "@/components/ui/HeartfulIcon";
+import { ClipboardList, Send } from "@/components/ui/RichlandIcon";
 
 const FIELDS: { key: keyof CheckIn; label: string }[] = [
   { key: "emotional_state", label: "Emotional State" },

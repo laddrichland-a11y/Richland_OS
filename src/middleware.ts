@@ -14,11 +14,11 @@ import { NextRequest, NextResponse } from "next/server";
 // something comparable without a database round trip.
 // ---------------------------------------------------------------------------
 
-const AUTH_COOKIE = "heartful_auth";
+const AUTH_COOKIE = "richland_auth";
 // Remembers which client a device belongs to, so a bare /portal or / visit
 // can be turned back into that client's deep link. See the two blocks that
 // use it in middleware() below.
-const PORTAL_CLIENT_COOKIE = "heartful_portal_client";
+const PORTAL_CLIENT_COOKIE = "richland_portal_client";
 const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
 const PUBLIC_PATHS = ["/login", "/favicon.ico"];
 

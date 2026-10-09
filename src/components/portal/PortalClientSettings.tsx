@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { portalLogoutAction, updatePortalProfileAction } from "@/lib/actions";
 import type { Client } from "@/lib/types";
-import { CheckCircle2, FileText, LogOut, Mail, Settings, UserRound } from "@/components/ui/HeartfulIcon";
+import { CheckCircle2, FileText, LogOut, Mail, Settings, UserRound } from "@/components/ui/RichlandIcon";
 import { getSavedTheme, saveTheme, ThemeOptions, type Theme } from "@/components/settings/ThemeSettings";
 
 const NOTIFICATIONS = [
@@ -14,7 +14,7 @@ const NOTIFICATIONS = [
 ] as const;
 
 function storageKey(clientId: string) {
-  return `heartful-portal-preferences-${clientId}`;
+  return `richland-portal-preferences-${clientId}`;
 }
 
 function savedPreferences(clientId: string) {
@@ -98,7 +98,7 @@ export default function PortalClientSettings({
           <label><span>Email</span><input type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" /></label>
           <label><span>Phone</span><input type="tel" value={phone} onChange={(event) => setPhone(event.target.value)} autoComplete="tel" /></label>
         </div>
-        <p className="portal-settings-note">Preferred name and time zone are not yet saved in your Heartful profile.</p>
+        <p className="portal-settings-note">Preferred name and time zone are not yet saved in your Richland profile.</p>
         <div className="portal-settings-save-row">
           <button type="button" className="btn-primary" onClick={saveProfile} disabled={isPending}>{isPending ? "Saving…" : "Save changes"}</button>
           {message && <span className="portal-settings-save-message" role="status">{message}</span>}

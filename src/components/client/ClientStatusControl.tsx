@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { ClientStatus, JourneyMilestone, JourneyPhase } from "@/lib/types";
 import { canSetJourneyStatus, clientStatusBadgeClasses, cx, phaseForStatus, phaseLabel } from "@/lib/utils";
 import { updateClientStatusAction } from "@/lib/actions";
-import { ChevronDown, Loader2 } from "@/components/ui/HeartfulIcon";
+import { ChevronDown, Loader2 } from "@/components/ui/RichlandIcon";
 
 // Practitioner-facing manual override for a client's journey status/phase.
 // Scheduling and completing sessions already advance status automatically

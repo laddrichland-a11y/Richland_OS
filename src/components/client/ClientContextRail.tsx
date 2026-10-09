@@ -10,7 +10,7 @@ import {
   Plus,
   Sparkles,
   Upload,
-} from "@/components/ui/HeartfulIcon";
+} from "@/components/ui/RichlandIcon";
 import TaskReminderCard from "@/components/client/TaskReminderCard";
 import {
   AiSummary,

@@ -1,17 +1,17 @@
 // ---------------------------------------------------------------------------
-// Centralized AI prompt library for Heartful OS.
+// Centralized AI prompt library for Richland OS.
 // Every AI-generated artifact in the product is produced from a prompt
 // defined here, so prompts can be reviewed, versioned, and tuned in one
 // place. Each builder returns { system, user } messages ready to send to
 // the OpenAI Chat Completions / Responses API.
 //
 // IMPORTANT FRAMING USED IN EVERY SYSTEM PROMPT:
-// Heartful OS is NOT a medical record system and these summaries are NOT
+// Richland OS is NOT a medical record system and these summaries are NOT
 // clinical or diagnostic documents. The AI is instructed accordingly.
 // ---------------------------------------------------------------------------
 
 const BASE_SYSTEM_FRAME = `You are an assistant supporting a psychedelic harm reduction specialist,
-preparation coach, or integration coach inside "Heartful OS" — a client journey
+preparation coach, or integration coach inside "Richland OS" — a client journey
 management platform. This is explicitly NOT a medical record system and you are
 NOT providing clinical diagnoses, medical advice, or treatment recommendations.
 Your job is to help the practitioner understand their client's journey, intentions,
@@ -334,7 +334,7 @@ ${transcript}
 export function buildProspectClientSummaryPrompt(transcript: string, prospectName: string): PromptPair {
   return {
     system: `You are an assistant supporting a psychedelic harm reduction specialist,
-preparation coach, or integration coach inside "Heartful OS" — a client journey
+preparation coach, or integration coach inside "Richland OS" — a client journey
 management platform. This is explicitly NOT a medical record system and you are
 NOT providing clinical diagnoses, medical advice, or treatment recommendations.
 

@@ -4,7 +4,7 @@ import ReportsNav from "@/components/reports/ReportsNav";
 import ReportsFilterBar from "@/components/reports/ReportsFilterBar";
 import { getReferralSources, getReportsSummary, parseReportsFilter } from "@/lib/data";
 import { getClientJourneyProgress } from "@/lib/utils";
-import { ClipboardList, TrendingUp, UserRound, Users } from "@/components/ui/HeartfulIcon";
+import { ClipboardList, TrendingUp, UserRound, Users } from "@/components/ui/RichlandIcon";
 
 export const dynamic = "force-dynamic";
 

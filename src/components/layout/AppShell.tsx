@@ -35,7 +35,7 @@ export default function AppShell({
 
   return (
     <div
-      className={`app-frame heartful-site-shell flex min-h-screen ${variant === "wellnest-client" ? "wellnest-client-screen" : ""}${title === "Clients" ? " app-frame--clients-typography" : ""}`}
+      className={`app-frame richland-site-shell flex min-h-screen ${variant === "wellnest-client" ? "wellnest-client-screen" : ""}${title === "Clients" ? " app-frame--clients-typography" : ""}`}
       data-shell-variant={variant ?? "practitioner"}
     >
       <Sidebar />

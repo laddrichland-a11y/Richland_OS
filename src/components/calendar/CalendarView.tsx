@@ -36,7 +36,7 @@ import {
   RotateCcw,
   Copy,
   MoreHorizontal,
-} from "@/components/ui/HeartfulIcon";
+} from "@/components/ui/RichlandIcon";
 type SessionWithClient = Session & { client_name: string };
 type ClientOption = { id: string; full_name: string };
 

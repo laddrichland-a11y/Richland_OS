@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { PauseCircle, PlayCircle, X } from "@/components/ui/HeartfulIcon";
+import { PauseCircle, PlayCircle, X } from "@/components/ui/RichlandIcon";
 import { DEFAULT_HOLD_DAYS } from "@/lib/types";
 import {
   putClientOnHoldAction,

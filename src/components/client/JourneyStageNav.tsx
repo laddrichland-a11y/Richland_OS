@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect } from "react";
 import { Client, JourneyMilestone, Session, SessionType } from "@/lib/types";
 import { getClientJourneyProgress, journeyStageStatusLabel } from "@/lib/utils";
-import { Check } from "@/components/ui/HeartfulIcon";
+import { Check } from "@/components/ui/RichlandIcon";
 import { selectStageWorkspaceSession } from "@/lib/sessionSelectors";
 
 export type PhaseNavKey = "overview" | "intake" | "preparation" | "harm_reduction_session" | "post_journey_check_in" | "integration_1" | "integration_2" | "growth_action_plan";
@@ -20,11 +20,11 @@ export const PHASE_LINKS: { phase: PhaseNavKey; label: string; href: string; ses
 ];
 
 function headerIsExpanded(clientId: string) {
-  return window.sessionStorage.getItem(`heartful:client-header:${clientId}:expanded`) !== "false";
+  return window.sessionStorage.getItem(`richland:client-header:${clientId}:expanded`) !== "false";
 }
 
 function stageScrollKey(clientId: string) {
-  return `heartful:stage-scroll:${clientId}`;
+  return `richland:stage-scroll:${clientId}`;
 }
 
 export function getJourneyStageProgress(milestones: JourneyMilestone[]) {

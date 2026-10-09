@@ -1,7 +1,7 @@
 "use client";
 
 import { completeTaskAction, sendMessageAction } from "@/lib/actions";
-import { Bell, Check } from "@/components/ui/HeartfulIcon";
+import { Bell, Check } from "@/components/ui/RichlandIcon";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 

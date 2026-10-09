@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { FormTemplate, DOCUMENT_LABELS } from "@/lib/types";
 import { cx } from "@/lib/utils";
 import { setFormTemplateFlagsAction, resyncFormTemplatesAction } from "@/lib/actions";
-import { FileText, ChevronDown, ChevronUp, ShieldCheck, ShieldOff, RefreshCw, Plus, Pencil } from "@/components/ui/HeartfulIcon";
+import { FileText, ChevronDown, ChevronUp, ShieldCheck, ShieldOff, RefreshCw, Plus, Pencil } from "@/components/ui/RichlandIcon";
 import FormRenderer from "./FormRenderer";
 import FormTemplateEditor, { FORM_STAGE_CHOICES } from "./FormTemplateEditor";
 

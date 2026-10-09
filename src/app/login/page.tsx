@@ -3,7 +3,7 @@
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { loginAction } from "@/lib/actions";
-import { HeartHandshake } from "@/components/ui/HeartfulIcon";
+import { HeartHandshake } from "@/components/ui/RichlandIcon";
 
 export default function LoginPage() {
   return (
@@ -41,7 +41,7 @@ function LoginPageInner() {
           <div className="h-9 w-9 rounded-lg bg-clay-500 text-white flex items-center justify-center">
             <HeartHandshake className="h-4.5 w-4.5" />
           </div>
-          <div className="font-semibold text-ink-900">Heartful OS</div>
+          <div className="font-semibold text-ink-900">Richland OS</div>
         </div>
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>

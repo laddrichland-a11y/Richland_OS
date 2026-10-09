@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { CalendarDays, Download, DollarSign, ExternalLink, FileText, MoreHorizontal, Pencil, X } from "@/components/ui/HeartfulIcon";
+import { CalendarDays, Download, DollarSign, ExternalLink, FileText, MoreHorizontal, Pencil, X } from "@/components/ui/RichlandIcon";
 import RecordPaymentButton from "@/components/client/RecordPaymentButton";
 import { updateOutstandingPaymentAction, updatePaymentAction, updatePaymentDueDateAction } from "@/lib/actions";
 import { formatCurrency, formatDate } from "@/lib/utils";
@@ -26,11 +26,11 @@ export default function PaymentRowActions({ clientId, outstanding, dueDate, paym
 
   function downloadReceipt() {
     if (!payment) return;
-    const content = ["Heartful — Payment receipt", `Client: ${payment.client}`, `Amount: ${formatCurrency(payment.amount)}`, `Date: ${formatDate(payment.date)}`, `Method: ${payment.method ?? "Not specified"}`, payment.notes ? `Notes: ${payment.notes}` : ""].filter(Boolean).join("\n");
+    const content = ["Richland — Payment receipt", `Client: ${payment.client}`, `Amount: ${formatCurrency(payment.amount)}`, `Date: ${formatDate(payment.date)}`, `Method: ${payment.method ?? "Not specified"}`, payment.notes ? `Notes: ${payment.notes}` : ""].filter(Boolean).join("\n");
     const url = URL.createObjectURL(new Blob([content], { type: "text/plain" }));
     const link = document.createElement("a");
     link.href = url;
-    link.download = `heartful-receipt-${payment.id}.txt`;
+    link.download = `richland-receipt-${payment.id}.txt`;
     link.click();
     URL.revokeObjectURL(url);
     setMenuOpen(false);

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Loader2, Upload } from "@/components/ui/HeartfulIcon";
+import { Loader2, Upload } from "@/components/ui/RichlandIcon";
 
 /** Adds an uploaded file's text to the end of the existing notes, with a
  *  small header so it's clear where that part came from. */

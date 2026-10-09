@@ -8,7 +8,7 @@ import {
 } from "@/lib/types";
 import { cx, isGeneralPaperwork } from "@/lib/utils";
 import { formTemplateAppliesToSession } from "@/lib/requiredForms";
-import { FileText } from "@/components/ui/HeartfulIcon";
+import { FileText } from "@/components/ui/RichlandIcon";
 
 // "Forms for This Session" — one shared list used on every stage page and
 // session page, so the forms for a stage look and open the same everywhere.

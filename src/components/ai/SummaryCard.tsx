@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Trash2, Pencil, Check, X, Loader2 } from "@/components/ui/HeartfulIcon";
+import { Trash2, Pencil, Check, X, Loader2 } from "@/components/ui/RichlandIcon";
 
 const ASSESSMENT_GROUPS = [
   { title: "Goals & background", keys: ["client_goals", "personal_history"] },

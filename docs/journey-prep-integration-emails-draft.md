@@ -142,7 +142,7 @@ Warmly,
   `{followUpDate}` pulls from the next scheduled session/call for that
   client if one exists, otherwise falls back to generic phrasing ("in the
   next few days").
-- For the "two days before" timing: since Heartful OS never auto-sends
+- For the "two days before" timing: since Richland OS never auto-sends
   email (everything routes through "open in mail app" / copy), the
   practical version of this is a **reminder**, not an auto-send — e.g. a
   small addition to the existing daily Netlify scheduled function (the same

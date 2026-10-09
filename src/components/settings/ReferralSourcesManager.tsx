@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, type FormEvent } from "react";
-import { Plus, X } from "@/components/ui/HeartfulIcon";
+import { Plus, X } from "@/components/ui/RichlandIcon";
 import { ReferralSource } from "@/lib/types";
 import { createReferralSourceAction, deleteReferralSourceAction } from "@/lib/actions";
 

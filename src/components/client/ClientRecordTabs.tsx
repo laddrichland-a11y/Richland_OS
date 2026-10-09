@@ -63,7 +63,7 @@ import {
   ListChecks,
   BookOpen,
   MoreHorizontal,
-} from "@/components/ui/HeartfulIcon";
+} from "@/components/ui/RichlandIcon";
 import {
   uploadDocumentAction,
   sendMessageAction,
@@ -1846,7 +1846,7 @@ function ClientCopilotTab({
                   )}
                 >
                   <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-ink-400">
-                    {message.role === "practitioner" ? "You" : "Heartful AI"}
+                    {message.role === "practitioner" ? "You" : "Richland AI"}
                   </div>
                   <p className="whitespace-pre-wrap text-sm leading-6">{message.body}</p>
                   <div className="mt-2 text-xs text-ink-400">{formatDateTime(message.created_at)}</div>
@@ -1876,7 +1876,7 @@ function ClientCopilotTab({
               rows={2}
               disabled={chatBusy}
               placeholder="Ask the AI about this client..."
-              aria-label="Ask the Heartful AI"
+              aria-label="Ask the Richland AI"
               className="min-h-[4.5rem] w-full resize-none rounded-[var(--radius-control)] border border-ink-200 bg-white px-3 pt-3 pr-28 pb-12 text-sm text-ink-800 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-clay-200 disabled:opacity-60"
             />
             <button type="submit" disabled={chatBusy || !chatDraft.trim()} className="btn-primary absolute bottom-3 right-2 flex min-h-10 items-center gap-2 px-3 py-2.5 disabled:opacity-60">

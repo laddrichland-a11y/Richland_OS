@@ -9,7 +9,7 @@ import {
 } from "@/lib/actions";
 import type { Recording, StageNotesKey } from "@/lib/types";
 import { formatDateTime } from "@/lib/utils";
-import { FileAudio, Loader2, Music, Trash2 } from "@/components/ui/HeartfulIcon";
+import { FileAudio, Loader2, Music, Trash2 } from "@/components/ui/RichlandIcon";
 
 function formatBytes(bytes?: number): string {
   if (!bytes && bytes !== 0) return "";

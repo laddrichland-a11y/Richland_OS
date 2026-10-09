@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import AiGenerateButton from "@/components/ai/AiGenerateButton";
 import { SessionBriefContent } from "@/components/ai/SummaryCard";
 import { AiSummary } from "@/lib/types";
-import { ChevronDown, ChevronUp, FileText } from "@/components/ui/HeartfulIcon";
+import { ChevronDown, ChevronUp, FileText } from "@/components/ui/RichlandIcon";
 
 /**
  * Prepare Me, on a stage page.
@@ -42,7 +42,7 @@ export default function PrepareMeCard({
   const autoStarted = useRef(false);
   const buttonId = `prepare-me-generate-${clientId}`;
   // Hide/show the brief body. Remembered per client + stage in this browser.
-  const hiddenKey = `heartful:prepare-me-hidden:${clientId}:${sessionTypeLabel}`;
+  const hiddenKey = `richland:prepare-me-hidden:${clientId}:${sessionTypeLabel}`;
   const [hidden, setHidden] = useState(false);
 
   useEffect(() => {
@@ -79,12 +79,12 @@ export default function PrepareMeCard({
       });
     }
 
-    window.addEventListener(`heartful:prepare-me:${clientId}`, generateBrief);
+    window.addEventListener(`richland:prepare-me:${clientId}`, generateBrief);
     if (autoGenerate && !autoStarted.current) {
       autoStarted.current = true;
       generateBrief();
     }
-    return () => window.removeEventListener(`heartful:prepare-me:${clientId}`, generateBrief);
+    return () => window.removeEventListener(`richland:prepare-me:${clientId}`, generateBrief);
   }, [autoGenerate, buttonId, clientId, readOnly]);
 
   if (readOnly && !briefing) return null;

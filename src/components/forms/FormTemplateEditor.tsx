@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import type { FormFieldType, FormTemplate, SessionType } from "@/lib/types";
 import { createFormTemplateAction, updateFormTemplateAction } from "@/lib/actions";
 import { cx } from "@/lib/utils";
-import { ChevronDown, ChevronUp, Loader2, Plus, Trash2 } from "@/components/ui/HeartfulIcon";
+import { ChevronDown, ChevronUp, Loader2, Plus, Trash2 } from "@/components/ui/RichlandIcon";
 
 export const FORM_STAGE_CHOICES: { value: SessionType; label: string }[] = [
   { value: "intake_assessment", label: "Intake & Assessment" },

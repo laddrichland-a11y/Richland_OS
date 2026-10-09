@@ -20,7 +20,7 @@ import {
 import ClientContextRail from "@/components/client/ClientContextRail";
 import ClientWorkspace from "@/components/client/ClientWorkspace";
 import ClientHeader from "@/components/client/ClientHeader";
-import { ArrowLeft } from "@/components/ui/HeartfulIcon";
+import { ArrowLeft } from "@/components/ui/RichlandIcon";
 import { headers } from "next/headers";
 
 /** Keeps dedicated stage routes in the same two-column client workspace as the record page. */

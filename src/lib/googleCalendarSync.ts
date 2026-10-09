@@ -4,10 +4,10 @@ import * as data from "@/lib/data";
 import { occupiesCalendarSlot, SESSION_TYPE_LABELS } from "@/lib/utils";
 import {
   getAuthorizedClient,
-  ensureHeartfulCalendar,
-  upsertHeartfulEvent,
-  deleteHeartfulEvent,
-  deleteHeartfulEventsByLocalId,
+  ensureRichlandCalendar,
+  upsertRichlandEvent,
+  deleteRichlandEvent,
+  deleteRichlandEventsByLocalId,
   listChangedEvents,
   watchCalendar,
   stopChannel,
@@ -38,7 +38,7 @@ function isEcho(googleUpdatedIso: string | null | undefined, localSyncedAtIso: s
 }
 
 // ---------------------------------------------------------------------------
-// PUSH — mirror a local Session or ProspectCall to the "Heartful OS" Google
+// PUSH — mirror a local Session or ProspectCall to the "Richland OS" Google
 // calendar. Best-effort: any failure is logged, never thrown, so a Google
 // hiccup never breaks scheduling inside the app.
 // ---------------------------------------------------------------------------
@@ -50,7 +50,7 @@ export async function pushSessionToGoogle(sessionId: string): Promise<void> {
     const session = await data.getSession(sessionId);
     if (!session) return;
 
-    const calendarId = await ensureHeartfulCalendar(auth);
+    const calendarId = await ensureRichlandCalendar(auth);
 
     // Cancelled, or no longer has a time: it holds no slot, so it must not
     // exist on Google. Sweeping by tag (not just by the stored event id)
@@ -64,7 +64,7 @@ export async function pushSessionToGoogle(sessionId: string): Promise<void> {
     const client = await data.getClient(session.client_id);
     const title = `${client?.full_name ?? "Client"} — ${SESSION_TYPE_LABELS[session.session_type] ?? session.session_type.replace(/_/g, " ")}`;
 
-    const event = await upsertHeartfulEvent(
+    const event = await upsertRichlandEvent(
       auth,
       calendarId,
       {
@@ -102,9 +102,9 @@ async function removeSessionFromGoogle(
   session: { id: string; google_event_id?: string }
 ): Promise<void> {
   if (session.google_event_id) {
-    await deleteHeartfulEvent(auth, calendarId, session.google_event_id);
+    await deleteRichlandEvent(auth, calendarId, session.google_event_id);
   }
-  await deleteHeartfulEventsByLocalId(auth, calendarId, session.id);
+  await deleteRichlandEventsByLocalId(auth, calendarId, session.id);
   await data.clearSessionGoogleEvent(session.id);
 }
 
@@ -116,7 +116,7 @@ export async function pushProspectCallToGoogle(callId: string): Promise<void> {
     const call = calls.find((c) => c.id === callId);
     if (!call) return;
 
-    const calendarId = await ensureHeartfulCalendar(auth);
+    const calendarId = await ensureRichlandCalendar(auth);
 
     // Same rule as sessions — see occupiesCalendarSlot and the sweep comment
     // in removeSessionFromGoogle above.
@@ -137,7 +137,7 @@ export async function pushProspectCallToGoogle(callId: string): Promise<void> {
     const ownerLabel = call.client_id ? "Client" : "Prospect";
     const title = `${call.prospect_name} — ${callLabel} (${ownerLabel})`;
 
-    const event = await upsertHeartfulEvent(
+    const event = await upsertRichlandEvent(
       auth,
       calendarId,
       {
@@ -172,14 +172,14 @@ async function removeProspectCallFromGoogle(
   call: { id: string; google_event_id?: string }
 ): Promise<void> {
   if (call.google_event_id) {
-    await deleteHeartfulEvent(auth, calendarId, call.google_event_id);
+    await deleteRichlandEvent(auth, calendarId, call.google_event_id);
   }
-  await deleteHeartfulEventsByLocalId(auth, calendarId, call.id);
+  await deleteRichlandEventsByLocalId(auth, calendarId, call.id);
   await data.clearProspectCallGoogleEvent(call.id);
 }
 
 // ---------------------------------------------------------------------------
-// PULL — apply changes from Google (either calendar) back into Heartful OS.
+// PULL — apply changes from Google (either calendar) back into Richland OS.
 // Called from the webhook route on every push notification, and can also be
 // invoked manually as a fallback ("Sync now" in Settings).
 // ---------------------------------------------------------------------------
@@ -189,7 +189,7 @@ export async function pullAndApplyChanges(): Promise<void> {
   if (!auth) return;
 
   const settings = await data.getGoogleCalendarSettings();
-  const calendarId = await ensureHeartfulCalendar(auth);
+  const calendarId = await ensureRichlandCalendar(auth);
 
   // Run both calendars concurrently rather than sequentially — halves the
   // wall-clock time of a sync, which matters a lot for staying under
@@ -197,7 +197,7 @@ export async function pullAndApplyChanges(): Promise<void> {
   // biggest contributors to a 504 on "Sync now"/the webhook route, along
   // with the unbounded first-sync window fixed in listChangedEvents).
   await Promise.all([
-    syncOneCalendar(auth, calendarId, "heartful", settings.heartful_sync_token),
+    syncOneCalendar(auth, calendarId, "richland", settings.richland_sync_token),
     syncOneCalendar(auth, PRIMARY_CALENDAR_ID, "primary", settings.primary_sync_token),
   ]);
 
@@ -207,7 +207,7 @@ export async function pullAndApplyChanges(): Promise<void> {
 async function syncOneCalendar(
   auth: Awaited<ReturnType<typeof getAuthorizedClient>>,
   calendarId: string,
-  which: "heartful" | "primary",
+  which: "richland" | "primary",
   storedSyncToken: string | undefined
 ): Promise<void> {
   if (!auth) return;
@@ -219,8 +219,8 @@ async function syncOneCalendar(
     }
 
     for (const event of result.events) {
-      if (which === "heartful") {
-        await applyHeartfulCalendarEvent(event);
+      if (which === "richland") {
+        await applyRichlandCalendarEvent(event);
       } else {
         await applyPrimaryCalendarEvent(event);
       }
@@ -228,8 +228,8 @@ async function syncOneCalendar(
 
     if (result.nextSyncToken) {
       await data.saveGoogleCalendarSettings(
-        which === "heartful"
-          ? { heartful_sync_token: result.nextSyncToken }
+        which === "richland"
+          ? { richland_sync_token: result.nextSyncToken }
           : { primary_sync_token: result.nextSyncToken }
       );
     }
@@ -241,48 +241,48 @@ async function syncOneCalendar(
   }
 }
 
-// Events on the "Heartful OS" calendar. Ones we created ourselves carry an
-// extendedProperties.private.heartfulId tag — for those we only care about
+// Events on the "Richland OS" calendar. Ones we created ourselves carry an
+// extendedProperties.private.richlandId tag — for those we only care about
 // changes NOT made by us (i.e. the practitioner rescheduled/deleted the
 // mirrored event directly in Google). Untagged events were created directly
 // on that calendar by the practitioner and are mirrored in as busy blocks.
-async function applyHeartfulCalendarEvent(event: calendar_v3.Schema$Event): Promise<void> {
-  const heartfulId = event.extendedProperties?.private?.heartfulId;
-  const kind = event.extendedProperties?.private?.heartfulKind as "session" | "prospect_call" | undefined;
+async function applyRichlandCalendarEvent(event: calendar_v3.Schema$Event): Promise<void> {
+  const richlandId = event.extendedProperties?.private?.richlandId;
+  const kind = event.extendedProperties?.private?.richlandKind as "session" | "prospect_call" | undefined;
 
-  if (heartfulId && kind) {
+  if (richlandId && kind) {
     if (kind === "session") {
-      const session = await data.getSession(heartfulId);
+      const session = await data.getSession(richlandId);
       if (!session) return;
       if (isEcho(event.updated, session.google_synced_at)) return;
 
       if (event.status === "cancelled") {
-        if (session.status !== "cancelled") await data.updateSession(heartfulId, { status: "cancelled" });
+        if (session.status !== "cancelled") await data.updateSession(richlandId, { status: "cancelled" });
         return;
       }
       const start = event.start?.dateTime ?? event.start?.date;
       if (!start) return;
       const end = event.end?.dateTime ?? event.end?.date;
       const durationMinutes = end ? Math.max(5, Math.round((new Date(end).getTime() - new Date(start).getTime()) / 60000)) : session.duration_minutes;
-      await data.updateSession(heartfulId, {
+      await data.updateSession(richlandId, {
         scheduled_at: new Date(start).toISOString(),
         duration_minutes: durationMinutes,
       });
     } else {
       const calls = await data.getAllProspectCalls();
-      const call = calls.find((c) => c.id === heartfulId);
+      const call = calls.find((c) => c.id === richlandId);
       if (!call) return;
       if (isEcho(event.updated, call.google_synced_at)) return;
 
       if (event.status === "cancelled") {
-        if (call.status !== "cancelled") await data.updateProspectCall(heartfulId, { status: "cancelled" });
+        if (call.status !== "cancelled") await data.updateProspectCall(richlandId, { status: "cancelled" });
         return;
       }
       const start = event.start?.dateTime ?? event.start?.date;
       if (!start) return;
       const end = event.end?.dateTime ?? event.end?.date;
       const durationMinutes = end ? Math.max(5, Math.round((new Date(end).getTime() - new Date(start).getTime()) / 60000)) : call.duration_minutes;
-      await data.updateProspectCall(heartfulId, {
+      await data.updateProspectCall(richlandId, {
         scheduled_at: new Date(start).toISOString(),
         duration_minutes: durationMinutes,
       });
@@ -290,7 +290,7 @@ async function applyHeartfulCalendarEvent(event: calendar_v3.Schema$Event): Prom
     return;
   }
 
-  // Untagged — created directly on the Heartful OS calendar in Google.
+  // Untagged — created directly on the Richland OS calendar in Google.
   await mirrorAsExternalEvent(event);
 }
 
@@ -326,28 +326,28 @@ export async function renewWatchChannels(opts: { force?: boolean } = {}): Promis
     settings = await data.saveGoogleCalendarSettings({ webhook_token: randomUUID() });
   }
   const token = settings.webhook_token!;
-  const calendarId = await ensureHeartfulCalendar(auth);
+  const calendarId = await ensureRichlandCalendar(auth);
 
-  await renewOne(auth, calendarId, "heartful", webhookUrl, token, opts.force);
+  await renewOne(auth, calendarId, "richland", webhookUrl, token, opts.force);
   await renewOne(auth, PRIMARY_CALENDAR_ID, "primary", webhookUrl, token, opts.force);
 }
 
 async function renewOne(
   auth: Awaited<ReturnType<typeof getAuthorizedClient>>,
   calendarId: string,
-  which: "heartful" | "primary",
+  which: "richland" | "primary",
   webhookUrl: string,
   token: string,
   force?: boolean
 ): Promise<void> {
   if (!auth) return;
   const settings = await data.getGoogleCalendarSettings();
-  const expiration = which === "heartful" ? settings.heartful_channel_expiration : settings.primary_channel_expiration;
+  const expiration = which === "richland" ? settings.richland_channel_expiration : settings.primary_channel_expiration;
   const stillFresh = expiration && expiration - Date.now() > RENEW_IF_EXPIRING_WITHIN_MS;
   if (stillFresh && !force) return;
 
-  const oldChannelId = which === "heartful" ? settings.heartful_channel_id : settings.primary_channel_id;
-  const oldResourceId = which === "heartful" ? settings.heartful_channel_resource_id : settings.primary_channel_resource_id;
+  const oldChannelId = which === "richland" ? settings.richland_channel_id : settings.primary_channel_id;
+  const oldResourceId = which === "richland" ? settings.richland_channel_resource_id : settings.primary_channel_resource_id;
   if (oldChannelId && oldResourceId) {
     await stopChannel(auth, oldChannelId, oldResourceId);
   }
@@ -356,8 +356,8 @@ async function renewOne(
     const channelId = randomUUID();
     const { resourceId, expiration: newExpiration } = await watchCalendar(auth, calendarId, channelId, webhookUrl, token);
     await data.saveGoogleCalendarSettings(
-      which === "heartful"
-        ? { heartful_channel_id: channelId, heartful_channel_resource_id: resourceId, heartful_channel_expiration: newExpiration }
+      which === "richland"
+        ? { richland_channel_id: channelId, richland_channel_resource_id: resourceId, richland_channel_expiration: newExpiration }
         : { primary_channel_id: channelId, primary_channel_resource_id: resourceId, primary_channel_expiration: newExpiration }
     );
   } catch (err) {

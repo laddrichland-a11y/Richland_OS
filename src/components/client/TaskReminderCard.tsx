@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { addTaskAction } from "@/lib/actions";
 import { Task } from "@/lib/types";
 import { relativeDueLabel } from "@/lib/utils";
-import { Check, ChevronRight, ListTodo, Plus } from "@/components/ui/HeartfulIcon";
+import { Check, ChevronRight, ListTodo, Plus } from "@/components/ui/RichlandIcon";
 
 interface Props {
   clientId: string;

@@ -405,7 +405,7 @@ export async function getPractitioner(): Promise<Profile> {
   if (isFirebaseConfigured) {
     const existing = await getDocById<Profile>("meta", "practitioner");
     if (existing) {
-      if (existing.practice_name !== "Heartful Labs") return existing;
+      if (existing.practice_name !== "Richland Labs") return existing;
       return setSingleton<Profile & Record<string, unknown>>(
         "meta",
         "practitioner",
@@ -420,7 +420,7 @@ export async function getPractitioner(): Promise<Profile> {
       store.practitioner as unknown as Profile & Record<string, unknown>
     );
   }
-  if (store.practitioner.practice_name === "Heartful Labs") {
+  if (store.practitioner.practice_name === "Richland Labs") {
     store.practitioner.practice_name = PRACTICE_NAME;
   }
   return store.practitioner;

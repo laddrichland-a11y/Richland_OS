@@ -6,7 +6,7 @@ import { getAgreementStatusByClient, getAllSessions, getDashboardSummary, getMil
 import {
   CheckCircle2, ChevronRight, CircleAlert, DollarSign, FileText,
   MessageCircle, OutstandingTasks, Users,
-} from "@/components/ui/HeartfulIcon";
+} from "@/components/ui/RichlandIcon";
 import ClientAvatarImage from "@/components/client/ClientAvatarImage";
 import Link from "next/link";
 import {

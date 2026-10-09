@@ -37,7 +37,7 @@ import {
   MoreHorizontal,
   ChevronDown,
   ChevronUp,
-} from "@/components/ui/HeartfulIcon";
+} from "@/components/ui/RichlandIcon";
 import SummaryCard from "@/components/ai/SummaryCard";
 import StageFormsCard from "@/components/client/StageFormsCard";
 import NotesFileUpload, { appendUploadedText } from "@/components/ai/NotesFileUpload";

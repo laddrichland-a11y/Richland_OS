@@ -11,7 +11,7 @@
 .settings-notifications-block { border-top: 0 !important; }
 .settings-block h3, .settings-calendar h3 { margin: 0; color: var(--text-primary); font-size: 1rem; font-weight: 700; line-height: 1.35; }
 .settings-heading { display: inline-flex; align-items: center; gap: .5rem; }
-.settings-heading .heartful-icon { width: 20px; height: 20px; color: var(--brand-accent); }
+.settings-heading .richland-icon { width: 20px; height: 20px; color: var(--brand-accent); }
 .settings-description { margin: .35rem 0 0; color: var(--text-secondary); font-size: .8125rem; line-height: 1.5; }
 .settings-profile-form { margin-top: 1.15rem; }
 .settings-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem 1.25rem; }

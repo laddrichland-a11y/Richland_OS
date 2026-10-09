@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Loader2, MoreHorizontal } from "@/components/ui/HeartfulIcon";
+import { Check, Loader2, MoreHorizontal } from "@/components/ui/RichlandIcon";
 import { formatDateTime, toDatetimeLocalValue, fromDatetimeLocalValue } from "@/lib/utils";
 
 /** Records a journey event while keeping time correction and removal available. */

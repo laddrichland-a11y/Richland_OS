@@ -7,26 +7,26 @@ import {
   type SVGProps,
 } from "react";
 import * as Lucide from "lucide-react";
-import styles from "./HeartfulIcon.module.css";
+import styles from "./RichlandIcon.module.css";
 
 /**
  * The product icon gateway uses the Iconstica family throughout: Line at
  * rest, then Filled for interactive hover, focus, and selected states.
  */
-export type HeartfulIcon = React.ForwardRefExoticComponent<
+export type RichlandIcon = React.ForwardRefExoticComponent<
   SVGProps<SVGSVGElement> & { size?: string | number }
 >;
 
 type IconStyle = CSSProperties & {
-  "--heartful-icon-line": string;
-  "--heartful-icon-filled": string;
+  "--richland-icon-line": string;
+  "--richland-icon-filled": string;
 };
 
 type StrokeIcon = React.ComponentType<SVGProps<SVGSVGElement>>;
 
-function glyph(name: string, StrokeIcon: StrokeIcon): HeartfulIcon {
+function glyph(name: string, StrokeIcon: StrokeIcon): RichlandIcon {
   return forwardRef<SVGSVGElement, SVGProps<SVGSVGElement> & { size?: string | number }>(
-    function HeartfulGlyph(
+    function RichlandGlyph(
       {
         className,
         size,
@@ -48,14 +48,14 @@ function glyph(name: string, StrokeIcon: StrokeIcon): HeartfulIcon {
         ...(width !== undefined ? { width } : {}),
         ...(height !== undefined ? { height } : {}),
         ...(color !== undefined ? { color } : {}),
-        "--heartful-icon-line": `url("/icons/iconstica/line/${name}.svg")`,
-        "--heartful-icon-filled": `url("/icons/iconstica/filled/${name}.svg")`,
+        "--richland-icon-line": `url("/icons/iconstica/line/${name}.svg")`,
+        "--richland-icon-filled": `url("/icons/iconstica/filled/${name}.svg")`,
       };
 
       return (
         <span
           ref={ref as never}
-          className={`heartful-icon ${styles.icon}${className ? ` ${className}` : ""}`}
+          className={`richland-icon ${styles.icon}${className ? ` ${className}` : ""}`}
           style={iconStyle}
           {...(props as HTMLAttributes<HTMLSpanElement>)}
         >

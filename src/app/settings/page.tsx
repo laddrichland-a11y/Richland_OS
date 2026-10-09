@@ -1,7 +1,7 @@
 import AppShell from "@/components/layout/AppShell";
 import { getPractitioner, getReferralSources, getGoogleCalendarSettings } from "@/lib/data";
 import { isGoogleOAuthConfigured } from "@/lib/googleCalendar";
-import { ArrowRight, DollarSign, Tag, UserRound } from "@/components/ui/HeartfulIcon";
+import { ArrowRight, DollarSign, Tag, UserRound } from "@/components/ui/RichlandIcon";
 import Link from "next/link";
 import PracticeProfileForm from "@/components/settings/PracticeProfileForm";
 import VenmoSettingsForm from "@/components/settings/VenmoSettingsForm";

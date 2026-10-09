@@ -1,6 +1,6 @@
 import { Client, JourneyMilestone } from "@/lib/types";
 import { cx, getClientJourneyProgress, journeyStageLabelForMilestone, journeyStageStatusLabel, JOURNEY_PROGRESS_STAGE_COUNT, type JourneyStageStatus } from "@/lib/utils";
-import { Check, IntegrationLink } from "@/components/ui/HeartfulIcon";
+import { Check, IntegrationLink } from "@/components/ui/RichlandIcon";
 
 export default function JourneyProgressBar({
   milestones,

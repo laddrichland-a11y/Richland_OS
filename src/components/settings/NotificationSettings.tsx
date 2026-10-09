@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Bell } from "@/components/ui/HeartfulIcon";
+import { Bell } from "@/components/ui/RichlandIcon";
 
-const STORAGE_KEY = "heartful-notification-preferences";
+const STORAGE_KEY = "richland-notification-preferences";
 const items = [
   ["sessions", "Upcoming session reminders"],
   ["forms", "Outstanding forms & tasks"],

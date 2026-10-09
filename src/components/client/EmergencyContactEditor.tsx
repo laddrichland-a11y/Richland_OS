@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ShieldAlert, Pencil, X, Loader2, Check } from "@/components/ui/HeartfulIcon";
+import { ShieldAlert, Pencil, X, Loader2, Check } from "@/components/ui/RichlandIcon";
 import { updateClientProfileAction } from "@/lib/actions";
 
 export default function EmergencyContactEditor({

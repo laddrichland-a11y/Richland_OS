@@ -1,6 +1,6 @@
 import AppShell from "@/components/layout/AppShell";
 import Link from "next/link";
-import { ArrowLeft } from "@/components/ui/HeartfulIcon";
+import { ArrowLeft } from "@/components/ui/RichlandIcon";
 import {
   getClient,
   getMilestones,

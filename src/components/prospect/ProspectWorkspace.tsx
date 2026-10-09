@@ -26,7 +26,7 @@ import {
   ChevronRight,
   CalendarDays,
   Circle,
-} from "@/components/ui/HeartfulIcon";
+} from "@/components/ui/RichlandIcon";
 import {
   updateProspectAction,
   deleteProspectAction,

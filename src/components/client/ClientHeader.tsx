@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import ClientAvatarEditor from "@/components/client/ClientAvatarEditor";
-import { CalendarDays, CheckCircle2, ChevronDown, ChevronUp, CircleDollarSign, KeyRound, Mail, PauseCircle, Phone, UserRound } from "@/components/ui/HeartfulIcon";
+import { CalendarDays, CheckCircle2, ChevronDown, ChevronUp, CircleDollarSign, KeyRound, Mail, PauseCircle, Phone, UserRound } from "@/components/ui/RichlandIcon";
 import { Client, JourneyMilestone, Profile, ReferralSource, Session } from "@/lib/types";
 import { clientAvatarSrc, cx, formatCurrency, formatDate, formatDateTime } from "@/lib/utils";
 import { selectCurrentOrNextSession } from "@/lib/sessionSelectors";
@@ -24,7 +24,7 @@ export default function ClientHeader({ client, milestones, sessions = [], referr
   portalUrl: string;
   autoOpenIntro?: boolean;
 }) {
-  const headerStateKey = `heartful:client-header:${client.id}:expanded`;
+  const headerStateKey = `richland:client-header:${client.id}:expanded`;
   const [expanded, setExpanded] = useState(() => {
     if (typeof window === "undefined") return true;
     return window.sessionStorage.getItem(headerStateKey) !== "false";

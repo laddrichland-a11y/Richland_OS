@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { exchangeCodeAndSaveTokens, ensureHeartfulCalendar } from "@/lib/googleCalendar";
+import { exchangeCodeAndSaveTokens, ensureRichlandCalendar } from "@/lib/googleCalendar";
 import { renewWatchChannels, pullAndApplyChanges } from "@/lib/googleCalendarSync";
 import { requirePractitioner } from "@/lib/serverAuth";
 
@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const client = await exchangeCodeAndSaveTokens(code);
-    await ensureHeartfulCalendar(client);
+    await ensureRichlandCalendar(client);
     // Register webhook channels and pull a baseline sync right away so the
     // Calendar page has data immediately instead of waiting for the first
     // push notification.
