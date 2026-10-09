@@ -5,7 +5,7 @@ import { forbidden, redirect, unauthorized } from "next/navigation";
 import { cookies } from "next/headers";
 import * as data from "@/lib/data";
 import { SessionNoteField, StageNotesKey, ClientStatus, JourneyPhase, DocumentType, SessionType, type PaymentMethod } from "@/lib/types";
-import { canSetJourneyStatus, JOURNEY_PROGRESS_COMPLETED_MILESTONES, SESSION_TYPE_LABELS } from "@/lib/utils";
+import { canSetJourneyStatus, JOURNEY_COMPLETION_MILESTONE_KEYS, JOURNEY_PROGRESS_COMPLETED_MILESTONES, SESSION_TYPE_LABELS } from "@/lib/utils";
 import { runAiJson } from "@/lib/ai/generate";
 import { buildAiConversationPrompt, buildProspectIntroSummaryPrompt } from "@/lib/ai/prompts";
 import { mockAiConversationReply } from "@/lib/ai/mocks";
@@ -263,7 +263,7 @@ export async function deleteAiSummaryAction(summaryId: string, clientId: string)
   await data.deleteAiSummary(summaryId);
   revalidatePath(`/clients/${clientId}`);
   revalidatePath(`/clients/${clientId}/sessions`);
-  revalidatePath(`/clients/${clientId}/journey-day`);
+  revalidatePath(`/clients/${clientId}/coaching`);
 }
 
 const STAGE_NOTES_KEYS: StageNotesKey[] = ["intake", "preparation", "journey_day", "check_in_12hr", "integration_1", "integration_2", "growth_plan"];
@@ -284,7 +284,7 @@ export async function updateAiSummaryAction(summaryId: string, clientId: string,
   const updated = await data.updateAiSummary(summaryId, content);
   revalidatePath(`/clients/${clientId}`);
   revalidatePath(`/clients/${clientId}/sessions`);
-  revalidatePath(`/clients/${clientId}/journey-day`);
+  revalidatePath(`/clients/${clientId}/coaching`);
   return updated;
 }
 
@@ -408,16 +408,6 @@ export async function deleteClientDocumentAction(documentId: string, clientId: s
   revalidatePath(`/clients/${clientId}`);
 }
 
-const JOURNEY_PROGRESS_MILESTONES = [
-  "intake_complete",
-  "preparation_complete",
-  "journey_complete",
-  "check_in_12hr_complete",
-  "integration_1_complete",
-  "integration_2_complete",
-  "growth_action_plan_complete",
-  "journey_closed",
-] as const;
 
 export async function updateClientStatusAction(clientId: string, status: ClientStatus, phase: JourneyPhase) {
   await requireClientAccess(clientId);
@@ -425,9 +415,9 @@ export async function updateClientStatusAction(clientId: string, status: ClientS
   if (completedCount !== undefined) {
     const milestones = await data.getMilestones(clientId);
     if (!canSetJourneyStatus(milestones, status)) {
-      throw new Error("Complete the next journey stage before advancing this status.");
+      throw new Error("Complete the next stage before advancing this status.");
     }
-    for (const [index, milestoneKey] of JOURNEY_PROGRESS_MILESTONES.entries()) {
+    for (const [index, milestoneKey] of JOURNEY_COMPLETION_MILESTONE_KEYS.entries()) {
       if (index < completedCount) {
         await data.completeMilestone(clientId, milestoneKey);
       } else {
@@ -546,7 +536,7 @@ export async function updateSessionManualNotesAction(sessionId: string, clientId
   await requireClientAccess(clientId);
   await requireSessionForClient(clientId, sessionId);
   await data.setSessionManualNotes(sessionId, manualNotes);
-  revalidatePath(`/clients/${clientId}/journey-day`);
+  revalidatePath(`/clients/${clientId}/coaching`);
   revalidatePath(`/clients/${clientId}/sessions/${sessionId}`);
 }
 
@@ -554,7 +544,7 @@ export async function updateSessionTranscriptAction(sessionId: string, clientId:
   await requireClientAccess(clientId);
   await requireSessionForClient(clientId, sessionId);
   await data.setSessionTranscript(sessionId, transcript);
-  revalidatePath(`/clients/${clientId}/journey-day`);
+  revalidatePath(`/clients/${clientId}/coaching`);
   revalidatePath(`/clients/${clientId}/sessions/${sessionId}`);
 }
 
@@ -581,7 +571,7 @@ export async function addRecordingAction(
   await requireClientAccess(clientId);
   await requireSessionForClient(clientId, sessionId);
   const recording = await data.addRecording(clientId, sessionId, fileName, storagePath, sizeBytes);
-  revalidatePath(`/clients/${clientId}/journey-day`);
+  revalidatePath(`/clients/${clientId}/coaching`);
   revalidatePath(`/clients/${clientId}/sessions/${sessionId}`);
   return recording;
 }
@@ -640,7 +630,7 @@ export async function deleteRecordingAction(recordingId: string, clientId: strin
   await requireSessionForClient(clientId, sessionId);
   if (!(await data.getRecordings(clientId, sessionId)).some((recording) => recording.id === recordingId)) forbidden();
   await data.deleteRecording(recordingId);
-  revalidatePath(`/clients/${clientId}/journey-day`);
+  revalidatePath(`/clients/${clientId}/coaching`);
   revalidatePath(`/clients/${clientId}/sessions/${sessionId}`);
 }
 
@@ -655,7 +645,7 @@ export async function setJourneyMarkerAction(
   await requireClientAccess(clientId);
   await requireSessionForClient(clientId, sessionId);
   const session = await data.setJourneyMarker(sessionId, marker, !on, currentManualNotes, timeZone);
-  revalidatePath(`/clients/${clientId}/journey-day`);
+  revalidatePath(`/clients/${clientId}/coaching`);
   revalidatePath(`/clients/${clientId}/sessions/${sessionId}`);
   revalidatePath(`/clients/${clientId}`);
   return session;
@@ -673,7 +663,7 @@ export async function updateJourneyMarkerTimeAction(
   await requireClientAccess(clientId);
   await requireSessionForClient(clientId, sessionId);
   const session = await data.setJourneyMarkerTime(sessionId, marker, isoTimestamp);
-  revalidatePath(`/clients/${clientId}/journey-day`);
+  revalidatePath(`/clients/${clientId}/coaching`);
   revalidatePath(`/clients/${clientId}/sessions/${sessionId}`);
   revalidatePath(`/clients/${clientId}`);
   return session;
@@ -683,7 +673,7 @@ export async function updateInitialDoseAmountAction(sessionId: string, clientId:
   await requireClientAccess(clientId);
   await requireSessionForClient(clientId, sessionId);
   const session = await data.setInitialDoseAmount(sessionId, amount);
-  revalidatePath(`/clients/${clientId}/journey-day`);
+  revalidatePath(`/clients/${clientId}/coaching`);
   revalidatePath(`/clients/${clientId}/sessions/${sessionId}`);
   return session;
 }
@@ -692,7 +682,7 @@ export async function updateBoosterDoseAmountAction(sessionId: string, clientId:
   await requireClientAccess(clientId);
   await requireSessionForClient(clientId, sessionId);
   const session = await data.setBoosterDoseAmount(sessionId, amount);
-  revalidatePath(`/clients/${clientId}/journey-day`);
+  revalidatePath(`/clients/${clientId}/coaching`);
   revalidatePath(`/clients/${clientId}/sessions/${sessionId}`);
   return session;
 }
@@ -707,7 +697,7 @@ export async function addSessionNoteAction(
   await requireClientAccess(clientId);
   await requireSessionForClient(clientId, sessionId);
   await data.addSessionNote(sessionId, clientId, fieldType, content, elapsedMinutes);
-  revalidatePath(`/clients/${clientId}/journey-day`);
+  revalidatePath(`/clients/${clientId}/coaching`);
 }
 
 export async function addSessionAction(input: {
@@ -804,7 +794,7 @@ export async function toggleMilestoneAction(clientId: string, milestoneKey: stri
   revalidatePath(`/clients/${clientId}`);
   revalidatePath(`/clients/${clientId}/intake`);
   revalidatePath(`/clients/${clientId}/preparation`);
-  revalidatePath(`/clients/${clientId}/journey-day`);
+  revalidatePath(`/clients/${clientId}/coaching`);
   revalidatePath(`/clients/${clientId}/integration-1`);
   revalidatePath(`/clients/${clientId}/integration-2`);
 }
@@ -829,7 +819,7 @@ export async function reopenCompletedSessionAction(sessionId: string, clientId: 
   revalidatePath(`/clients/${clientId}`);
   revalidatePath(`/clients/${clientId}/intake`);
   revalidatePath(`/clients/${clientId}/preparation`);
-  revalidatePath(`/clients/${clientId}/journey-day`);
+  revalidatePath(`/clients/${clientId}/coaching`);
   revalidatePath(`/clients/${clientId}/integration-1`);
   revalidatePath(`/clients/${clientId}/integration-2`);
 }

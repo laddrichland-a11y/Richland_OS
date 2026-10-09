@@ -21,14 +21,24 @@ export type Tab = (typeof TABS)[number];
 // Shared display labels for session_type, used anywhere a Session needs a
 // human-readable stage name (AI Copilot panel, per-client Copilot tab, etc.)
 export const SESSION_TYPE_LABELS: Record<string, string> = {
-  intake_assessment: "Intake & Assessment",
-  preparation: "Preparation",
-  harm_reduction_support: "Journey Day",
-  check_in_12hr: "12-Hour Check-In",
-  integration_1: "Integration Session 1",
-  integration_2: "Integration Session 2",
+  intake_assessment: "Intake & Assessments",
+  preparation: "Goals & Agreement",
+  coaching: "Coaching Session",
+  // Legacy Heartful session types — kept so old records still render.
+  harm_reduction_support: "Coaching Session",
+  check_in_12hr: "Check-In",
+  integration_1: "Follow-up Session",
+  integration_2: "Follow-up Session",
   other: "Other",
 };
+
+/** Session types offered when scheduling or tagging in Richland OS. */
+export const SESSION_TYPE_OPTIONS: { value: Session["session_type"]; label: string }[] = [
+  { value: "coaching", label: SESSION_TYPE_LABELS.coaching },
+  { value: "intake_assessment", label: SESSION_TYPE_LABELS.intake_assessment },
+  { value: "preparation", label: SESSION_TYPE_LABELS.preparation },
+  { value: "other", label: SESSION_TYPE_LABELS.other },
+];
 
 // Manual Notes auto-timestamping (Journey Day). Typing this marker alone on
 // its own line and pressing Enter signals "I'm done with this note" — the
@@ -197,13 +207,14 @@ export function clientStatusBadgeClasses(status: ClientStatus): string {
 
 export function phaseLabel(phase: JourneyPhase): string {
   const map: Record<JourneyPhase, string> = {
-    intake: "Intake",
-    preparation: "Preparation",
-    harm_reduction_session: "Journey Day",
-    post_journey_check_in: "Post-Journey Check-In",
-    integration_1: "Integration 1",
-    integration_2: "Integration 2",
-    closed: "Closed",
+    intake: "Intake & Assessments",
+    preparation: "Goals & Agreement",
+    // Richland OS reuses this phase key for the ongoing coaching stage.
+    harm_reduction_session: "Coaching",
+    post_journey_check_in: "Coaching",
+    integration_1: "Coaching",
+    integration_2: "Coaching",
+    closed: "Action Plan",
   };
   return map[phase];
 }
@@ -220,12 +231,13 @@ export const STATUS_PHASE_MAP: Partial<Record<ClientStatus, JourneyPhase>> = {
   preparation: "preparation",
   preparation_complete: "harm_reduction_session",
   journey_scheduled: "harm_reduction_session",
-  journey_complete: "post_journey_check_in",
-  check_in_complete: "integration_1",
-  integration_1: "integration_1",
-  integration_1_complete: "integration_2",
-  integration_2: "integration_2",
-  integration_2_complete: "closed",
+  journey_complete: "closed",
+  // Legacy Heartful statuses all fold into the coaching stage.
+  check_in_complete: "harm_reduction_session",
+  integration_1: "harm_reduction_session",
+  integration_1_complete: "harm_reduction_session",
+  integration_2: "harm_reduction_session",
+  integration_2_complete: "harm_reduction_session",
   journey_closed: "closed",
 };
 
@@ -240,9 +252,6 @@ export const JOURNEY_COMPLETION_MILESTONE_KEYS = [
   "intake_complete",
   "preparation_complete",
   "journey_complete",
-  "check_in_12hr_complete",
-  "integration_1_complete",
-  "integration_2_complete",
   "growth_action_plan_complete",
   "journey_closed",
 ] as const;
@@ -254,17 +263,14 @@ export const JOURNEY_STAGE_DEFINITIONS: ReadonlyArray<{
   milestoneKey: JourneyCompletionMilestoneKey;
   label: string;
 }> = [
-  { phase: "intake", milestoneKey: "intake_complete", label: "Intake" },
-  { phase: "preparation", milestoneKey: "preparation_complete", label: "Preparation" },
-  { phase: "harm_reduction_session", milestoneKey: "journey_complete", label: "Journey Day" },
-  { phase: "post_journey_check_in", milestoneKey: "check_in_12hr_complete", label: "12-Hour Check-In" },
-  { phase: "integration_1", milestoneKey: "integration_1_complete", label: "Integration 1" },
-  { phase: "integration_2", milestoneKey: "integration_2_complete", label: "Integration 2" },
-  { phase: "growth_action_plan", milestoneKey: "growth_action_plan_complete", label: "Growth Plan" },
+  { phase: "intake", milestoneKey: "intake_complete", label: "Intake & Assessments" },
+  { phase: "preparation", milestoneKey: "preparation_complete", label: "Goals & Agreement" },
+  { phase: "harm_reduction_session", milestoneKey: "journey_complete", label: "Coaching" },
+  { phase: "growth_action_plan", milestoneKey: "growth_action_plan_complete", label: "Action Plan" },
 ];
 
-export function journeyStageLabelForMilestone(milestoneKey: string, fallback = "Journey"): string {
-  if (milestoneKey === "journey_closed") return "Journey";
+export function journeyStageLabelForMilestone(milestoneKey: string, fallback = "Engagement"): string {
+  if (milestoneKey === "journey_closed") return "Engagement";
   return JOURNEY_STAGE_DEFINITIONS.find((stage) => stage.milestoneKey === milestoneKey)?.label ?? fallback;
 }
 
@@ -316,10 +322,8 @@ export const SESSION_COMPLETION_MILESTONE_KEYS: Partial<
 > = {
   intake_assessment: "intake_complete",
   preparation: "preparation_complete",
-  harm_reduction_support: "journey_complete",
-  check_in_12hr: "check_in_12hr_complete",
-  integration_1: "integration_1_complete",
-  integration_2: "integration_2_complete",
+  // Coaching sessions are recurring and never complete a stage on their own;
+  // the Coaching stage is closed out by hand from its stage page.
 };
 
 export function canCompleteJourneySession(
@@ -379,19 +383,16 @@ export function clientJourneyWorkspaceHref(
     case "preparation":
       return `${base}/preparation`;
     case "harm_reduction_session":
-      return `${base}/journey-day`;
     case "post_journey_check_in":
-      return `${base}/check-in`;
     case "integration_1":
-      return `${base}/integration-1`;
     case "integration_2":
-      return `${base}/integration-2`;
+      return `${base}/coaching`;
     case "closed":
       return `${base}/growth-plan`;
   }
 }
 
-/** Journey Day complete is not the same as a closed client journey. */
+/** Finishing the Coaching stage is not the same as a closed engagement. */
 export function isCompletedClient(status: ClientStatus): boolean {
   return status === "journey_closed";
 }
@@ -400,31 +401,27 @@ export function isActiveClient(status: ClientStatus): boolean {
   return status !== "journey_closed" && status !== "inactive";
 }
 
-export function isAwaitingIntegrationClient(status: ClientStatus): boolean {
-  return status === "journey_complete" || status === "check_in_complete" || status === "integration_1_complete";
+/** Richland OS has no post-journey integration window; kept for old call sites. */
+export function isAwaitingIntegrationClient(_status: ClientStatus): boolean {
+  return false;
 }
 
 export const CLIENT_JOURNEY_STAGE_OPTIONS = [
-  { value: "intake", label: "Intake" },
-  { value: "preparation", label: "Preparation" },
-  { value: "journey", label: "Journey Day" },
-  { value: "check_in", label: "12-Hour Check-In" },
-  { value: "integration", label: "Integration" },
-  { value: "growth_plan", label: "Growth Plan" },
-  { value: "completed", label: "Growth Plan · Completed" },
+  { value: "intake", label: "Intake & Assessments" },
+  { value: "preparation", label: "Goals & Agreement" },
+  { value: "journey", label: "Coaching" },
+  { value: "growth_plan", label: "Action Plan" },
+  { value: "completed", label: "Completed" },
 ] as const;
 
 export type ClientJourneyStageFilter = (typeof CLIENT_JOURNEY_STAGE_OPTIONS)[number]["value"];
 
 export function clientJourneyStageForStatus(status: ClientStatus, phase: JourneyPhase): ClientJourneyStageFilter {
   if (status === "journey_closed") return "completed";
-  if (status === "integration_2_complete") return "growth_plan";
   const current = phaseForStatus(status, phase);
-  if (current === "post_journey_check_in") return "check_in";
-  if (current === "harm_reduction_session") return "journey";
-  if (current === "integration_1" || current === "integration_2") return "integration";
   if (current === "closed") return "growth_plan";
-  return current;
+  if (current === "intake" || current === "preparation") return current;
+  return "journey";
 }
 
 /**
@@ -440,15 +437,16 @@ export const JOURNEY_PROGRESS_COMPLETED_MILESTONES: Partial<Record<ClientStatus,
   preparation_complete: 2,
   journey_scheduled: 2,
   journey_complete: 3,
-  check_in_complete: 4,
-  integration_1: 4,
-  integration_1_complete: 5,
-  integration_2: 5,
-  integration_2_complete: 6,
-  journey_closed: 8,
+  // Legacy Heartful statuses count as "in coaching".
+  check_in_complete: 2,
+  integration_1: 2,
+  integration_1_complete: 2,
+  integration_2: 2,
+  integration_2_complete: 2,
+  journey_closed: 5,
 };
 
-export const JOURNEY_PROGRESS_STAGE_COUNT = 7;
+export const JOURNEY_PROGRESS_STAGE_COUNT = 4;
 
 export function completedJourneyMilestonePrefix(
   milestones: Pick<JourneyMilestone, "milestone_key" | "completed">[],

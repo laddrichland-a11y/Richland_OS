@@ -15,19 +15,30 @@ const STATUS_PRESENTATION: Record<Exclude<ClientStatus, "inactive">, { stage: st
   inquiry: { stage: "Intake", state: "Inquiry" },
   intake_scheduled: { stage: "Intake", state: "Scheduled" },
   intake_complete: { stage: "Intake", state: "Completed" },
-  preparation: { stage: "Preparation", state: "Current" },
-  preparation_complete: { stage: "Preparation", state: "Completed" },
-  journey_scheduled: { stage: "Journey Day", state: "Scheduled" },
-  journey_complete: { stage: "Journey Day", state: "Completed" },
-  check_in_complete: { stage: "12-Hour Check-In", state: "Completed" },
-  integration_1: { stage: "Integration 1", state: "Current" },
-  integration_1_complete: { stage: "Integration 1", state: "Completed" },
-  integration_2: { stage: "Integration 2", state: "Current" },
-  integration_2_complete: { stage: "Integration 2", state: "Completed" },
-  journey_closed: { stage: "Growth Plan", state: "Completed" },
+  preparation: { stage: "Goals & Agreement", state: "Current" },
+  preparation_complete: { stage: "Goals & Agreement", state: "Completed" },
+  journey_scheduled: { stage: "Coaching", state: "Active" },
+  journey_complete: { stage: "Action Plan", state: "Current" },
+  // Legacy Heartful statuses — shown as active coaching, never offered.
+  check_in_complete: { stage: "Coaching", state: "Active" },
+  integration_1: { stage: "Coaching", state: "Active" },
+  integration_1_complete: { stage: "Coaching", state: "Active" },
+  integration_2: { stage: "Coaching", state: "Active" },
+  integration_2_complete: { stage: "Coaching", state: "Active" },
+  journey_closed: { stage: "Engagement", state: "Completed" },
 };
 
-const STATUS_OPTIONS = [...Object.keys(STATUS_PRESENTATION), "inactive"] as ClientStatus[];
+const STATUS_OPTIONS: ClientStatus[] = [
+  "inquiry",
+  "intake_scheduled",
+  "intake_complete",
+  "preparation",
+  "preparation_complete",
+  "journey_scheduled",
+  "journey_complete",
+  "journey_closed",
+  "inactive",
+];
 
 function statusPresentation(status: ClientStatus, phase: JourneyPhase) {
   return status === "inactive"

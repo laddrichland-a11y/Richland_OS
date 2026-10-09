@@ -8,12 +8,9 @@ import { cx } from "@/lib/utils";
 import { ChevronDown, ChevronUp, Loader2, Plus, Trash2 } from "@/components/ui/RichlandIcon";
 
 export const FORM_STAGE_CHOICES: { value: SessionType; label: string }[] = [
-  { value: "intake_assessment", label: "Intake & Assessment" },
-  { value: "preparation", label: "Preparation" },
-  { value: "harm_reduction_support", label: "Journey Day" },
-  { value: "check_in_12hr", label: "12-Hour Check-In" },
-  { value: "integration_1", label: "Integration Session 1" },
-  { value: "integration_2", label: "Integration Session 2" },
+  { value: "intake_assessment", label: "Intake & Assessments" },
+  { value: "preparation", label: "Goals & Agreement" },
+  { value: "coaching", label: "Coaching Sessions" },
 ];
 
 const FIELD_TYPE_CHOICES: { value: FormFieldType; label: string }[] = [

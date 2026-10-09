@@ -14,7 +14,7 @@ import {
   ScheduleConflict,
 } from "@/lib/actions";
 import { Session, SessionType, ProspectCall, ExternalCalendarEvent } from "@/lib/types";
-import { clientAvatarSrc, cx, formatDateTime, initials, occupiesCalendarSlot } from "@/lib/utils";
+import { clientAvatarSrc, cx, formatDateTime, initials, occupiesCalendarSlot, SESSION_TYPE_LABELS, SESSION_TYPE_OPTIONS } from "@/lib/utils";
 import { selectSessionTimeline } from "@/lib/sessionSelectors";
 import ClientAvatarImage from "@/components/client/ClientAvatarImage";
 import {
@@ -40,18 +40,8 @@ import {
 type SessionWithClient = Session & { client_name: string };
 type ClientOption = { id: string; full_name: string };
 
-const SESSION_TYPE_OPTIONS: { value: SessionType; label: string }[] = [
-  { value: "intake_assessment", label: "Intake Assessment" },
-  { value: "preparation", label: "Preparation" },
-  { value: "harm_reduction_support", label: "Journey Day" },
-  { value: "check_in_12hr", label: "12-Hour Check-In" },
-  { value: "integration_1", label: "Integration Session 1" },
-  { value: "integration_2", label: "Integration Session 2" },
-  { value: "other", label: "Other" },
-];
-
 function typeLabel(t: SessionType) {
-  return SESSION_TYPE_OPTIONS.find((o) => o.value === t)?.label ?? t;
+  return SESSION_TYPE_LABELS[t] ?? t;
 }
 
 const CALL_TYPE_LABELS: Record<ProspectCall["call_type"], string> = {
@@ -878,7 +868,7 @@ function SessionForm({
   const isDuplicate = Boolean(duplicateOf);
   const existingDate = sourceSession?.scheduled_at ? new Date(sourceSession.scheduled_at) : undefined;
   const [clientId, setClientId] = useState(sourceSession?.client_id ?? initialClientId ?? clients[0]?.id ?? "");
-  const [sessionType, setSessionType] = useState<SessionType>(sourceSession?.session_type ?? "preparation");
+  const [sessionType, setSessionType] = useState<SessionType>(sourceSession?.session_type ?? "coaching");
   const [date, setDate] = useState(
     existingDate
       ? existingDate.toISOString().slice(0, 10)

@@ -31,6 +31,7 @@ const PREPARE_ME_STAGE_ORDER: Record<SessionType, number> = {
   intake_assessment: 0,
   preparation: 1,
   harm_reduction_support: 2,
+  coaching: 2,
   check_in_12hr: 3,
   integration_1: 4,
   integration_2: 5,
@@ -133,6 +134,15 @@ async function stageCompletionError(
       { status: 409 },
     );
   }
+}
+
+/** Content-only check for summaries that no longer complete a journey stage. */
+function missingContentError(hasContent: boolean): NextResponse | undefined {
+  if (hasContent) return undefined;
+  return NextResponse.json(
+    { error: "Add a transcript or notes before generating a summary." },
+    { status: 400 },
+  );
 }
 
 async function completeJourneyStage(clientId: string, milestoneKey: JourneyCompletionMilestoneKey) {
@@ -245,12 +255,11 @@ export async function POST(req: NextRequest) {
         legacyText && `Check-In (recorded earlier):\n${legacyText}`,
         notes.trim() && `Practitioner's check-in call notes / transcript:\n${notes}`,
       ].filter(Boolean).join("\n\n");
-      const completionError = await stageCompletionError(clientId, "check_in_12hr_complete", Boolean(checkInData.trim()));
+      const completionError = missingContentError(Boolean(checkInData.trim()));
       if (completionError) return completionError;
       const prompt = prompts.buildCheckInSummaryPrompt(checkInData, client.full_name);
       const { data, model } = await runAiJson(prompt, () => mocks.mockCheckInSummary(client.full_name));
-      const summary = await addAiSummary(clientId, summaryType, "12-Hour Check-In Summary", data, model, undefined, undefined, checkInData);
-      await completeJourneyStage(clientId, "check_in_12hr_complete");
+      const summary = await addAiSummary(clientId, summaryType, "Check-In Summary", data, model, undefined, undefined, checkInData);
       return NextResponse.json({ summary });
     }
     case "integration_1_brief": {
@@ -280,13 +289,11 @@ export async function POST(req: NextRequest) {
     case "integration_summary": {
       const transcript = body.transcript ?? "";
       const sessionNumber = body.integrationSession ?? 1;
-      const milestoneKey = sessionNumber === 1 ? "integration_1_complete" : "integration_2_complete";
-      const completionError = await stageCompletionError(clientId, milestoneKey, Boolean(transcript.trim()));
+      const completionError = missingContentError(Boolean(transcript.trim()));
       if (completionError) return completionError;
       const prompt = prompts.buildIntegrationSummaryPrompt(sessionNumber, transcript, client.full_name);
       const { data, model } = await runAiJson(prompt, () => mocks.mockIntegrationSummary(sessionNumber, client.full_name));
-      const summary = await addAiSummary(clientId, summaryType, `Integration Summary ${sessionNumber}`, data, model, undefined, undefined, sourceNotes);
-      await completeJourneyStage(clientId, milestoneKey);
+      const summary = await addAiSummary(clientId, summaryType, `Session Summary ${sessionNumber}`, data, model, undefined, undefined, sourceNotes);
       return NextResponse.json({ summary });
     }
     case "growth_action_plan": {

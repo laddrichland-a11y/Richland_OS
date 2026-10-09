@@ -25,13 +25,9 @@ export interface ClientListItem {
 function clientActionLabel(status: ClientStatus) {
   if (isCompletedClient(status) || status === "inactive") return "View client →";
   if (status === "inquiry" || status === "intake_scheduled") return "Open intake →";
-  if (status === "intake_complete" || status === "preparation") return "Continue preparation →";
-  if (status === "preparation_complete" || status === "journey_scheduled") return "Open Journey Day →";
-  if (status === "journey_complete") return "Review check-in →";
-  if (status === "check_in_complete") return "Continue integration →";
-  if (status === "integration_2_complete") return "Open growth plan →";
-  if (status.startsWith("integration")) return "Continue integration →";
-  return "Open client →";
+  if (status === "intake_complete" || status === "preparation") return "Set goals & agreement →";
+  if (status === "journey_complete") return "Open action plan →";
+  return "Open coaching →";
 }
 
 function clientStageHref(client: Client, sessions: Session[]): string {

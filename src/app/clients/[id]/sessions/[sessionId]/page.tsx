@@ -33,15 +33,18 @@ export const dynamic = "force-dynamic";
 const SESSION_NAV_PHASE: Partial<Record<SessionType, JourneyWorkspaceStage>> = {
   intake_assessment: "intake",
   preparation: "preparation",
+  coaching: "harm_reduction_session",
+  // Legacy Heartful session types live under the Coaching stage.
   harm_reduction_support: "harm_reduction_session",
-  check_in_12hr: "post_journey_check_in",
-  integration_1: "integration_1",
-  integration_2: "integration_2",
+  check_in_12hr: "harm_reduction_session",
+  integration_1: "harm_reduction_session",
+  integration_2: "harm_reduction_session",
 };
 
 const SESSION_PRIMARY_SUMMARY_TYPES: Partial<Record<SessionType, AiSummaryType[]>> = {
   intake_assessment: ["client_assessment_summary"],
   preparation: ["journey_brief"],
+  coaching: ["session_call_summary"],
   harm_reduction_support: ["journey_summary"],
   check_in_12hr: ["check_in_12hr_summary"],
   integration_1: ["integration_1_brief", "integration_summary"],
@@ -53,10 +56,7 @@ const SESSION_PRIMARY_SUMMARY_TYPES: Partial<Record<SessionType, AiSummaryType[]
 const SESSION_MILESTONE_KEY: Partial<Record<SessionType, string>> = {
   intake_assessment: "intake_complete",
   preparation: "preparation_complete",
-  harm_reduction_support: "journey_complete",
-  check_in_12hr: "check_in_12hr_complete",
-  integration_1: "integration_1_complete",
-  integration_2: "integration_2_complete",
+  // Coaching sessions recur; the Coaching stage is closed from its own page.
 };
 
 export default async function SessionDetailPage({

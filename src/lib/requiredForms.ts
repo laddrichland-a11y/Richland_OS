@@ -43,6 +43,7 @@ const SESSION_PHASE: Record<SessionType, JourneyPhase> = {
   intake_assessment: "intake",
   preparation: "preparation",
   harm_reduction_support: "harm_reduction_session",
+  coaching: "harm_reduction_session",
   check_in_12hr: "post_journey_check_in",
   integration_1: "integration_1",
   integration_2: "integration_2",

@@ -17,9 +17,6 @@ const milestoneKeys = [
   "intake_complete",
   "preparation_complete",
   "journey_complete",
-  "check_in_12hr_complete",
-  "integration_1_complete",
-  "integration_2_complete",
   "growth_action_plan_complete",
 ] as const;
 
@@ -81,13 +78,19 @@ function submission(document_type: DocumentType, status: FormSubmission["status"
   };
 }
 
-test("journey stages can only complete in order", () => {
+test("coaching stages can only complete in order", () => {
   const afterIntake = milestones(1);
   assert.equal(canCompleteJourneyMilestone(afterIntake, "preparation_complete"), true);
-  assert.equal(canCompleteJourneyMilestone(afterIntake, "integration_2_complete"), false);
-  assert.equal(journeyCompletionIssue(afterIntake, "integration_2_complete", true), "previous_stages_incomplete");
+  assert.equal(canCompleteJourneyMilestone(afterIntake, "growth_action_plan_complete"), false);
+  assert.equal(journeyCompletionIssue(afterIntake, "journey_complete", true), "previous_stages_incomplete");
   assert.equal(canSetJourneyStatus(afterIntake, "preparation_complete"), true);
-  assert.equal(canSetJourneyStatus(afterIntake, "integration_2"), false);
+  assert.equal(canSetJourneyStatus(afterIntake, "journey_complete"), false);
+});
+
+test("legacy Heartful milestone keys are not coaching stages", () => {
+  const all = milestones(4);
+  assert.equal(canCompleteJourneyMilestone(all, "integration_2_complete"), false);
+  assert.equal(canCompleteJourneyMilestone(all, "check_in_12hr_complete"), false);
 });
 
 test("completion summaries require non-empty source content", () => {

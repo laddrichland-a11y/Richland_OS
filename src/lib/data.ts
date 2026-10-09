@@ -247,12 +247,14 @@ const STATUS_ORDER: ClientStatus[] = [
   "preparation",
   "preparation_complete",
   "journey_scheduled",
-  "journey_complete",
+  // Legacy Heartful statuses — all mean "in coaching" in Richland OS.
   "check_in_complete",
   "integration_1",
   "integration_1_complete",
   "integration_2",
   "integration_2_complete",
+  // Coaching stage closed out; working on the final Action Plan.
+  "journey_complete",
   "journey_closed",
 ];
 
@@ -276,9 +278,8 @@ interface SessionProgressRule {
 // where the client is in their journey.
 const SESSION_SCHEDULED_PROGRESS: Partial<Record<SessionType, SessionProgressRule>> = {
   intake_assessment: { status: "intake_scheduled", phase: "intake" },
+  coaching: { status: "journey_scheduled", phase: "harm_reduction_session" },
   harm_reduction_support: { status: "journey_scheduled", phase: "harm_reduction_session" },
-  integration_1: { status: "integration_1", phase: "integration_1" },
-  integration_2: { status: "integration_2", phase: "integration_2" },
 };
 
 // What completing a session of this type implies — also flips the matching
@@ -286,10 +287,8 @@ const SESSION_SCHEDULED_PROGRESS: Partial<Record<SessionType, SessionProgressRul
 const SESSION_COMPLETED_PROGRESS: Partial<Record<SessionType, SessionProgressRule>> = {
   intake_assessment: { status: "intake_complete", phase: "preparation", milestoneKey: "intake_complete" },
   preparation: { status: "preparation_complete", phase: "harm_reduction_session", milestoneKey: "preparation_complete" },
-  harm_reduction_support: { status: "journey_complete", phase: "post_journey_check_in", milestoneKey: "journey_complete" },
-  check_in_12hr: { status: "check_in_complete", phase: "integration_1", milestoneKey: "check_in_12hr_complete" },
-  integration_1: { status: "integration_1_complete", phase: "integration_2", milestoneKey: "integration_1_complete" },
-  integration_2: { status: "integration_2_complete", phase: "closed", milestoneKey: "integration_2_complete" },
+  // Coaching sessions recur, so completing one never closes the Coaching
+  // stage — that is done by hand from the Coaching stage page.
 };
 
 // Where a client returns when the practitioner undoes a session completion.
@@ -298,10 +297,6 @@ const SESSION_COMPLETED_PROGRESS: Partial<Record<SessionType, SessionProgressRul
 const SESSION_REOPEN_PROGRESS: Partial<Record<SessionType, SessionProgressRule>> = {
   intake_assessment: { status: "intake_scheduled", phase: "intake" },
   preparation: { status: "preparation", phase: "preparation" },
-  harm_reduction_support: { status: "journey_scheduled", phase: "harm_reduction_session" },
-  check_in_12hr: { status: "journey_complete", phase: "post_journey_check_in" },
-  integration_1: { status: "integration_1", phase: "integration_1" },
-  integration_2: { status: "integration_2", phase: "integration_2" },
 };
 
 async function applyJourneyProgress(clientId: string, rule?: SessionProgressRule) {
@@ -328,8 +323,11 @@ async function applyJourneyProgress(clientId: string, rule?: SessionProgressRule
 // meaning as completing its session. Keep the client record in sync with
 // those milestones as well. We only advance: a manually scheduled or later
 // status must never be rolled back by an older milestone being read.
-const MILESTONE_COMPLETED_PROGRESS: SessionProgressRule[] = Object.values(SESSION_COMPLETED_PROGRESS)
-  .filter((rule): rule is SessionProgressRule => Boolean(rule?.milestoneKey));
+const MILESTONE_COMPLETED_PROGRESS: SessionProgressRule[] = [
+  ...Object.values(SESSION_COMPLETED_PROGRESS)
+    .filter((rule): rule is SessionProgressRule => Boolean(rule?.milestoneKey)),
+  { status: "journey_complete", phase: "closed", milestoneKey: "journey_complete" },
+];
 
 export async function syncJourneyProgressFromMilestones(
   clientId: string,
@@ -726,7 +724,14 @@ export async function getMilestones(clientId: string): Promise<JourneyMilestone[
   // synchronization was added. This also means every current client gets the
   // corrected status the next time their record is opened.
   await syncJourneyProgressFromMilestones(clientId, milestones);
-  return milestones.sort((a, b) => a.sort_order - b.sort_order);
+  // Only the Richland coaching stages are shown; labels and order always
+  // come from the template so older records pick up the coaching names.
+  return milestones
+    .flatMap((milestone) => {
+      const template = MILESTONE_TEMPLATE.find((t) => t.key === milestone.milestone_key);
+      return template ? [{ ...milestone, label: template.label, sort_order: template.sort_order }] : [];
+    })
+    .sort((a, b) => a.sort_order - b.sort_order);
 }
 
 export async function completeMilestone(clientId: string, milestoneKey: string) {
@@ -772,14 +777,12 @@ export async function uncompleteMilestone(clientId: string, milestoneKey: string
 
   if (targetIndex >= 0) {
     const rollback: Array<{ status: ClientStatus; phase: JourneyPhase }> = [
+      // One entry per JOURNEY_COMPLETION_MILESTONE_KEYS stage.
       { status: "intake_scheduled", phase: "intake" },
       { status: "preparation", phase: "preparation" },
       { status: "journey_scheduled", phase: "harm_reduction_session" },
-      { status: "journey_complete", phase: "post_journey_check_in" },
-      { status: "integration_1", phase: "integration_1" },
-      { status: "integration_2", phase: "integration_2" },
-      { status: "integration_2_complete", phase: "closed" },
-      { status: "integration_2_complete", phase: "closed" },
+      { status: "journey_complete", phase: "closed" },
+      { status: "journey_complete", phase: "closed" },
     ];
     await updateClient(clientId, rollback[targetIndex]);
   }
@@ -1218,10 +1221,6 @@ export async function addSession(input: {
 const MILESTONE_SESSION_TYPE: Partial<Record<string, SessionType>> = {
   intake_complete: "intake_assessment",
   preparation_complete: "preparation",
-  journey_complete: "harm_reduction_support",
-  check_in_12hr_complete: "check_in_12hr",
-  integration_1_complete: "integration_1",
-  integration_2_complete: "integration_2",
 };
 
 // Ensures a session record of the given type exists for this client.

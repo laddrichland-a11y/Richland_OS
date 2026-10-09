@@ -281,8 +281,8 @@ function buildRecentActivity({
       at: checkIn.submitted_at,
       category: "submission",
       title: "Client submission",
-      detail: checkIn.check_in_type === "12_hour" ? "12-hour check-in" : "48-hour reflection",
-      href: `/clients/${client.id}/check-in`,
+      detail: "Between-session check-in",
+      href: `/clients/${client.id}/coaching`,
       icon: ClipboardCheck,
     });
   }

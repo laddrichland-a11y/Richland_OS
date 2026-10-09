@@ -32,14 +32,14 @@ export default async function GrowthPlanPage({ params }: { params: Promise<{ id:
       <MilestoneToggleBanner
         clientId={id}
         milestoneKey="growth_action_plan_complete"
-        label="Growth Action Plan"
-        meta="Phase 7 · Final step"
+        label="Action Plan"
+        meta="Stage 4 · Commitments and next steps"
         initialCompleted={milestone?.completed ?? false}
         stageStatus={stage.status}
         canMarkComplete={stage.canMarkComplete}
         canPrepare={stage.canPrepare}
       />
-      <PhasePrepareMe readOnly={!stage.canPrepare} clientId={id} sessionTypeLabel="Growth Plan" />
+      <PhasePrepareMe readOnly={!stage.canPrepare} clientId={id} sessionTypeLabel="Action Plan" />
       <GrowthActionPlanWorkspace
         clientId={id}
         clientName={client.full_name}

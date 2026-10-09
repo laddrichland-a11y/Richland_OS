@@ -10,13 +10,11 @@ import { selectStageWorkspaceSession } from "@/lib/sessionSelectors";
 export type PhaseNavKey = "overview" | "intake" | "preparation" | "harm_reduction_session" | "post_journey_check_in" | "integration_1" | "integration_2" | "growth_action_plan";
 
 export const PHASE_LINKS: { phase: PhaseNavKey; label: string; href: string; sessionType?: SessionType; milestoneKey: string }[] = [
-  { phase: "intake", label: "Intake", href: "intake", sessionType: "intake_assessment", milestoneKey: "intake_complete" },
-  { phase: "preparation", label: "Preparation", href: "preparation", sessionType: "preparation", milestoneKey: "preparation_complete" },
-  { phase: "harm_reduction_session", label: "Journey Day", href: "journey-day", sessionType: "harm_reduction_support", milestoneKey: "journey_complete" },
-  { phase: "post_journey_check_in", label: "12-Hour Check-In", href: "check-in", sessionType: "check_in_12hr", milestoneKey: "check_in_12hr_complete" },
-  { phase: "integration_1", label: "Integration 1", href: "integration-1", sessionType: "integration_1", milestoneKey: "integration_1_complete" },
-  { phase: "integration_2", label: "Integration 2", href: "integration-2", sessionType: "integration_2", milestoneKey: "integration_2_complete" },
-  { phase: "growth_action_plan", label: "Growth Plan", href: "growth-plan", milestoneKey: "growth_action_plan_complete" },
+  { phase: "intake", label: "Intake & Assessments", href: "intake", sessionType: "intake_assessment", milestoneKey: "intake_complete" },
+  { phase: "preparation", label: "Goals & Agreement", href: "preparation", sessionType: "preparation", milestoneKey: "preparation_complete" },
+  // Ongoing stage: always opens the coaching session list, never one session.
+  { phase: "harm_reduction_session", label: "Coaching", href: "coaching", milestoneKey: "journey_complete" },
+  { phase: "growth_action_plan", label: "Action Plan", href: "growth-plan", milestoneKey: "growth_action_plan_complete" },
 ];
 
 function headerIsExpanded(clientId: string) {
@@ -62,7 +60,7 @@ export function JourneyStageNav({ clientId, client, sessions, milestones, curren
   }
 
   return (
-    <div className="journey-stage-nav" aria-label="Journey stages">
+    <div className="journey-stage-nav" aria-label="Coaching stages">
       <ol>
         {PHASE_LINKS.map((stage, index) => {
           const session = phaseSession(sessions, stage.sessionType);

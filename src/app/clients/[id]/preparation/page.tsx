@@ -54,14 +54,14 @@ export default async function PreparationPage({ params }: { params: Promise<{ id
       <MilestoneToggleBanner
         clientId={id}
         milestoneKey="preparation_complete"
-        label="Preparation Session"
-        meta="Phase 2 · 90 minutes"
+        label="Goals & Agreement"
+        meta="Stage 2 · Set goals and sign the coaching agreement"
         initialCompleted={milestone?.completed ?? false}
         stageStatus={stage.status}
         canMarkComplete={stage.canMarkComplete}
         canPrepare={stage.canPrepare}
       />
-      <PhasePrepareMe readOnly={!stage.canPrepare} clientId={id} sessionTypeLabel="Preparation" sessionType="preparation" />
+      <PhasePrepareMe readOnly={!stage.canPrepare} clientId={id} sessionTypeLabel="Goals & Agreement" sessionType="preparation" />
       <PreparationWorkspace
         clientId={id}
         clientName={client.full_name}

@@ -86,6 +86,8 @@ export type SessionType =
   | "check_in_12hr"
   | "integration_1"
   | "integration_2"
+  /** Richland OS: a recurring coaching session (the main session type). */
+  | "coaching"
   | "other";
 
 export type TaskStatus = "pending" | "in_progress" | "completed" | "skipped" | "overdue";
@@ -558,34 +560,31 @@ export interface Payment {
 }
 
 export const DOCUMENT_LABELS: Record<DocumentType, string> = {
-  participant_screening_form: "Participant Screening Form",
-  informed_consent: "Informed Consent",
-  harm_reduction_services_agreement: "Harm Reduction Services Agreement",
+  participant_screening_form: "Client Intake Questionnaire",
+  informed_consent: "Confidentiality & Consent",
+  harm_reduction_services_agreement: "Coaching Engagement Agreement",
   client_services_agreement: "Client Services Agreement",
-  preparation_navigation_plan: "Psychedelic Preparation and Navigation Plan",
-  preparation_education_session: "Preparation Education Session",
-  integration_session_1: "Integration Session 1 — Reflection Form",
-  integration_session_2: "Integration Session 2 — Reflection Form",
-  post_integration_form: "Post Integration Form",
-  post_integration_form_updated: "Updated Post Integration Form",
+  preparation_navigation_plan: "Goals & Vision Worksheet",
+  preparation_education_session: "Goal-Setting Session Notes",
+  integration_session_1: "Session Reflection Form",
+  integration_session_2: "Session Reflection Form (Follow-up)",
+  post_integration_form: "Engagement Review",
+  post_integration_form_updated: "Updated Engagement Review",
   session_notes: "Session Notes",
-  journey_brief: "Journey Brief",
-  integration_summary_1: "Integration Summary (Session 1)",
-  integration_summary_2: "Integration Summary (Session 2)",
-  growth_action_plan: "Growth Action Plan",
-  check_in_12hr_form: "12-Hour Check-In",
+  journey_brief: "Engagement Brief",
+  integration_summary_1: "Session Summary",
+  integration_summary_2: "Session Summary (Follow-up)",
+  growth_action_plan: "Action Plan",
+  check_in_12hr_form: "Between-Session Check-In",
   other: "Other Document",
 };
 
 export const MILESTONE_TEMPLATE: { key: string; label: string; sort_order: number }[] = [
-  { key: "intake_complete", label: "Intake", sort_order: 1 },
-  { key: "preparation_complete", label: "Preparation", sort_order: 2 },
-  { key: "journey_complete", label: "Journey Day", sort_order: 3 },
-  { key: "check_in_12hr_complete", label: "12-Hour Check-In", sort_order: 4 },
-  { key: "integration_1_complete", label: "Integration 1", sort_order: 5 },
-  { key: "integration_2_complete", label: "Integration 2", sort_order: 6 },
-  { key: "growth_action_plan_complete", label: "Growth Plan", sort_order: 7 },
-  { key: "journey_closed", label: "Journey", sort_order: 8 },
+  { key: "intake_complete", label: "Intake & Assessments", sort_order: 1 },
+  { key: "preparation_complete", label: "Goals & Agreement", sort_order: 2 },
+  { key: "journey_complete", label: "Coaching", sort_order: 3 },
+  { key: "growth_action_plan_complete", label: "Action Plan", sort_order: 4 },
+  { key: "journey_closed", label: "Engagement", sort_order: 5 },
 ];
 
 // ---------------------------------------------------------------------------
@@ -687,17 +686,18 @@ export const STATUS_LABELS: Record<ClientStatus, string> = {
   inquiry: "Intake",
   intake_scheduled: "Intake",
   intake_complete: "Intake",
-  preparation: "Preparation",
-  preparation_complete: "Preparation",
-  journey_scheduled: "Journey Day",
-  journey_complete: "Journey Day",
-  check_in_complete: "12-Hour Check-In",
-  integration_1: "Integration 1",
-  integration_1_complete: "Integration 1",
-  integration_2: "Integration 2",
-  integration_2_complete: "Integration 2",
-  journey_closed: "Growth Plan",
-  inactive: "Journey",
+  preparation: "Goals & Agreement",
+  preparation_complete: "Goals & Agreement",
+  journey_scheduled: "Coaching",
+  journey_complete: "Action Plan",
+  // Legacy Heartful statuses — unreachable in the coaching flow.
+  check_in_complete: "Coaching",
+  integration_1: "Coaching",
+  integration_1_complete: "Coaching",
+  integration_2: "Coaching",
+  integration_2_complete: "Coaching",
+  journey_closed: "Completed",
+  inactive: "Inactive",
 };
 
 // ---------------------------------------------------------------------------

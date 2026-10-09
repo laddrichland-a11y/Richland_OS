@@ -54,14 +54,14 @@ export default async function IntakePage({ params }: { params: Promise<{ id: str
       <MilestoneToggleBanner
         clientId={id}
         milestoneKey="intake_complete"
-        label="Intake & Assessment"
-        meta="Phase 1 · 90 minutes"
+        label="Intake & Assessments"
+        meta="Stage 1 · Intake call and assessments"
         initialCompleted={milestone?.completed ?? false}
         stageStatus={stage.status}
         canMarkComplete={stage.canMarkComplete}
         canPrepare={stage.canPrepare}
       />
-      <PhasePrepareMe readOnly={!stage.canPrepare} clientId={id} sessionTypeLabel="Intake & Assessment" sessionType="intake_assessment" />
+      <PhasePrepareMe readOnly={!stage.canPrepare} clientId={id} sessionTypeLabel="Intake & Assessments" sessionType="intake_assessment" />
       <IntakeWorkspace
         clientId={id}
         clientName={client.full_name}

@@ -25,7 +25,7 @@ import {
   Session,
   Task,
 } from "@/lib/types";
-import { canCompleteJourneyMilestone, canCompleteJourneySession, cx, formatDate, formatDateTime, getClientJourneyProgress, getJourneyStageWorkspaceState, isGeneralPaperwork, phaseForStatus, SESSION_TYPE_LABELS, Tab, type JourneyWorkspaceStage } from "@/lib/utils";
+import { canCompleteJourneyMilestone, canCompleteJourneySession, cx, formatDate, formatDateTime, getClientJourneyProgress, getJourneyStageWorkspaceState, isGeneralPaperwork, phaseForStatus, SESSION_TYPE_LABELS, SESSION_TYPE_OPTIONS, Tab, type JourneyWorkspaceStage } from "@/lib/utils";
 import { selectCurrentOrNextSession, selectStageWorkspaceSession } from "@/lib/sessionSelectors";
 import {
   FileText,
@@ -101,15 +101,6 @@ const CLIENT_TABS: { value: Tab; label: string }[] = [
   { value: "AI Copilot", label: "AI" },
 ];
 
-const SESSION_TYPE_OPTIONS: { value: SessionType; label: string }[] = [
-  { value: "intake_assessment", label: "Intake Assessment" },
-  { value: "preparation", label: "Preparation" },
-  { value: "harm_reduction_support", label: "Journey Day" },
-  { value: "check_in_12hr", label: "12-Hour Check-In" },
-  { value: "integration_1", label: "Integration Session 1" },
-  { value: "integration_2", label: "Integration Session 2" },
-  { value: "other", label: "Other" },
-];
 
 // Journey-tab stage → the stage key recordings are filed under.
 const PHASE_STAGE_KEY: Partial<Record<string, StageNotesKey>> = {
@@ -1346,7 +1337,7 @@ function sessionStatusClasses(status: Session["status"]) {
 }
 
 function ScheduleSessionForm({ clientId, onClose }: { clientId: string; onClose: () => void }) {
-  const [sessionType, setSessionType] = useState<SessionType>("preparation");
+  const [sessionType, setSessionType] = useState<SessionType>("coaching");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [time, setTime] = useState("10:00");
   const [duration, setDuration] = useState(60);
