@@ -1,0 +1,93 @@
+"use client";
+
+import { useState } from "react";
+import TranscriptInput from "@/components/ai/TranscriptInput";
+import AiGenerateButton from "@/components/ai/AiGenerateButton";
+import ActionCardHeader from "@/components/client/ActionCardHeader";
+import SummaryVersions from "@/components/ai/SummaryVersions";
+import { useStageNotes } from "@/components/ai/useStageNotes";
+import {
+  AiSummary,
+  Recording,
+  ClientDocument,
+  FormSubmission,
+  FormTemplate,
+} from "@/lib/types";
+import { ScrollText } from "@/components/ui/HeartfulIcon";
+import StageFormsCard from "@/components/client/StageFormsCard";
+
+export default function IntakeWorkspace({
+  clientId,
+  clientName,
+  documents,
+  formTemplates,
+  formSubmissions,
+  existingSummaries,
+  initialNotes,
+  initialRecordings = [],
+  canCompleteStage,
+}: {
+  clientId: string;
+  clientName: string;
+  documents: ClientDocument[];
+  formTemplates: FormTemplate[];
+  formSubmissions: FormSubmission[];
+  existingSummaries: AiSummary[];
+  /** Notes already saved on the client record for this stage. */
+  initialNotes: string;
+  /** Recordings already uploaded on this stage page. */
+  initialRecordings?: Recording[];
+  canCompleteStage: boolean;
+}) {
+  // Saved to the client record as you type, and kept after generating.
+  const { notes, setNotes, saveState } = useStageNotes(clientId, "intake", initialNotes);
+  const [summaries, setSummaries] = useState(existingSummaries);
+
+  return (
+    <div className="space-y-6">
+      <StageFormsCard
+        clientId={clientId}
+        sessionType="intake_assessment"
+        formTemplates={formTemplates}
+        documents={documents}
+        formSubmissions={formSubmissions}
+      />
+
+      <div className="card p-4 space-y-3">
+        <ActionCardHeader
+          title={
+            <span className="inline-flex items-center gap-2">
+              <ScrollText className="h-4 w-4" aria-hidden="true" />
+              Session Notes &amp; Transcript
+            </span>
+          }
+          titleAs="h2"
+          description={`Your notes are saved to ${clientName}'s record as you type. Generate a client intake summary from them — each one is kept as a new version.`}
+          action={
+            <AiGenerateButton
+              clientId={clientId}
+              summaryType="client_assessment_summary"
+              label={summaries.length > 0 ? "Generate New Version" : "Generate Client Intake Summary"}
+              extra={{ transcript: notes, stageNotesKey: "intake" }}
+              onDone={(s) => setSummaries((prev) => [s as unknown as AiSummary, ...prev])}
+              disabled={!canCompleteStage || !notes.trim()}
+              className="btn-primary inline-flex items-center gap-2 whitespace-nowrap text-sm disabled:opacity-60"
+            />
+          }
+        />
+        <TranscriptInput clientId={clientId} stage="intake" initialRecordings={initialRecordings} value={notes} onChange={setNotes} saveState={saveState} hideLabel inlineUploadActions />
+      </div>
+
+      <SummaryVersions
+        clientId={clientId}
+        summaries={summaries}
+        onChange={setSummaries}
+        heading="Client Intake Summary"
+        description={`Every intake summary generated for ${clientName}, newest first. Open "Notes this version was generated from" to see what each one was based on.`}
+        cardTitle="Client Intake Summary"
+        variant="assessment"
+      />
+
+    </div>
+  );
+}

@@ -1,0 +1,2818 @@
+import { createHash } from "crypto";
+import { normalizeAgreementStatus } from "@/lib/agreementStatus";
+import { resolveRequiredForms } from "@/lib/requiredForms";
+import { selectSessionTimeline, selectStageWorkspaceSession } from "@/lib/sessionSelectors";
+import { store } from "@/lib/mock/store";
+import { nextId } from "@/lib/mock/seed";
+import { isFirebaseConfigured, getBucket } from "@/lib/firebaseAdmin";
+import {
+  canCompleteJourneyMilestone,
+  isActiveClient,
+  isAwaitingIntegrationClient,
+  isJourneyCompletionMilestoneKey,
+  isPastDue,
+  JOURNEY_COMPLETION_MILESTONE_KEYS,
+  phaseForStatus,
+} from "@/lib/utils";
+import {
+  allDocs,
+  deleteDoc,
+  deleteDocsWhere,
+  getDocById,
+  insertDoc,
+  insertDocs,
+  clearDocFields,
+  queryEq,
+  setSingleton,
+  updateDocById,
+} from "@/lib/firestoreRepo";
+import {
+  AiConversationMessage,
+  AiSummary,
+  AiSummaryType,
+  CheckIn,
+  Client,
+  ClientDocument,
+  ClientMemoryItem,
+  ClientStatus,
+  DEFAULT_HOLD_DAYS,
+  DocumentType,
+  EmailLog,
+  ExternalCalendarEvent,
+  FormSubmission,
+  FormTemplate,
+  GoogleCalendarSettings,
+  GrowthActionPlan,
+  JourneyMilestone,
+  JourneyPhase,
+  Message,
+  MILESTONE_TEMPLATE,
+  Payment,
+  PortalAssignment,
+  PostIntegrationForm,
+  PreparationPlan,
+  Profile,
+  Prospect,
+  ProspectCall,
+  ProspectTranscript,
+  Recording,
+  ReferralSource,
+  Session,
+  SessionNote,
+  SessionNoteField,
+  StageNotes,
+  StageNotesKey,
+  SessionType,
+  SmsLog,
+  Task,
+  Transcript,
+} from "@/lib/types";
+
+// ---------------------------------------------------------------------------
+// Real, persistent data layer (Firestore), with the original in-memory mock
+// store kept as an automatic fallback when no FIREBASE_* env vars are
+// configured (e.g. a fresh local checkout with no credentials yet, or CI).
+//
+// Every exported function below has the exact same signature/behavior it
+// always had — only the storage backend changed. The small generic helpers
+// just below (listAll/listWhere/findById/create/createMany/patchById) pick
+// Firestore or the mock array at call time based on `isFirebaseConfigured`,
+// so the bulk of this file reads the same either way.
+// ---------------------------------------------------------------------------
+
+// A tiny process-local read-through cache keeps route-to-route navigation from
+// repeating the same Firestore reads. It is deliberately brief: mutations
+// below clear it immediately, while a natural expiry protects live data even
+// across another server instance.
+const FIRESTORE_READ_CACHE_MS = 3_000;
+const firestoreReadCache = new Map<string, { expiresAt: number; value: Promise<unknown> }>();
+
+function cachedFirestoreRead<T>(key: string, read: () => Promise<T>): Promise<T> {
+  const now = Date.now();
+  const cached = firestoreReadCache.get(key);
+  if (cached && cached.expiresAt > now) return cached.value as Promise<T>;
+
+  const value = read();
+  firestoreReadCache.set(key, { expiresAt: now + FIRESTORE_READ_CACHE_MS, value });
+  void value.catch(() => firestoreReadCache.delete(key));
+  return value;
+}
+
+function invalidateFirestoreReadCache() {
+  firestoreReadCache.clear();
+}
+
+async function listAll<T>(mockArr: T[], collection: string): Promise<T[]> {
+  return isFirebaseConfigured
+    ? cachedFirestoreRead(`all:${collection}`, () => allDocs<T>(collection))
+    : [...mockArr];
+}
+
+async function listWhere<T>(
+  mockArr: T[],
+  collection: string,
+  field: string,
+  value: unknown
+): Promise<T[]> {
+  if (isFirebaseConfigured) {
+    return cachedFirestoreRead(`where:${collection}:${field}:${JSON.stringify(value)}`, () => queryEq<T>(collection, field, value));
+  }
+  return mockArr.filter((x) => (x as unknown as Record<string, unknown>)[field] === value);
+}
+
+async function findById<T extends { id: string }>(
+  mockArr: T[],
+  collection: string,
+  id: string
+): Promise<T | undefined> {
+  if (isFirebaseConfigured) return cachedFirestoreRead(`id:${collection}:${id}`, () => getDocById<T>(collection, id));
+  return mockArr.find((x) => x.id === id);
+}
+
+async function create<T extends { id: string }>(mockArr: T[], collection: string, doc: T): Promise<T> {
+  if (isFirebaseConfigured) {
+    const created = await insertDoc(collection, doc);
+    invalidateFirestoreReadCache();
+    return created;
+  }
+  mockArr.push(doc);
+  return doc;
+}
+
+async function createMany<T extends { id: string }>(
+  mockArr: T[],
+  collection: string,
+  docs: T[]
+): Promise<T[]> {
+  if (docs.length === 0) return docs;
+  if (isFirebaseConfigured) {
+    const created = await insertDocs(collection, docs);
+    invalidateFirestoreReadCache();
+    return created;
+  }
+  mockArr.push(...docs);
+  return docs;
+}
+
+async function removeById<T extends { id: string }>(
+  mockArr: T[],
+  collection: string,
+  id: string
+): Promise<void> {
+  if (isFirebaseConfigured) {
+    await deleteDoc(collection, id);
+    invalidateFirestoreReadCache();
+    return;
+  }
+  const idx = mockArr.findIndex((x) => x.id === id);
+  if (idx !== -1) mockArr.splice(idx, 1);
+}
+
+async function removeWhere<T>(
+  mockArr: T[],
+  collection: string,
+  field: string,
+  value: unknown
+): Promise<void> {
+  if (isFirebaseConfigured) {
+    await deleteDocsWhere(collection, field, value);
+    invalidateFirestoreReadCache();
+    return;
+  }
+  for (let i = mockArr.length - 1; i >= 0; i--) {
+    if ((mockArr[i] as unknown as Record<string, unknown>)[field] === value) mockArr.splice(i, 1);
+  }
+}
+
+async function patchById<T extends { id: string }>(
+  mockArr: T[],
+  collection: string,
+  id: string,
+  patch: Partial<T>
+): Promise<T | undefined> {
+  // A blank id means the caller is acting on a record that doesn't exist
+  // (see getDocById's note) — "nothing to patch", not an error.
+  if (!id) return undefined;
+  if (isFirebaseConfigured) {
+    const updated = await updateDocById<T>(collection, id, patch);
+    invalidateFirestoreReadCache();
+    return updated;
+  }
+  const item = mockArr.find((x) => x.id === id);
+  if (!item) return undefined;
+  for (const [k, v] of Object.entries(patch as Record<string, unknown>)) {
+    if (v !== undefined) (item as unknown as Record<string, unknown>)[k] = v;
+  }
+  return item;
+}
+
+// Removes fields outright, rather than patching them.
+//
+// patchById can't express this: both backends skip undefined values (the
+// Firestore write is merge-based, the mock loop checks `v !== undefined`),
+// because callers routinely pass optional fields as undefined meaning "leave
+// this alone". Clearing therefore needs its own primitive — see
+// clearSessionGoogleEvent for the case that made this necessary.
+async function clearFields<T extends { id: string }>(
+  mockArr: T[],
+  collection: string,
+  id: string,
+  fields: (keyof T & string)[]
+): Promise<void> {
+  if (!id) return;
+  if (isFirebaseConfigured) {
+    await clearDocFields(collection, id, fields);
+    invalidateFirestoreReadCache();
+    return;
+  }
+  const item = mockArr.find((x) => x.id === id);
+  if (!item) return;
+  for (const f of fields) delete (item as Record<string, unknown>)[f];
+}
+
+// ---------------------------------------------------------------------------
+// Session <-> journey progress wiring.
+//
+// Scheduling or completing a session moves the client's status/phase
+// forward automatically — but only forward. We never downgrade a client
+// (e.g. completing an old "preparation" session after they're already in
+// Integration 2 shouldn't roll them back), and we never touch clients who
+// are inactive or already closed out.
+// ---------------------------------------------------------------------------
+
+const STATUS_ORDER: ClientStatus[] = [
+  "inquiry",
+  "intake_scheduled",
+  "intake_complete",
+  "preparation",
+  "preparation_complete",
+  "journey_scheduled",
+  "journey_complete",
+  "check_in_complete",
+  "integration_1",
+  "integration_1_complete",
+  "integration_2",
+  "integration_2_complete",
+  "journey_closed",
+];
+
+const PHASE_ORDER: JourneyPhase[] = [
+  "intake",
+  "preparation",
+  "harm_reduction_session",
+  "post_journey_check_in",
+  "integration_1",
+  "integration_2",
+  "closed",
+];
+
+interface SessionProgressRule {
+  status: ClientStatus;
+  phase: JourneyPhase;
+  milestoneKey?: string;
+}
+
+// What scheduling a (not-yet-happened) session of this type implies about
+// where the client is in their journey.
+const SESSION_SCHEDULED_PROGRESS: Partial<Record<SessionType, SessionProgressRule>> = {
+  intake_assessment: { status: "intake_scheduled", phase: "intake" },
+  harm_reduction_support: { status: "journey_scheduled", phase: "harm_reduction_session" },
+  integration_1: { status: "integration_1", phase: "integration_1" },
+  integration_2: { status: "integration_2", phase: "integration_2" },
+};
+
+// What completing a session of this type implies — also flips the matching
+// milestone so the journey progress bar stays in sync.
+const SESSION_COMPLETED_PROGRESS: Partial<Record<SessionType, SessionProgressRule>> = {
+  intake_assessment: { status: "intake_complete", phase: "preparation", milestoneKey: "intake_complete" },
+  preparation: { status: "preparation_complete", phase: "harm_reduction_session", milestoneKey: "preparation_complete" },
+  harm_reduction_support: { status: "journey_complete", phase: "post_journey_check_in", milestoneKey: "journey_complete" },
+  check_in_12hr: { status: "check_in_complete", phase: "integration_1", milestoneKey: "check_in_12hr_complete" },
+  integration_1: { status: "integration_1_complete", phase: "integration_2", milestoneKey: "integration_1_complete" },
+  integration_2: { status: "integration_2_complete", phase: "closed", milestoneKey: "integration_2_complete" },
+};
+
+// Where a client returns when the practitioner undoes a session completion.
+// This is applied only while the client is still exactly at the state caused
+// by that completion, so reopening an older session never erases later work.
+const SESSION_REOPEN_PROGRESS: Partial<Record<SessionType, SessionProgressRule>> = {
+  intake_assessment: { status: "intake_scheduled", phase: "intake" },
+  preparation: { status: "preparation", phase: "preparation" },
+  harm_reduction_support: { status: "journey_scheduled", phase: "harm_reduction_session" },
+  check_in_12hr: { status: "journey_complete", phase: "post_journey_check_in" },
+  integration_1: { status: "integration_1", phase: "integration_1" },
+  integration_2: { status: "integration_2", phase: "integration_2" },
+};
+
+async function applyJourneyProgress(clientId: string, rule?: SessionProgressRule) {
+  if (!rule) return;
+  const c = await getClient(clientId);
+  if (!c || c.status === "inactive" || c.status === "journey_closed") return;
+
+  // Validate and persist the milestone before moving the client position.
+  // If this is a future stage, completeMilestone throws and no journey state
+  // is changed.
+  if (rule.milestoneKey) await completeMilestone(clientId, rule.milestoneKey);
+
+  const patch: Partial<Client> = {};
+  if (STATUS_ORDER.indexOf(rule.status) > STATUS_ORDER.indexOf(c.status)) {
+    patch.status = rule.status;
+  }
+  if (PHASE_ORDER.indexOf(rule.phase) > PHASE_ORDER.indexOf(c.current_phase)) {
+    patch.current_phase = rule.phase;
+  }
+  if (Object.keys(patch).length > 0) await updateClient(clientId, patch);
+}
+
+// Marking a journey stage complete from its workspace has the same business
+// meaning as completing its session. Keep the client record in sync with
+// those milestones as well. We only advance: a manually scheduled or later
+// status must never be rolled back by an older milestone being read.
+const MILESTONE_COMPLETED_PROGRESS: SessionProgressRule[] = Object.values(SESSION_COMPLETED_PROGRESS)
+  .filter((rule): rule is SessionProgressRule => Boolean(rule?.milestoneKey));
+
+export async function syncJourneyProgressFromMilestones(
+  clientId: string,
+  suppliedMilestones?: JourneyMilestone[],
+) {
+  const milestones = suppliedMilestones ?? await ensureMilestones(clientId);
+  const completedKeys = new Set(
+    milestones.filter((milestone) => milestone.completed).map((milestone) => milestone.milestone_key),
+  );
+
+  // A later stage cannot establish progress until all earlier stages are
+  // complete. This keeps an accidentally checked future stage from moving a
+  // client ahead in their journey.
+  for (const rule of MILESTONE_COMPLETED_PROGRESS) {
+    if (!rule.milestoneKey || !completedKeys.has(rule.milestoneKey)) break;
+    await applyJourneyProgress(clientId, rule);
+  }
+}
+
+async function revertJourneyProgressForSession(session: Session) {
+  const completedRule = SESSION_COMPLETED_PROGRESS[session.session_type];
+  const reopenRule = SESSION_REOPEN_PROGRESS[session.session_type];
+  if (!completedRule || !reopenRule) return;
+
+  const sessions = await listWhere(store.sessions, "sessions", "client_id", session.client_id);
+  const hasAnotherCompletedSession = sessions.some(
+    (candidate) =>
+      candidate.id !== session.id &&
+      candidate.session_type === session.session_type &&
+      candidate.status === "completed"
+  );
+  if (hasAnotherCompletedSession) return;
+
+  const client = await getClient(session.client_id);
+  if (!client) return;
+  const completionIsCurrent =
+    client.status === completedRule.status && client.current_phase === completedRule.phase;
+  if (!completionIsCurrent) return;
+
+  await updateClient(session.client_id, {
+    status: reopenRule.status,
+    current_phase: reopenRule.phase,
+  });
+  if (completedRule.milestoneKey) {
+    await uncompleteMilestone(session.client_id, completedRule.milestoneKey);
+  }
+}
+
+// Document types that are NOT (yet) backed by a Form Library template —
+// these stay as plain upload slots. Anything backed by a template in
+// lib/mock/formTemplates.ts is sourced from the template instead (see
+// createClient below), so the client fills it out + signs it in the portal
+// rather than uploading a file.
+const UPLOAD_ONLY_DOCUMENT_TYPES: { type: DocumentType; required: boolean }[] = [
+  // Legacy exports retained for old records. The active required forms are
+  // integration_session_1 / integration_session_2 in the Form Library.
+  { type: "post_integration_form", required: false },
+  { type: "post_integration_form_updated", required: false },
+  { type: "session_notes", required: false },
+  { type: "journey_brief", required: false },
+  { type: "integration_summary_1", required: false },
+  { type: "integration_summary_2", required: false },
+  { type: "growth_action_plan", required: false },
+];
+
+// ---------------------------------------------------------------------------
+// PRACTITIONER PROFILE + REFERRAL SOURCES
+// ---------------------------------------------------------------------------
+
+const PRACTICE_NAME = "Stillwater Integration Studio";
+
+export async function getPractitioner(): Promise<Profile> {
+  if (isFirebaseConfigured) {
+    const existing = await getDocById<Profile>("meta", "practitioner");
+    if (existing) {
+      if (existing.practice_name !== "Heartful Labs") return existing;
+      return setSingleton<Profile & Record<string, unknown>>(
+        "meta",
+        "practitioner",
+        { ...existing, practice_name: PRACTICE_NAME } as Profile & Record<string, unknown>
+      );
+    }
+    // First run against a brand-new Firestore project: seed from the mock
+    // practitioner profile so the app has something sensible to show.
+    return setSingleton<Profile & Record<string, unknown>>(
+      "meta",
+      "practitioner",
+      store.practitioner as unknown as Profile & Record<string, unknown>
+    );
+  }
+  if (store.practitioner.practice_name === "Heartful Labs") {
+    store.practitioner.practice_name = PRACTICE_NAME;
+  }
+  return store.practitioner;
+}
+
+export async function updatePractitioner(patch: Partial<Profile>): Promise<Profile> {
+  if (isFirebaseConfigured) {
+    const current = await getPractitioner();
+    const updated = { ...current, ...patch };
+    return setSingleton<Profile & Record<string, unknown>>(
+      "meta",
+      "practitioner",
+      updated as Profile & Record<string, unknown>
+    );
+  }
+  Object.assign(store.practitioner, patch);
+  return store.practitioner;
+}
+
+export async function getReferralSources(): Promise<ReferralSource[]> {
+  if (isFirebaseConfigured) {
+    const existing = await allDocs<ReferralSource>("referralSources");
+    if (existing.length > 0) return existing;
+    // Seed once from the mock constants so the new-client form has options.
+    return insertDocs("referralSources", store.referralSources);
+  }
+  return store.referralSources;
+}
+
+export async function createReferralSource(name: string, category?: string): Promise<ReferralSource> {
+  const practitioner = await getPractitioner();
+  const src: ReferralSource = { id: nextId("ref"), practitioner_id: practitioner.id, name, category };
+  return create(store.referralSources, "referralSources", src);
+}
+
+export async function deleteReferralSource(id: string): Promise<void> {
+  if (isFirebaseConfigured) {
+    const { getDb } = await import("@/lib/firebaseAdmin");
+    await getDb()!.collection("referralSources").doc(id).delete();
+    return;
+  }
+  const idx = store.referralSources.findIndex((r) => r.id === id);
+  if (idx !== -1) store.referralSources.splice(idx, 1);
+}
+
+// ---------------------------------------------------------------------------
+// CLIENTS
+// ---------------------------------------------------------------------------
+
+// One-way hash for client-chosen portal passwords. Not bcrypt/scrypt — this
+// app has no other PII-grade secrets at rest and is deliberately simple
+// (see practitioner password handling in actions.ts) — but we still never
+// store the plaintext password itself.
+export function hashPassword(password: string): string {
+  return createHash("sha256").update(password).digest("hex");
+}
+
+/** A record is on hold if it carries an on_hold_at timestamp. */
+export function isOnHold(record: { on_hold_at?: string } | undefined | null): boolean {
+  return Boolean(record?.on_hold_at);
+}
+
+async function allClients(): Promise<Client[]> {
+  const clients = await listAll(store.clients, "clients");
+  // Defensive de-dupe: guards against any stale duplicate-id records (e.g.
+  // left over in a long-running dev server's in-memory store).
+  const byId = new Map<string, Client>();
+  for (const c of clients) byId.set(c.id, c);
+  return [...byId.values()].sort((a, b) => (a.updated_at < b.updated_at ? 1 : -1));
+}
+
+/**
+ * Default client read — EXCLUDES anyone on hold. This is deliberately the
+ * default so a new view can't accidentally leak held clients into the
+ * practitioner's working surfaces. Reach for getClientsIncludingOnHold only
+ * where completeness matters more than focus (financial totals, exports).
+ */
+export async function getClients(): Promise<Client[]> {
+  return (await allClients()).filter((c) => !isOnHold(c));
+}
+
+/** Every client regardless of hold state. */
+export async function getClientsIncludingOnHold(): Promise<Client[]> {
+  return allClients();
+}
+
+/** Only clients currently on hold, soonest follow-up first. */
+export async function getOnHoldClients(): Promise<Client[]> {
+  return (await allClients())
+    .filter(isOnHold)
+    .sort((a, b) => ((a.hold_follow_up_at ?? "") < (b.hold_follow_up_at ?? "") ? -1 : 1));
+}
+
+export async function getClient(id: string): Promise<Client | undefined> {
+  return findById(store.clients, "clients", id);
+}
+
+// Client sets their own email + password the first time they open their
+// private portal link (see actions.ts createPortalAccountAction).
+export async function createPortalAccount(clientId: string, email: string, password: string): Promise<void> {
+  await patchById(store.clients, "clients", clientId, {
+    portal_email: email.trim().toLowerCase(),
+    portal_password_hash: hashPassword(password),
+  } as Partial<Client>);
+}
+
+// Practitioner-triggered reset for a client who forgot their password —
+// clears the stored hash so the client sees the "create your account" form
+// again next time they open their portal link, and can set a new password.
+export async function resetPortalPassword(clientId: string): Promise<void> {
+  // patchById (mock store) skips `undefined` values, so clear with an empty
+  // string instead — every check below treats a falsy hash as "no account".
+  await patchById(store.clients, "clients", clientId, {
+    portal_password_hash: "",
+  } as Partial<Client>);
+}
+
+export async function verifyPortalLogin(
+  clientId: string,
+  email: string,
+  password: string
+): Promise<{ ok: boolean; passwordHash?: string }> {
+  const client = await findById(store.clients, "clients", clientId);
+  if (!client?.portal_password_hash || !client.portal_email) return { ok: false };
+  const emailMatches = client.portal_email === email.trim().toLowerCase();
+  const passwordMatches = client.portal_password_hash === hashPassword(password);
+  if (!emailMatches || !passwordMatches) return { ok: false };
+  return { ok: true, passwordHash: client.portal_password_hash };
+}
+
+export async function updateClient(id: string, patch: Partial<Client>): Promise<Client | undefined> {
+  return patchById(store.clients, "clients", id, { ...patch, updated_at: new Date().toISOString() });
+}
+
+export async function markPortalAgreementsOpened(clientId: string): Promise<Client | undefined> {
+  const client = await getClient(clientId);
+  if (!client || client.portal_agreements_opened_at) return client;
+  return updateClient(clientId, { portal_agreements_opened_at: new Date().toISOString() });
+}
+
+export async function createClient(input: {
+  full_name: string;
+  email?: string;
+  phone?: string;
+  date_of_birth?: string;
+  address?: string;
+  emergency_contact_name?: string;
+  emergency_contact_phone?: string;
+  emergency_contact_relationship?: string;
+  referral_source_id?: string;
+  notes?: string;
+  package_name?: string;
+  package_value?: number;
+}): Promise<Client> {
+  const id = nextId("client");
+  const now = new Date().toISOString();
+  const practitioner = await getPractitioner();
+  const newClient: Client = {
+    id,
+    practitioner_id: practitioner.id,
+    portal_user_id: `${id}_portal`,
+    full_name: input.full_name,
+    email: input.email,
+    phone: input.phone,
+    date_of_birth: input.date_of_birth,
+    address: input.address,
+    emergency_contact_name: input.emergency_contact_name,
+    emergency_contact_phone: input.emergency_contact_phone,
+    emergency_contact_relationship: input.emergency_contact_relationship,
+    referral_source_id: input.referral_source_id,
+    status: "inquiry",
+    current_phase: "intake",
+    notes: input.notes ?? "",
+    package_name: input.package_name,
+    package_value: input.package_value,
+    amount_paid: 0,
+    created_at: now,
+    updated_at: now,
+  };
+  await create(store.clients, "clients", newClient);
+
+  const milestones: JourneyMilestone[] = MILESTONE_TEMPLATE.map((m) => ({
+    id: nextId("ms"),
+    client_id: id,
+    milestone_key: m.key,
+    label: m.label,
+    sort_order: m.sort_order,
+    completed: false,
+  }));
+  await createMany(store.milestones, "milestones", milestones);
+
+  // Every active+required template in the Form Library auto-attaches to
+  // the new client as a form-backed document slot.
+  const templates = await getFormTemplates();
+  const activeRequiredTemplates = [...new Map(
+    templates
+      .filter((template) => template.required && template.active)
+      .map((template) => [template.document_type, template]),
+  ).values()];
+  const templateDocuments: ClientDocument[] = activeRequiredTemplates
+    .map((t) => ({
+      id: nextId("doc"),
+      client_id: id,
+      document_type: t.document_type,
+      title: t.title,
+      required: t.required,
+      status: "missing",
+      versions: [],
+    }));
+  const templateCoveredTypes = new Set(templateDocuments.map((d) => d.document_type));
+
+  const uploadOnlyDocuments: ClientDocument[] = UPLOAD_ONLY_DOCUMENT_TYPES.filter(
+    ({ type }) => !templateCoveredTypes.has(type)
+  ).map(({ type, required }) => ({
+    id: nextId("doc"),
+    client_id: id,
+    document_type: type,
+    title: type,
+    required,
+    status: "missing",
+    versions: [],
+  }));
+
+  await createMany(store.documents, "documents", [...templateDocuments, ...uploadOnlyDocuments]);
+
+  return newClient;
+}
+
+// Permanently deletes a client and every record tied to them. There's no
+// undo — the caller (the delete confirmation in the UI) is responsible for
+// making sure the practitioner really means it. sessionNotes are keyed by
+// session_id rather than client_id, so we look up that client's session ids
+// first and sweep notes for each of them.
+export async function deleteClient(clientId: string): Promise<void> {
+  const sessions = await listWhere(store.sessions, "sessions", "client_id", clientId);
+  for (const session of sessions) {
+    await removeWhere(store.sessionNotes, "sessionNotes", "session_id", session.id);
+  }
+
+  await Promise.all([
+    removeWhere(store.milestones, "milestones", "client_id", clientId),
+    removeWhere(store.documents, "documents", "client_id", clientId),
+    removeWhere(store.sessions, "sessions", "client_id", clientId),
+    removeWhere(store.transcripts, "transcripts", "client_id", clientId),
+    removeWhere(store.aiSummaries, "aiSummaries", "client_id", clientId),
+    removeWhere(store.stageNotes, "stageNotes", "client_id", clientId),
+    removeWhere(store.memory, "memory", "client_id", clientId),
+    removeWhere(store.preparationPlans, "preparationPlans", "client_id", clientId),
+    removeWhere(store.checkIns, "checkIns", "client_id", clientId),
+    removeWhere(store.postIntegrationForms, "postIntegrationForms", "client_id", clientId),
+    removeWhere(store.growthActionPlans, "growthActionPlans", "client_id", clientId),
+    removeWhere(store.tasks, "tasks", "client_id", clientId),
+    removeWhere(store.messages, "messages", "client_id", clientId),
+    removeWhere(store.portalAssignments, "portalAssignments", "client_id", clientId),
+    removeWhere(store.payments, "payments", "client_id", clientId),
+    removeWhere(store.formSubmissions, "formSubmissions", "client_id", clientId),
+    removeWhere(store.emailLogs, "emailLogs", "client_id", clientId),
+  ]);
+
+  await removeById(store.clients, "clients", clientId);
+}
+
+// Self-heal: a client created before MILESTONE_TEMPLATE grew a new entry
+// (e.g. Growth Action Plan Complete was added after some clients already
+// existed) won't have that milestone's record at all. Creating whatever's
+// missing on read means every client always has the full current template,
+// with no one-time migration script to remember to run.
+async function ensureMilestones(clientId: string): Promise<JourneyMilestone[]> {
+  const existing = await listWhere(store.milestones, "milestones", "client_id", clientId);
+  const missing = MILESTONE_TEMPLATE.filter((t) => !existing.some((m) => m.milestone_key === t.key));
+  if (missing.length === 0) return existing;
+  const created: JourneyMilestone[] = missing.map((m) => ({
+    id: nextId("ms"),
+    client_id: clientId,
+    milestone_key: m.key,
+    label: m.label,
+    sort_order: m.sort_order,
+    completed: false,
+  }));
+  await createMany(store.milestones, "milestones", created);
+  return [...existing, ...created];
+}
+
+export async function getMilestones(clientId: string): Promise<JourneyMilestone[]> {
+  const milestones = await ensureMilestones(clientId);
+  // Self-heal: a client whose status was set to "Journey Closed" via the
+  // status dropdown before that action also completed this milestone (or a
+  // client closed out any other way that didn't go through it) can end up
+  // with the last progress dot stuck gray even though the file really is
+  // closed. Sync it here on every read so the dot always reflects the
+  // client's actual current status, not just changes made after this fix.
+  const client = await findById(store.clients, "clients", clientId);
+  const shouldBeClosed = client?.status === "journey_closed";
+  const closedMilestone = milestones.find((m) => m.milestone_key === "journey_closed");
+  if (closedMilestone && closedMilestone.completed !== shouldBeClosed) {
+    await patchById(store.milestones, "milestones", closedMilestone.id, {
+      completed: shouldBeClosed,
+      completed_at: shouldBeClosed ? new Date().toISOString() : "",
+    });
+    closedMilestone.completed = shouldBeClosed;
+  }
+  // Self-heal records created before stage-completion and client-status
+  // synchronization was added. This also means every current client gets the
+  // corrected status the next time their record is opened.
+  await syncJourneyProgressFromMilestones(clientId, milestones);
+  return milestones.sort((a, b) => a.sort_order - b.sort_order);
+}
+
+export async function completeMilestone(clientId: string, milestoneKey: string) {
+  const milestones = await ensureMilestones(clientId);
+  const m = milestones.find((x) => x.milestone_key === milestoneKey);
+  if (!m) return undefined;
+  if (
+    isJourneyCompletionMilestoneKey(milestoneKey) &&
+    !canCompleteJourneyMilestone(milestones, milestoneKey)
+  ) {
+    throw new Error("Complete all previous journey stages before completing this stage.");
+  }
+  return patchById(store.milestones, "milestones", m.id, {
+    completed: true,
+    completed_at: new Date().toISOString(),
+  });
+}
+
+export async function uncompleteMilestone(clientId: string, milestoneKey: string) {
+  const milestones = await ensureMilestones(clientId);
+  const m = milestones.find((x) => x.milestone_key === milestoneKey);
+  if (!m) return undefined;
+  const targetIndex = JOURNEY_COMPLETION_MILESTONE_KEYS.indexOf(
+    milestoneKey as (typeof JOURNEY_COMPLETION_MILESTONE_KEYS)[number],
+  );
+  const affected = targetIndex >= 0
+    ? milestones.filter((candidate) => {
+        const candidateIndex = JOURNEY_COMPLETION_MILESTONE_KEYS.indexOf(
+          candidate.milestone_key as (typeof JOURNEY_COMPLETION_MILESTONE_KEYS)[number],
+        );
+        return candidate.completed && candidateIndex >= targetIndex;
+      })
+    : [m];
+
+  let target: JourneyMilestone | undefined;
+  for (const candidate of affected) {
+    const updated = await patchById(store.milestones, "milestones", candidate.id, {
+      completed: false,
+      completed_at: "",
+    });
+    if (candidate.id === m.id) target = updated;
+  }
+
+  if (targetIndex >= 0) {
+    const rollback: Array<{ status: ClientStatus; phase: JourneyPhase }> = [
+      { status: "intake_scheduled", phase: "intake" },
+      { status: "preparation", phase: "preparation" },
+      { status: "journey_scheduled", phase: "harm_reduction_session" },
+      { status: "journey_complete", phase: "post_journey_check_in" },
+      { status: "integration_1", phase: "integration_1" },
+      { status: "integration_2", phase: "integration_2" },
+      { status: "integration_2_complete", phase: "closed" },
+      { status: "integration_2_complete", phase: "closed" },
+    ];
+    await updateClient(clientId, rollback[targetIndex]);
+  }
+
+  return target;
+}
+
+export function milestoneTemplate() {
+  return MILESTONE_TEMPLATE;
+}
+
+export async function getDocuments(clientId: string): Promise<ClientDocument[]> {
+  const [documents, templates] = await Promise.all([
+    listWhere(store.documents, "documents", "client_id", clientId),
+    getFormTemplates(),
+  ]);
+  const existingTypes = new Set(documents.map((document) => document.document_type));
+  const missingTemplates = [...new Map(
+    templates
+      .filter((template) => template.active && template.required && !existingTypes.has(template.document_type))
+      .map((template) => [template.document_type, template]),
+  ).values()];
+  const missingDocuments: ClientDocument[] = missingTemplates
+    .map((template) => ({
+      id: nextId("doc"),
+      client_id: clientId,
+      document_type: template.document_type,
+      title: template.title,
+      required: true,
+      status: "missing" as const,
+      versions: [],
+    }));
+
+  if (missingDocuments.length > 0) {
+    await createMany(store.documents, "documents", missingDocuments);
+  }
+  return [...documents, ...missingDocuments];
+}
+
+export async function getDocument(documentId: string): Promise<ClientDocument | undefined> {
+  return findById(store.documents, "documents", documentId);
+}
+
+export async function addClientDocument(
+  clientId: string,
+  documentType: DocumentType,
+  title?: string,
+  required = false
+): Promise<ClientDocument> {
+  const doc: ClientDocument = {
+    id: nextId("doc"),
+    client_id: clientId,
+    document_type: documentType,
+    title: title ?? documentType,
+    required,
+    status: "missing",
+    versions: [],
+  };
+  return create(store.documents, "documents", doc);
+}
+
+// A document title is display metadata only. It never changes a stored file
+// name or creates a new version.
+export async function renameClientDocument(documentId: string, title: string) {
+  return patchById(store.documents, "documents", documentId, { title });
+}
+
+// Versions are embedded in the document record in both supported backends.
+// Removing the record therefore removes the document and its complete version
+// history together, without touching any other client's documents.
+export async function deleteClientDocument(documentId: string): Promise<void> {
+  await removeById(store.documents, "documents", documentId);
+}
+
+// ---------------------------------------------------------------------------
+// FORM LIBRARY — templates + per-client submissions
+// ---------------------------------------------------------------------------
+
+export async function getFormTemplates(): Promise<FormTemplate[]> {
+  if (isFirebaseConfigured) {
+    const existing = await allDocs<FormTemplate>("formTemplates");
+    if (existing.length === 0) {
+      // Seed once from the mock library so a brand-new Firestore project has
+      // the practitioner's real intake/consent forms available immediately.
+      return insertDocs("formTemplates", store.formTemplates);
+    }
+    // A built-in form added to the code later (e.g. the 12-Hour Check-In)
+    // is added automatically — without this it would never appear until
+    // someone pressed "Update form content".
+    const existingIds = new Set(existing.map((t) => t.id));
+    const missingBuiltIns = store.formTemplates.filter((t) => !t.custom && !existingIds.has(t.id));
+    if (missingBuiltIns.length === 0) return existing;
+    const added = await insertDocs("formTemplates", missingBuiltIns);
+    invalidateFirestoreReadCache();
+    return [...existing, ...added];
+  }
+  return store.formTemplates;
+}
+
+// Makes sure a client has a document slot for every active form that
+// auto-attaches (Required + Active) — including forms added to the library
+// after the client was created. Idempotent; called whenever a client's
+// record, stage pages, session pages or portal are loaded, so a new form
+// shows up everywhere it belongs without any manual step.
+export async function ensureClientFormDocuments(clientId: string): Promise<void> {
+  if (!clientId || !(await getClient(clientId))) return;
+  const [templates, documents] = await Promise.all([getFormTemplates(), getDocuments(clientId)]);
+  const existingTypes = new Set(documents.map((d) => d.document_type));
+  const missing: ClientDocument[] = [...new Map(
+    templates
+      .filter((t) => t.active && t.required && !existingTypes.has(t.document_type))
+      .map((t) => [t.document_type, t]),
+  ).values()].map((t) => ({
+    id: nextId("doc"),
+    client_id: clientId,
+    document_type: t.document_type,
+    title: t.title,
+    required: t.required,
+    status: "missing" as const,
+    versions: [],
+  }));
+  if (missing.length > 0) await createMany(store.documents, "documents", missing);
+}
+
+export interface FormTemplateInput {
+  title: string;
+  description?: string;
+  session_types: SessionType[];
+  required: boolean;
+  sections: FormTemplate["sections"];
+}
+
+function slugify(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 40) || "form";
+}
+
+// A form the practitioner builds in Settings → Forms. It gets its own
+// document type so it attaches to clients like any built-in form.
+export async function createFormTemplate(input: FormTemplateInput): Promise<FormTemplate> {
+  const now = new Date().toISOString();
+  const id = nextId("tmpl_custom");
+  const template: FormTemplate = {
+    id,
+    document_type: `custom_${slugify(input.title)}_${id.slice(-6)}`,
+    title: input.title.trim(),
+    ...(input.description?.trim() ? { description: input.description.trim() } : {}),
+    required: input.required,
+    active: true,
+    session_types: input.session_types,
+    sections: input.sections,
+    custom: true,
+    created_at: now,
+    updated_at: now,
+  };
+  const created = await create(store.formTemplates, "formTemplates", template);
+  if (created.required) await attachTemplateToAllClients(created);
+  return created;
+}
+
+// Built-in forms: only the stages and auto-attach setting can change (their
+// wording is managed in code). Custom forms: everything can change.
+export async function updateFormTemplate(templateId: string, input: FormTemplateInput): Promise<FormTemplate | undefined> {
+  const existing = await getFormTemplateById(templateId);
+  if (!existing) return undefined;
+  const patch: Partial<FormTemplate> = existing.custom
+    ? {
+        title: input.title.trim(),
+        description: input.description?.trim() ?? "",
+        session_types: input.session_types,
+        required: input.required,
+        sections: input.sections,
+        updated_at: new Date().toISOString(),
+      }
+    : { session_types: input.session_types, required: input.required, updated_at: new Date().toISOString() };
+  const updated = await patchById<FormTemplate>(store.formTemplates, "formTemplates", templateId, patch);
+  if (updated?.required && updated.active) await attachTemplateToAllClients(updated);
+  return updated;
+}
+
+async function attachTemplateToAllClients(template: FormTemplate): Promise<void> {
+  const clients = await getClientsIncludingOnHold();
+  for (const client of clients) {
+    const docs = await getDocuments(client.id);
+    if (docs.some((d) => d.document_type === template.document_type)) continue;
+    await create(store.documents, "documents", {
+      id: nextId("doc"),
+      client_id: client.id,
+      document_type: template.document_type,
+      title: template.title,
+      required: template.required,
+      status: "missing" as const,
+      versions: [],
+    });
+  }
+}
+
+export async function getFormTemplateById(templateId: string): Promise<FormTemplate | undefined> {
+  return findById(store.formTemplates, "formTemplates", templateId);
+}
+
+// Firestore is only seeded from lib/mock/formTemplates.ts ONCE, the first
+// time getFormTemplates() runs on a brand-new project (see above) — after
+// that, Firestore is the source of truth and code edits to the template
+// file (fixing a typo, changing a field type, tweaking wording) never reach
+// production on their own. This re-syncs every template's content (title,
+// description, sections/fields) from the current code, while preserving
+// each template's existing required/active flags so a practitioner's
+// Form Library toggles aren't reset.
+export async function resyncFormTemplates(): Promise<FormTemplate[]> {
+  if (!isFirebaseConfigured) return store.formTemplates;
+
+  // 1. Update template content (preserve practitioner's required/active flags)
+  const existing = await allDocs<FormTemplate>("formTemplates");
+  const existingById = new Map(existing.map((t) => [t.id, t]));
+  const merged = store.formTemplates.map((tpl) => {
+    const prev = existingById.get(tpl.id);
+    // Keep the practitioner's own choices: auto-attach, active, and which
+    // stage(s) the form belongs to (editable in Settings → Forms).
+    return prev
+      ? { ...tpl, required: prev.required, active: prev.active, session_types: prev.session_types ?? tpl.session_types }
+      : tpl;
+  });
+  const updatedTemplates = await insertDocs("formTemplates", merged);
+
+  // 2. Backfill missing document slots on existing clients for any templates
+  //    that are required+active but don't yet have a document slot for that client.
+  const clients = await getClients();
+  const activeRequired = [...new Map(
+    updatedTemplates
+      .filter((template) => template.required && template.active)
+      .map((template) => [template.document_type, template]),
+  ).values()];
+  for (const client of clients) {
+    const clientDocs = await getDocuments(client.id);
+    const existingTypes = new Set(clientDocs.map((d) => d.document_type));
+    const missing: ClientDocument[] = activeRequired
+      .filter((t) => !existingTypes.has(t.document_type))
+      .map((t) => ({
+        id: nextId("doc"),
+        client_id: client.id,
+        document_type: t.document_type,
+        title: t.title,
+        required: t.required,
+        status: "missing" as const,
+        versions: [],
+      }));
+    if (missing.length > 0) {
+      await createMany(store.documents, "documents", missing);
+    }
+  }
+
+  return updatedTemplates;
+}
+
+export async function getFormTemplateForDocumentType(
+  documentType: DocumentType
+): Promise<FormTemplate | undefined> {
+  const templates = await listWhere(store.formTemplates, "formTemplates", "document_type", documentType);
+  return templates.find((t) => t.active);
+}
+
+export async function setFormTemplateFlags(
+  templateId: string,
+  patch: { required?: boolean; active?: boolean }
+): Promise<FormTemplate | undefined> {
+  return patchById(store.formTemplates, "formTemplates", templateId, patch);
+}
+
+export async function getFormSubmission(documentId: string): Promise<FormSubmission | undefined> {
+  const subs = await listWhere(store.formSubmissions, "formSubmissions", "document_id", documentId);
+  return subs[0];
+}
+
+export async function getFormSubmissionsForClient(clientId: string): Promise<FormSubmission[]> {
+  return listWhere(store.formSubmissions, "formSubmissions", "client_id", clientId);
+}
+
+export async function saveFormSubmission(params: {
+  clientId: string;
+  documentId: string;
+  templateId: string;
+  answers: Record<string, string | string[] | boolean>;
+  status: "draft" | "in_progress" | "submitted" | "signed";
+}): Promise<FormSubmission> {
+  const now = new Date().toISOString();
+  let submission = await getFormSubmission(params.documentId);
+  if (!submission) {
+    submission = {
+      id: nextId("sub"),
+      client_id: params.clientId,
+      document_id: params.documentId,
+      template_id: params.templateId,
+      answers: params.answers,
+      status: params.status,
+      submitted_at: params.status === "submitted" ? now : undefined,
+      signed_at: params.status === "signed" ? now : undefined,
+    };
+    await create(store.formSubmissions, "formSubmissions", submission);
+  } else {
+    const patch: Partial<FormSubmission> = {
+      answers: { ...submission.answers, ...params.answers },
+      status: params.status,
+    };
+    if (params.status === "submitted") patch.submitted_at = now;
+    if (params.status === "signed") patch.signed_at = now;
+    submission = (await patchById(store.formSubmissions, "formSubmissions", submission.id, patch)) ?? submission;
+  }
+
+  const doc = await getDocument(params.documentId);
+  if (doc) {
+    if (params.status === "signed") await patchById(store.documents, "documents", doc.id, { status: "signed" });
+    else if (params.status === "submitted") await patchById(store.documents, "documents", doc.id, { status: "uploaded" });
+  }
+
+  return submission;
+}
+
+export async function markDocumentReviewed(documentId: string) {
+  return patchById(store.documents, "documents", documentId, { status: "reviewed" });
+}
+
+export async function uploadDocumentVersion(
+  documentId: string,
+  fileName: string,
+  notes?: string
+) {
+  const doc = await getDocument(documentId);
+  if (!doc) return undefined;
+  const versionNumber = doc.versions.length + 1;
+  const version = {
+    id: nextId("docv"),
+    document_id: documentId,
+    version_number: versionNumber,
+    file_url: `/mock-files/${doc.client_id}/${doc.document_type}-v${versionNumber}.pdf`,
+    file_name: fileName,
+    file_size_bytes: Math.floor(Math.random() * 500000) + 50000,
+    mime_type: fileName.endsWith(".pdf") ? "application/pdf" : "application/octet-stream",
+    uploaded_by_role: "practitioner" as const,
+    notes,
+    created_at: new Date().toISOString(),
+  };
+  const versions = [version, ...doc.versions];
+  return patchById(store.documents, "documents", documentId, {
+    versions,
+    current_version_id: version.id,
+    status: "uploaded",
+  });
+}
+
+export async function getSessions(clientId: string): Promise<Session[]> {
+  const sessions = await listWhere(store.sessions, "sessions", "client_id", clientId);
+  return sessions.sort((a, b) => ((a.scheduled_at ?? "") < (b.scheduled_at ?? "") ? -1 : 1));
+}
+
+export async function getSession(sessionId: string): Promise<Session | undefined> {
+  return findById(store.sessions, "sessions", sessionId);
+}
+
+// Stage workspaces share the canonical live/future selection rule. Reopening
+// the latest completed session is an explicit history fallback for the stage.
+export function pickPhaseSession(sessions: Session[], sessionType: SessionType): Session | undefined {
+  return selectStageWorkspaceSession(sessions, sessionType);
+}
+
+/**
+ * Attach client names to practice-wide lists (upcoming sessions, calendar,
+ * outstanding tasks, copilot outlook).
+ *
+ * Also DROPS items belonging to a client on hold — parking someone has to
+ * take their sessions and tasks off these surfaces too, otherwise the client
+ * disappears from the list but their work keeps nagging from the dashboard.
+ * Per-client reads (getSessions, getTasks) deliberately don't route through
+ * here, so a held client's own record still shows everything.
+ */
+async function withClientNames<T extends { client_id: string }>(
+  items: T[]
+): Promise<(T & { client_name: string })[]> {
+  const clients = await getClients();
+  const byId = new Map(clients.map((c) => [c.id, c.full_name]));
+  const heldIds = new Set((await getOnHoldClients()).map((c) => c.id));
+  return items
+    .filter((item) => !heldIds.has(item.client_id))
+    .map((item) => ({ ...item, client_name: byId.get(item.client_id) ?? "Unknown Client" }));
+}
+
+export async function getUpcomingSessions(limit = 10): Promise<(Session & { client_name: string })[]> {
+  const all = await listAll(store.sessions, "sessions");
+  const upcoming = selectSessionTimeline(all).activeAndUpcoming.slice(0, limit);
+  return withClientNames(upcoming);
+}
+
+// Every scheduled session across the whole practice falling within the next
+// `days` days — used for the AI Copilot's planning-ahead outlook, which
+// (unlike getUpcomingSessions' top-8 cutoff) needs to show everything coming
+// up in a fixed window regardless of how many clients that touches.
+export async function getUpcomingSessionsWithinDays(days: number): Promise<(Session & { client_name: string })[]> {
+  const now = Date.now();
+  const cutoff = now + days * 24 * 60 * 60 * 1000;
+  const all = await listAll(store.sessions, "sessions");
+  const upcoming = selectSessionTimeline(all, now).activeAndUpcoming.filter((session) => {
+    const scheduledAt = session.scheduled_at ? Date.parse(session.scheduled_at) : Number.NaN;
+    return Number.isFinite(scheduledAt) && scheduledAt <= cutoff;
+  });
+  return withClientNames(upcoming);
+}
+
+// Every session across every client, for the practice-wide Calendar view.
+export async function getAllSessions(): Promise<(Session & { client_name: string })[]> {
+  const all = await listAll(store.sessions, "sessions");
+  const withNames = await withClientNames(all);
+  return withNames.sort((a, b) => ((a.scheduled_at ?? "") < (b.scheduled_at ?? "") ? -1 : 1));
+}
+
+export async function addSession(input: {
+  client_id: string;
+  session_type: Session["session_type"];
+  scheduled_at: string;
+  duration_minutes?: number;
+  location?: string;
+}) {
+  const practitioner = await getPractitioner();
+  const s: Session = {
+    id: nextId("sess"),
+    practitioner_id: practitioner.id,
+    status: "scheduled",
+    ...input,
+  };
+  await create(store.sessions, "sessions", s);
+  await applyJourneyProgress(s.client_id, SESSION_SCHEDULED_PROGRESS[s.session_type]);
+  return s;
+}
+
+// Milestone → session type mapping used when auto-creating a session record
+// from the milestone toggle (so Sessions tab is never empty after marking
+// an activity complete).
+const MILESTONE_SESSION_TYPE: Partial<Record<string, SessionType>> = {
+  intake_complete: "intake_assessment",
+  preparation_complete: "preparation",
+  journey_complete: "harm_reduction_support",
+  check_in_12hr_complete: "check_in_12hr",
+  integration_1_complete: "integration_1",
+  integration_2_complete: "integration_2",
+};
+
+// Ensures a session record of the given type exists for this client.
+// If one already exists (scheduled or completed), returns it as-is.
+// Otherwise creates a completed session dated now so it shows up in the
+// Sessions tab and can receive AI summaries.
+export async function ensureSessionRecord(clientId: string, milestoneKey: string): Promise<Session | undefined> {
+  const sessionType = MILESTONE_SESSION_TYPE[milestoneKey];
+  if (!sessionType) return undefined;
+
+  const existing = await listWhere(store.sessions, "sessions", "client_id", clientId);
+  const match = existing.find((s) => s.session_type === sessionType);
+  if (match) return match;
+
+  const practitioner = await getPractitioner();
+  const s: Session = {
+    id: nextId("sess"),
+    client_id: clientId,
+    practitioner_id: practitioner.id,
+    session_type: sessionType,
+    scheduled_at: new Date().toISOString(),
+    status: "completed",
+  };
+  await create(store.sessions, "sessions", s);
+  return s;
+}
+
+export async function updateSession(
+  sessionId: string,
+  patch: Partial<
+    Pick<
+      Session,
+      "session_type" | "scheduled_at" | "duration_minutes" | "location" | "status" | "google_event_id" | "google_synced_at"
+    >
+  >
+) {
+  const existing = await findById(store.sessions, "sessions", sessionId);
+  if (!existing) return undefined;
+  const wasAlreadyCompleted = existing.status === "completed";
+  const completionRule = SESSION_COMPLETED_PROGRESS[patch.session_type ?? existing.session_type];
+  if (patch.status === "completed" && !wasAlreadyCompleted && completionRule?.milestoneKey) {
+    const milestones = await ensureMilestones(existing.client_id);
+    if (!canCompleteJourneyMilestone(milestones, completionRule.milestoneKey)) {
+      throw new Error("Complete all previous journey stages before completing this session.");
+    }
+  }
+  const s = await patchById<Session>(store.sessions, "sessions", sessionId, patch);
+  if (s && s.status === "completed" && !wasAlreadyCompleted) {
+    await applyJourneyProgress(s.client_id, SESSION_COMPLETED_PROGRESS[s.session_type]);
+  }
+  return s;
+}
+
+export async function cancelSession(sessionId: string) {
+  return updateSession(sessionId, { status: "cancelled" });
+}
+
+// Forget the Google Calendar event a session used to mirror to, after that
+// event has been deleted on Google. Must go through clearFields, not
+// updateSession — a patch of `{ google_event_id: undefined }` is stripped and
+// silently leaves the stale id in place, which then makes the *next* push for
+// this session try events.update against an event that no longer exists.
+export async function clearSessionGoogleEvent(sessionId: string): Promise<void> {
+  await clearFields(store.sessions, "sessions", sessionId, ["google_event_id"]);
+  await patchById<Session>(store.sessions, "sessions", sessionId, {
+    google_synced_at: new Date().toISOString(),
+  });
+}
+
+export async function completeSession(sessionId: string) {
+  return updateSession(sessionId, { status: "completed" });
+}
+
+export async function reopenCompletedSession(sessionId: string) {
+  const existing = await findById(store.sessions, "sessions", sessionId);
+  if (!existing || existing.status !== "completed") return existing;
+  const reopened = await patchById<Session>(store.sessions, "sessions", sessionId, { status: "scheduled" });
+  await revertJourneyProgressForSession(existing);
+  return reopened;
+}
+
+// Practitioner-only UI state on the per-client AI Copilot list — kept as a
+// direct patch (not routed through updateSession) since it should never
+// trigger the journey-progress side effects tied to a real status change.
+export async function setSessionCopilotState(sessionId: string, patch: { hidden?: boolean; finished?: boolean }) {
+  const dbPatch: Partial<Pick<Session, "copilot_hidden" | "copilot_finished">> = {};
+  if (patch.hidden !== undefined) dbPatch.copilot_hidden = patch.hidden;
+  if (patch.finished !== undefined) dbPatch.copilot_finished = patch.finished;
+  return patchById<Session>(store.sessions, "sessions", sessionId, dbPatch);
+}
+
+// Free-form "Manual Notes" on a session (Journey Day, etc.) — kept as a
+// direct patch for the same reason as setSessionCopilotState: it should
+// never trigger the journey-progress side effects tied to a real status
+// change on updateSession.
+export async function setSessionManualNotes(sessionId: string, manualNotes: string) {
+  return patchById<Session>(store.sessions, "sessions", sessionId, { manual_notes: manualNotes });
+}
+
+// Pasted transcript text — separate field from manual_notes (see the
+// Session.transcript doc comment in types.ts). Both the practitioner-facing
+// and client-facing AI summaries read from this single persisted source.
+export async function setSessionTranscript(sessionId: string, transcript: string) {
+  return patchById<Session>(store.sessions, "sessions", sessionId, { transcript });
+}
+
+// ---------------------------------------------------------------------------
+// RECORDINGS — uploaded audio files (Plaud, iPhone Voice Memos, etc.)
+// attached to a session. Actual bytes live in Cloud Storage, never in
+// Firestore/the mock store — only metadata + the storage path are recorded
+// here. Uploads go browser → signed URL → Cloud Storage directly, bypassing
+// the Netlify function entirely (large audio files would blow past a
+// serverless function's payload limit if routed through one).
+// ---------------------------------------------------------------------------
+
+function sanitizeFileName(name: string): string {
+  return name.replace(/[^a-zA-Z0-9._-]/g, "_");
+}
+
+// Returns null if Cloud Storage isn't configured (no bucket set up yet) —
+// callers should show a clear "storage isn't set up" message rather than a
+// generic error in that case.
+// LOCAL DEMO ONLY: with no Firebase at all (the local copy on Ladd's Mac),
+// recordings are written to a folder next to the app instead of Cloud
+// Storage, so the upload button works end-to-end while testing. Paths are
+// prefixed "local:" and served by /api/local-recordings. Never used when
+// Firebase is configured (the live site).
+export const LOCAL_RECORDING_PREFIX = "local:";
+export function localRecordingsEnabled() {
+  return !isFirebaseConfigured && !getBucket();
+}
+
+export async function createRecordingUploadUrl(
+  clientId: string,
+  /** A session id, or "stage-<stage>" for a stage-page recording. */
+  folder: string,
+  fileName: string,
+  contentType: string
+): Promise<{ uploadUrl: string; storagePath: string } | null> {
+  if (localRecordingsEnabled()) {
+    const relative = `${sanitizeFileName(clientId)}/${sanitizeFileName(folder)}/${Date.now()}-${sanitizeFileName(fileName)}`;
+    return {
+      uploadUrl: `/api/local-recordings?path=${encodeURIComponent(relative)}`,
+      storagePath: `${LOCAL_RECORDING_PREFIX}${relative}`,
+    };
+  }
+  const bucket = getBucket();
+  if (!bucket) return null;
+  const storagePath = `recordings/${clientId}/${folder}/${Date.now()}-${sanitizeFileName(fileName)}`;
+  const [uploadUrl] = await bucket.file(storagePath).getSignedUrl({
+    version: "v4",
+    action: "write",
+    expires: Date.now() + 15 * 60 * 1000, // 15 minutes to complete the upload
+    contentType,
+  });
+  return { uploadUrl, storagePath };
+}
+
+// A fresh, short-lived signed READ url — generated on demand rather than
+// stored, since signed URLs expire and files aren't public.
+export async function getRecordingDownloadUrl(storagePath: string): Promise<string | null> {
+  if (storagePath.startsWith(LOCAL_RECORDING_PREFIX)) {
+    return localRecordingsEnabled()
+      ? `/api/local-recordings?path=${encodeURIComponent(storagePath.slice(LOCAL_RECORDING_PREFIX.length))}`
+      : null;
+  }
+  const bucket = getBucket();
+  if (!bucket) return null;
+  const [url] = await bucket.file(storagePath).getSignedUrl({
+    version: "v4",
+    action: "read",
+    expires: Date.now() + 60 * 60 * 1000, // 1 hour
+  });
+  return url;
+}
+
+export async function getRecordings(clientId: string, sessionId?: string): Promise<Recording[]> {
+  const recordings = await listWhere(store.recordings, "recordings", "client_id", clientId);
+  return recordings
+    .filter((r) => !sessionId || r.session_id === sessionId)
+    .sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+}
+
+export async function getStageRecordings(clientId: string, stage: StageNotesKey): Promise<Recording[]> {
+  const recordings = await getRecordings(clientId);
+  return recordings.filter((r) => r.stage === stage && !r.session_id);
+}
+
+export async function addRecording(
+  clientId: string,
+  sessionId: string | undefined,
+  fileName: string,
+  storagePath: string,
+  sizeBytes?: number,
+  stage?: StageNotesKey
+): Promise<Recording> {
+  const recording: Recording = {
+    id: nextId("rec"),
+    client_id: clientId,
+    ...(sessionId ? { session_id: sessionId } : {}),
+    ...(stage ? { stage } : {}),
+    storage_path: storagePath,
+    file_name: fileName,
+    size_bytes: sizeBytes,
+    created_at: new Date().toISOString(),
+  };
+  return create(store.recordings, "recordings", recording);
+}
+
+export async function deleteRecording(recordingId: string): Promise<void> {
+  const existing = await findById<Recording>(store.recordings, "recordings", recordingId);
+  await removeById(store.recordings, "recordings", recordingId);
+  // Best-effort cleanup of the actual file — a Firestore-only delete
+  // (leaving an orphaned Storage object) is far less harmful than failing
+  // the whole delete over a Storage hiccup, so this is deliberately
+  // fire-and-forget with its own try/catch.
+  if (existing?.storage_path.startsWith(LOCAL_RECORDING_PREFIX)) {
+    try {
+      const { unlink } = await import("fs/promises");
+      const { localRecordingFilePath } = await import("@/lib/localRecordings");
+      const filePath = localRecordingFilePath(existing.storage_path.slice(LOCAL_RECORDING_PREFIX.length));
+      if (filePath) await unlink(/* turbopackIgnore: true */ filePath);
+    } catch {
+      // Ignore — same reasoning as the Cloud Storage cleanup below.
+    }
+    return;
+  }
+  if (existing) {
+    const bucket = getBucket();
+    if (bucket) {
+      try {
+        await bucket.file(existing.storage_path).delete();
+      } catch {
+        // Ignore — the metadata record is already gone, which is what the
+        // practitioner sees; a stray orphaned file isn't user-visible.
+      }
+    }
+  }
+}
+
+type JourneyMarker = "started" | "ended" | "booster";
+
+const JOURNEY_MARKER_FIELD: Record<JourneyMarker, "journey_started_at" | "journey_ended_at" | "booster_dose_at"> = {
+  started: "journey_started_at",
+  ended: "journey_ended_at",
+  booster: "booster_dose_at",
+};
+
+const JOURNEY_MARKER_LABEL: Record<JourneyMarker, string> = {
+  started: "Journey Begin",
+  ended: "Journey End",
+  booster: "Booster Dose",
+};
+
+// This runs server-side (inside the Netlify function), which defaults to
+// UTC regardless of the practitioner's actual location — without an
+// explicit IANA timeZone, the stamp written into Manual Notes would be off
+// by however many hours the practitioner is from UTC. `timeZone` is the
+// browser's zone (Intl.DateTimeFormat().resolvedOptions().timeZone),
+// passed up from the client so this always renders in local time.
+function formatMilestoneStamp(iso: string, timeZone?: string): string {
+  return new Date(iso).toLocaleString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone,
+  });
+}
+
+// Journey Begin / Journey End / Booster Dose toggles on a Journey Day
+// session. Recording (clear = false) stamps the session record itself
+// (which is what drives the History tab entry via activity.ts, no separate
+// log needed) AND appends a matching timestamped line to Manual Notes, so
+// the moment shows up both places without the practitioner having to type
+// anything. Un-toggling (clear = true) just clears the session field — it
+// does not try to remove the already-written notes line, since editing text
+// the practitioner may have since added to would be more surprising than
+// helpful; the notes remain as a plain record of what happened.
+//
+// `currentManualNotes`, if passed, is what's actually in the practitioner's
+// browser right now — which may include text they've typed but not yet
+// saved. We append onto THAT rather than the last-saved database copy, and
+// persist the result, so toggling a marker can never silently discard
+// unsaved typing (this was a real bug: toggling used to overwrite whatever
+// was in the textarea with the stale saved copy plus the marker line).
+export async function setJourneyMarker(
+  sessionId: string,
+  marker: JourneyMarker,
+  clear = false,
+  currentManualNotes?: string,
+  timeZone?: string
+) {
+  const now = new Date().toISOString();
+  const field = JOURNEY_MARKER_FIELD[marker];
+  const patch: Partial<Pick<Session, "journey_started_at" | "journey_ended_at" | "booster_dose_at">> = {
+    [field]: clear ? null : now,
+  };
+  const updated = await patchById<Session>(store.sessions, "sessions", sessionId, patch);
+  if (!updated || clear) return updated;
+
+  const line = `[${formatMilestoneStamp(now, timeZone)}] — ${JOURNEY_MARKER_LABEL[marker]}`;
+  const base = currentManualNotes ?? updated.manual_notes ?? "";
+  const nextNotes = base ? `${base}\n${line}\n` : `${line}\n`;
+  return patchById<Session>(store.sessions, "sessions", sessionId, { manual_notes: nextNotes });
+}
+
+// Lets the practitioner correct a marker's recorded time after the fact
+// (e.g. they forgot to toggle Journey Begin until a few minutes in) without
+// re-triggering the notes-append or touching any other field.
+export async function setJourneyMarkerTime(sessionId: string, marker: JourneyMarker, isoTimestamp: string) {
+  const field = JOURNEY_MARKER_FIELD[marker];
+  const patch: Partial<Pick<Session, "journey_started_at" | "journey_ended_at" | "booster_dose_at">> = {
+    [field]: isoTimestamp,
+  };
+  return patchById<Session>(store.sessions, "sessions", sessionId, patch);
+}
+
+export async function setInitialDoseAmount(sessionId: string, amount: string) {
+  return patchById<Session>(store.sessions, "sessions", sessionId, { initial_dose_amount: amount });
+}
+
+export async function setBoosterDoseAmount(sessionId: string, amount: string) {
+  return patchById<Session>(store.sessions, "sessions", sessionId, { booster_dose_amount: amount });
+}
+
+export async function getTranscripts(clientId: string): Promise<Transcript[]> {
+  return listWhere(store.transcripts, "transcripts", "client_id", clientId);
+}
+
+export async function addTranscript(clientId: string, rawText: string, sessionId?: string) {
+  const t: Transcript = {
+    id: nextId("tr"),
+    client_id: clientId,
+    session_id: sessionId,
+    source: "paste",
+    raw_text: rawText,
+    created_at: new Date().toISOString(),
+  };
+  return create(store.transcripts, "transcripts", t);
+}
+
+export async function getAiSummaries(clientId: string, type?: AiSummaryType): Promise<AiSummary[]> {
+  const summaries = await listWhere(store.aiSummaries, "aiSummaries", "client_id", clientId);
+  return summaries
+    .filter((s) => !type || s.summary_type === type)
+    .sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+}
+
+export async function deleteAiSummary(summaryId: string): Promise<void> {
+  await removeById(store.aiSummaries, "aiSummaries", summaryId);
+}
+
+// Lets a practitioner hand-correct a generated summary (e.g. the AI
+// misheard something in the transcript) without having to delete and
+// regenerate the whole thing.
+export async function updateAiSummary(
+  summaryId: string,
+  content: Record<string, unknown>
+): Promise<AiSummary | undefined> {
+  return patchById<AiSummary>(store.aiSummaries, "aiSummaries", summaryId, { content });
+}
+
+export async function addAiSummary(
+  clientId: string,
+  type: AiSummaryType,
+  title: string,
+  content: Record<string, unknown>,
+  model = "gpt-4o",
+  sessionId?: string,
+  stageLabel?: string,
+  sourceNotes?: string
+): Promise<AiSummary> {
+  const summary: AiSummary = {
+    id: nextId("ai"),
+    client_id: clientId,
+    ...(sessionId ? { session_id: sessionId } : {}),
+    ...(stageLabel ? { stage_label: stageLabel } : {}),
+    ...(sourceNotes?.trim() ? { source_notes: sourceNotes } : {}),
+    summary_type: type,
+    title,
+    content,
+    model,
+    created_at: new Date().toISOString(),
+  };
+  return create(store.aiSummaries, "aiSummaries", summary);
+}
+
+// ---------------------------------------------------------------------------
+// Stage notes — the notes box on a stage page (no session on the calendar
+// yet). One record per client per stage; saved as the practitioner types so
+// nothing typed or uploaded is ever lost to a page reload or a Generate click.
+// ---------------------------------------------------------------------------
+export async function getStageNotes(clientId: string, stage: StageNotesKey): Promise<StageNotes | undefined> {
+  const all = await listWhere(store.stageNotes, "stageNotes", "client_id", clientId);
+  return all.find((n) => n.stage === stage);
+}
+
+export async function saveStageNotes(clientId: string, stage: StageNotesKey, content: string): Promise<StageNotes> {
+  const existing = await getStageNotes(clientId, stage);
+  const updated_at = new Date().toISOString();
+  if (existing) {
+    const patched = await patchById<StageNotes>(store.stageNotes, "stageNotes", existing.id, { content, updated_at });
+    return patched ?? { ...existing, content, updated_at };
+  }
+  return create(store.stageNotes, "stageNotes", {
+    id: nextId("stagenotes"),
+    client_id: clientId,
+    stage,
+    content,
+    updated_at,
+  });
+}
+
+export async function getAiConversationMessages(clientId: string): Promise<AiConversationMessage[]> {
+  const messages = await listWhere(store.aiConversationMessages, "aiConversationMessages", "client_id", clientId);
+  return messages.sort((a, b) => (a.created_at < b.created_at ? -1 : 1));
+}
+
+export async function addAiConversationMessage(
+  clientId: string,
+  role: AiConversationMessage["role"],
+  body: string,
+  model?: string
+): Promise<AiConversationMessage> {
+  const message: AiConversationMessage = {
+    id: nextId("aichat"),
+    client_id: clientId,
+    role,
+    body,
+    ...(model ? { model } : {}),
+    created_at: new Date().toISOString(),
+  };
+  return create(store.aiConversationMessages, "aiConversationMessages", message);
+}
+
+export async function getMemory(clientId: string): Promise<ClientMemoryItem[]> {
+  const items = await listWhere(store.memory, "memory", "client_id", clientId);
+  return items.sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+}
+
+export async function addMemoryItems(
+  clientId: string,
+  items: { item_type: ClientMemoryItem["item_type"]; content: string; phase?: ClientMemoryItem["phase"] }[]
+) {
+  const created = items.map((i) => ({
+    id: nextId("mem"),
+    client_id: clientId,
+    item_type: i.item_type,
+    content: i.content,
+    phase: i.phase,
+    status: "open" as const,
+    created_at: new Date().toISOString(),
+  }));
+  return createMany(store.memory, "memory", created);
+}
+
+export async function getSessionNotes(sessionId: string): Promise<SessionNote[]> {
+  const notes = await listWhere(store.sessionNotes, "sessionNotes", "session_id", sessionId);
+  return notes.sort((a, b) => (a.note_timestamp < b.note_timestamp ? -1 : 1));
+}
+
+export async function addSessionNote(
+  sessionId: string,
+  clientId: string,
+  fieldType: SessionNoteField,
+  content: string,
+  elapsedMinutes?: number
+) {
+  const note: SessionNote = {
+    id: nextId("sn"),
+    session_id: sessionId,
+    client_id: clientId,
+    field_type: fieldType,
+    note_timestamp: new Date().toISOString(),
+    elapsed_minutes: elapsedMinutes,
+    content,
+  };
+  return create(store.sessionNotes, "sessionNotes", note);
+}
+
+export async function getPreparationPlan(clientId: string): Promise<PreparationPlan | undefined> {
+  const plans = await listWhere(store.preparationPlans, "preparationPlans", "client_id", clientId);
+  return plans[0];
+}
+
+export async function upsertPreparationPlan(clientId: string, patch: Partial<PreparationPlan>) {
+  const existing = await getPreparationPlan(clientId);
+  const now = new Date().toISOString();
+  if (!existing) {
+    const plan: PreparationPlan = { id: nextId("prep"), client_id: clientId, updated_at: now, ...patch };
+    return create(store.preparationPlans, "preparationPlans", plan);
+  }
+  return patchById(store.preparationPlans, "preparationPlans", existing.id, { ...patch, updated_at: now });
+}
+
+export async function getCheckIns(clientId: string): Promise<CheckIn[]> {
+  return listWhere(store.checkIns, "checkIns", "client_id", clientId);
+}
+
+export async function addCheckIn(clientId: string, data: Omit<CheckIn, "id" | "client_id">) {
+  const checkIn: CheckIn = { id: nextId("ci"), client_id: clientId, ...data };
+  return create(store.checkIns, "checkIns", checkIn);
+}
+
+export async function getPostIntegrationForms(clientId: string): Promise<PostIntegrationForm[]> {
+  return listWhere(store.postIntegrationForms, "postIntegrationForms", "client_id", clientId);
+}
+
+export async function addPostIntegrationForm(
+  clientId: string,
+  session: 1 | 2,
+  responses: Record<string, string>
+) {
+  const form: PostIntegrationForm = {
+    id: nextId("pif"),
+    client_id: clientId,
+    integration_session: session,
+    responses,
+    submitted_at: new Date().toISOString(),
+  };
+  return create(store.postIntegrationForms, "postIntegrationForms", form);
+}
+
+export async function getGrowthActionPlan(clientId: string): Promise<GrowthActionPlan | undefined> {
+  const plans = await listWhere(store.growthActionPlans, "growthActionPlans", "client_id", clientId);
+  return plans[0];
+}
+
+export async function setGrowthActionPlan(clientId: string, plan: Omit<GrowthActionPlan, "id" | "client_id" | "created_at">) {
+  const existing = await getGrowthActionPlan(clientId);
+  if (existing) {
+    return patchById(store.growthActionPlans, "growthActionPlans", existing.id, plan);
+  }
+  const created: GrowthActionPlan = {
+    id: nextId("gap"),
+    client_id: clientId,
+    created_at: new Date().toISOString(),
+    ...plan,
+  };
+  return create(store.growthActionPlans, "growthActionPlans", created);
+}
+
+// Clears a client's CURRENT Growth Action Plan so the practitioner can
+// regenerate a fresh one from scratch rather than being stuck enhancing
+// whatever was first generated. The generated versions (AiSummary rows) are
+// deliberately kept — they're the record's history and are deleted one at a
+// time from the Versions list.
+export async function deleteGrowthActionPlan(clientId: string): Promise<void> {
+  const existing = await getGrowthActionPlan(clientId);
+  if (existing) {
+    await removeById(store.growthActionPlans, "growthActionPlans", existing.id);
+  }
+  await uncompleteMilestone(clientId, "growth_action_plan_complete");
+}
+
+export async function getTasks(clientId?: string): Promise<Task[]> {
+  const all = clientId
+    ? await listWhere(store.tasks, "tasks", "client_id", clientId)
+    : await listAll(store.tasks, "tasks");
+  return [...all].sort((a, b) => ((a.due_at ?? "") < (b.due_at ?? "") ? -1 : 1));
+}
+
+export async function getOutstandingTasks(): Promise<(Task & { client_name: string })[]> {
+  const all = await listAll(store.tasks, "tasks");
+  const outstanding = all
+    .filter((t) => t.status === "pending" || t.status === "overdue")
+    .sort((a, b) => ((a.due_at ?? "") < (b.due_at ?? "") ? -1 : 1));
+  return withClientNames(outstanding);
+}
+
+export interface OutstandingFormItem {
+  id: string;
+  title: string;
+  client_id: string;
+  client_name: string;
+  status: "missing" | "in_progress" | "missing_template";
+  due_at?: undefined;
+  kind: "form";
+  category: "form" | "agreement";
+  href?: string;
+}
+
+// Form-backed documents (intake/consent forms, etc.) aren't Task records —
+// they live in `documents` + `formSubmissions` instead — so the practice-wide
+// "Outstanding Forms / Tasks" stat on the dashboard has to pull them in
+// explicitly, the same way the client portal's own Action Items list already
+// does. Without this, a client with zero Task records but several unfilled
+// forms incorrectly reads as having nothing outstanding.
+/**
+ * Drop form rows that duplicate an outstanding task for the same client
+ * (e.g. a "12-Hour Check-In" task AND the 12-Hour Check-In form, or
+ * "Collect Harm Reduction Services Agreement" AND the agreement itself).
+ * The task wins because it carries the due date.
+ */
+export function dedupeOutstandingForms<F extends { client_id: string; title: string }>(
+  forms: F[],
+  tasks: { client_id: string; title: string }[],
+): F[] {
+  const norm = (title: string) =>
+    title.toLowerCase().replace(/^(collect|sign|complete|send)\s+/, "").replace(/\s+/g, " ").trim();
+  const taskKeys = new Set(tasks.map((task) => `${task.client_id}|${norm(task.title)}`));
+  return forms.filter((form) => !taskKeys.has(`${form.client_id}|${norm(form.title)}`));
+}
+
+export async function getOutstandingForms(): Promise<OutstandingFormItem[]> {
+  const [clients, templates] = await Promise.all([getClients(), getFormTemplates()]);
+  const items: OutstandingFormItem[] = [];
+  for (const client of clients) {
+    const [docs, submissions] = await Promise.all([
+      getDocuments(client.id),
+      getFormSubmissionsForClient(client.id),
+    ]);
+    const requiredForms = resolveRequiredForms({
+      templates,
+      documents: docs,
+      submissions,
+      currentPhase: phaseForStatus(client.status, client.current_phase),
+    });
+    for (const form of requiredForms) {
+      if (form.complete) continue;
+      items.push({
+        id: form.document?.id ?? `required-${client.id}-${form.documentType}`,
+        title: form.title,
+        client_id: client.id,
+        client_name: client.full_name,
+        status: form.state === "missing_template"
+          ? "missing_template"
+          : form.state === "in_progress" ? "in_progress" : "missing",
+        kind: "form",
+        category: form.category,
+        href: form.state === "missing_template"
+          ? "/settings/forms"
+          : form.document
+            ? `/clients/${client.id}/forms/${form.document.id}`
+            : `/clients/${client.id}?tab=Documents`,
+      });
+    }
+  }
+  return items;
+}
+
+// ---------------------------------------------------------------------------
+// AGREEMENT PAPERWORK STATUS
+//
+// The three practice-wide agreements (see GENERAL_PAPERWORK_DOCUMENT_TYPES)
+// are what a new client is asked to sign the moment their portal opens — the
+// portal blocks on them. This rolls the state up per client so the dashboard
+// can answer "who still owes me signed paperwork, and who just finished?"
+// without the practitioner opening each record.
+// ---------------------------------------------------------------------------
+export interface ClientAgreementStatus {
+  client_id: string;
+  client_name: string;
+  portal_account_created: boolean;
+  completed_count: number;
+  total_count: number;
+  complete: boolean;
+  engagement: "not_opened" | "opened" | "completed";
+  outstanding_titles: string[];
+  /** When the last of the agreements was signed — only set once complete. */
+  completed_at?: string;
+}
+
+export async function getAgreementStatusByClient(clientRecords?: Client[]): Promise<ClientAgreementStatus[]> {
+  const [clients, templates] = await Promise.all([
+    clientRecords ? Promise.resolve(clientRecords) : getClients(),
+    getFormTemplates(),
+  ]);
+  const rows = await Promise.all(
+    clients.map(async (client): Promise<ClientAgreementStatus> => {
+      const [docs, submissions] = await Promise.all([
+        getDocuments(client.id),
+        getFormSubmissionsForClient(client.id),
+      ]);
+
+      const status = normalizeAgreementStatus({ client, templates, documents: docs, submissions });
+      return {
+        client_id: client.id,
+        client_name: client.full_name,
+        portal_account_created: Boolean(client.portal_password_hash),
+        completed_count: status.completed_count,
+        total_count: status.total_count,
+        complete: status.complete,
+        engagement: status.engagement,
+        outstanding_titles: status.items.filter((item) => !item.complete).map((item) => item.template.title),
+        completed_at: status.completed_at,
+      };
+    })
+  );
+
+  // Incomplete first (most paperwork owed at the top), then recently finished.
+  return rows.sort((a, b) => {
+    if (a.complete !== b.complete) return a.complete ? 1 : -1;
+    if (a.complete) return (b.completed_at ?? "").localeCompare(a.completed_at ?? "");
+    return a.completed_count - b.completed_count;
+  });
+}
+
+export async function getTask(taskId: string): Promise<Task | undefined> {
+  return findById(store.tasks, "tasks", taskId);
+}
+
+export async function addTask(task: Omit<Task, "id">) {
+  const t: Task = { id: nextId("task"), ...task };
+  return create(store.tasks, "tasks", t);
+}
+
+export async function updateTask(taskId: string, patch: Pick<Task, "title" | "due_at" | "task_type">) {
+  return patchById(store.tasks, "tasks", taskId, patch);
+}
+
+export async function completeTask(taskId: string) {
+  return patchById(store.tasks, "tasks", taskId, {
+    status: "completed",
+    completed_at: new Date().toISOString(),
+  });
+}
+
+export async function getMessages(clientId: string): Promise<Message[]> {
+  const messages = await listWhere(store.messages, "messages", "client_id", clientId);
+  return messages.sort((a, b) => (a.created_at < b.created_at ? -1 : 1));
+}
+
+export async function addMessage(clientId: string, sender: Message["sender"], body: string) {
+  const m: Message = {
+    id: nextId("msg"),
+    client_id: clientId,
+    sender,
+    body,
+    created_at: new Date().toISOString(),
+  };
+  return create(store.messages, "messages", m);
+}
+
+export async function updateMessage(clientId: string, messageId: string, sender: Message["sender"], body: string): Promise<Message | undefined> {
+  const message = await findById(store.messages, "messages", messageId);
+  if (!message || message.client_id !== clientId || message.sender !== sender) return undefined;
+  return patchById(store.messages, "messages", messageId, {
+    body,
+    edited_at: new Date().toISOString(),
+  });
+}
+
+export async function deleteMessage(clientId: string, messageId: string, sender: Message["sender"]): Promise<boolean> {
+  const message = await findById(store.messages, "messages", messageId);
+  if (!message || message.client_id !== clientId || message.sender !== sender) return false;
+  await removeById(store.messages, "messages", messageId);
+  return true;
+}
+
+export interface UnreadMessageThread {
+  client_id: string;
+  client_name: string;
+  count: number;
+  latest_body: string;
+  latest_at: string;
+}
+
+// Practitioner-facing inbox summary — every client-sent message that hasn't
+// been marked read yet, grouped by client. Read state is per-message
+// (read_at), flipped to "now" by markMessagesRead once the practitioner
+// actually opens that client's Messages tab.
+export async function getUnreadMessagesSummary(): Promise<{ totalUnread: number; threads: UnreadMessageThread[] }> {
+  const clients = await getClients();
+  const threads: UnreadMessageThread[] = [];
+  let totalUnread = 0;
+  for (const client of clients) {
+    const messages = await getMessages(client.id);
+    const unread = messages.filter((m) => m.sender === "client" && !m.read_at);
+    if (unread.length === 0) continue;
+    totalUnread += unread.length;
+    const latest = unread[unread.length - 1];
+    threads.push({
+      client_id: client.id,
+      client_name: client.full_name,
+      count: unread.length,
+      latest_body: latest.body,
+      latest_at: latest.created_at,
+    });
+  }
+  threads.sort((a, b) => (a.latest_at < b.latest_at ? 1 : -1));
+  return { totalUnread, threads };
+}
+
+export async function markMessagesRead(clientId: string): Promise<void> {
+  const messages = await getMessages(clientId);
+  const now = new Date().toISOString();
+  await Promise.all(
+    messages
+      .filter((m) => m.sender === "client" && !m.read_at)
+      .map((m) => patchById(store.messages, "messages", m.id, { read_at: now }))
+  );
+}
+
+export async function getEmailLogs(clientId: string): Promise<EmailLog[]> {
+  const logs = await listWhere(store.emailLogs, "emailLogs", "client_id", clientId);
+  return logs.sort((a, b) => (a.created_at < b.created_at ? -1 : 1));
+}
+
+export async function addEmailLog(clientId: string, emailType: EmailLog["email_type"], channel: EmailLog["channel"]) {
+  const log: EmailLog = {
+    id: nextId("email"),
+    client_id: clientId,
+    email_type: emailType,
+    channel,
+    created_at: new Date().toISOString(),
+  };
+  return create(store.emailLogs, "emailLogs", log);
+}
+
+export async function getSmsLogs(clientId: string): Promise<SmsLog[]> {
+  const logs = await listWhere(store.smsLogs, "smsLogs", "client_id", clientId);
+  return logs.sort((a, b) => (a.created_at < b.created_at ? -1 : 1));
+}
+
+export async function addSmsLog(clientId: string, smsType: SmsLog["sms_type"], channel: SmsLog["channel"]) {
+  const log: SmsLog = {
+    id: nextId("sms"),
+    client_id: clientId,
+    sms_type: smsType,
+    channel,
+    created_at: new Date().toISOString(),
+  };
+  return create(store.smsLogs, "smsLogs", log);
+}
+
+export async function getPortalAssignments(clientId: string): Promise<PortalAssignment[]> {
+  return listWhere(store.portalAssignments, "portalAssignments", "client_id", clientId);
+}
+
+export async function addPortalAssignment(assignment: Omit<PortalAssignment, "id">) {
+  const a: PortalAssignment = { id: nextId("pa"), ...assignment };
+  return create(store.portalAssignments, "portalAssignments", a);
+}
+
+export async function completePortalAssignment(id: string) {
+  return patchById(store.portalAssignments, "portalAssignments", id, {
+    status: "completed",
+    completed_at: new Date().toISOString(),
+  });
+}
+
+export async function getPayments(clientId?: string) {
+  return clientId
+    ? listWhere(store.payments, "payments", "client_id", clientId)
+    : listAll(store.payments, "payments");
+}
+
+export async function addPayment(
+  clientId: string,
+  amount: number,
+  method?: string,
+  notes?: string
+) {
+  const p: Payment = {
+    id: nextId("pay"),
+    client_id: clientId,
+    amount,
+    paid_at: new Date().toISOString(),
+    method,
+    notes,
+  };
+  return create(store.payments, "payments", p);
+}
+
+export async function updatePayment(
+  paymentId: string,
+  patch: Partial<Pick<Payment, "amount" | "paid_at" | "method" | "notes">>
+) {
+  return patchById<Payment>(store.payments, "payments", paymentId, patch);
+}
+
+// ---------------------------------------------------------------------------
+// AGGREGATES — dashboard, reporting, search
+// ---------------------------------------------------------------------------
+
+export async function getActiveClientCount(): Promise<number> {
+  const clients = await getClients();
+  return clients.filter((client) => isActiveClient(client.status)).length;
+}
+
+export async function getDashboardSummary() {
+  // These reads are independent. Parallelizing them removes several server
+  // round trips from every dashboard navigation.
+  const [clients, clientsForRevenue, outstandingTasks, allOutstandingForms, unreadMessages, upcomingSessions, payments, referralSources] = await Promise.all([
+    getClients(),
+    getClientsIncludingOnHold(),
+    getOutstandingTasks(),
+    getOutstandingForms(),
+    getUnreadMessagesSummary(),
+    getUpcomingSessions(6),
+    getPayments(),
+    getReferralSources(),
+  ]);
+  const outstandingForms = dedupeOutstandingForms(allOutstandingForms, outstandingTasks);
+  const activeClients = clients.filter((c) => isActiveClient(c.status));
+  const awaitingIntegration = clients.filter((c) => isAwaitingIntegrationClient(c.status));
+  const urgencyReference = Date.now();
+  const urgencyRank = (item: (typeof outstandingTasks)[number] | (typeof outstandingForms)[number]) => {
+    if (item.status === "overdue") return 0;
+    if (!item.due_at) return 3;
+    const dueTime = new Date(item.due_at).getTime();
+    if (dueTime < urgencyReference) return 0;
+    if (dueTime <= urgencyReference + 3 * 24 * 60 * 60 * 1000) return 1;
+    return 2;
+  };
+  const outstandingItems = [...outstandingTasks, ...outstandingForms].sort((a, b) => {
+    const rankDifference = urgencyRank(a) - urgencyRank(b);
+    if (rankDifference !== 0) return rankDifference;
+    const aDue = a.due_at ? new Date(a.due_at).getTime() : Number.POSITIVE_INFINITY;
+    const bDue = b.due_at ? new Date(b.due_at).getTime() : Number.POSITIVE_INFINITY;
+    return aDue - bDue;
+  });
+  const now = new Date();
+  const currentYear = now.getFullYear().toString();
+  const currentYearMonth = `${currentYear}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  // Total collected = authoritative source (includes pre-date-tracking amounts).
+  const revenueTotal = clientsForRevenue.reduce((sum, c) => sum + (c.amount_paid ?? 0), 0);
+  // Amounts in the dated payments collection (recorded after date-tracking was added).
+  const datedTotal = payments.reduce((sum, p) => sum + p.amount, 0);
+  // Payments recorded before date-tracking existed — we treat them as this-year
+  // since the practice is new and all prior collections happened in the current year.
+  const legacyRevenue = Math.max(0, revenueTotal - datedTotal);
+  const revenueMTD = payments
+    .filter((p) => (p.paid_at ?? "").startsWith(currentYearMonth))
+    .reduce((sum, p) => sum + p.amount, 0);
+  const revenueYTD =
+    legacyRevenue +
+    payments
+      .filter((p) => (p.paid_at ?? "").startsWith(currentYear))
+      .reduce((sum, p) => sum + p.amount, 0);
+  const expectedTotal = clientsForRevenue.reduce((sum, c) => sum + (c.package_value ?? 0), 0);
+  const outstandingBalance = clientsForRevenue.reduce(
+    (sum, c) => sum + Math.max(0, (c.package_value ?? 0) - (c.amount_paid ?? 0)),
+    0
+  );
+
+  const referralCounts = new Map<string, number>();
+  for (const c of clients) {
+    const src = referralSources.find((r) => r.id === c.referral_source_id);
+    const name = src?.name ?? "Unknown";
+    referralCounts.set(name, (referralCounts.get(name) ?? 0) + 1);
+  }
+
+  return {
+    totalClients: clients.length,
+    activeClients: activeClients.length,
+    activeClientRecords: activeClients,
+    awaitingIntegration: awaitingIntegration.length,
+    outstandingTasksCount: outstandingItems.length,
+    outstandingFormsCount: outstandingForms.length,
+    openTasksCount: outstandingTasks.length,
+    overdueTasksCount: outstandingTasks.filter((task) => task.status === "overdue" || isPastDue(task)).length,
+    pendingCheckInsCount: outstandingTasks.filter((task) => /check[ -]?in/i.test(task.title)).length,
+    outstandingTasks: outstandingItems.slice(0, 8),
+    unreadMessageCount: unreadMessages.totalUnread,
+    unreadMessageThreads: unreadMessages.threads,
+    upcomingSessions,
+    revenueTotal,
+    revenueMTD,
+    revenueYTD,
+    expectedTotal,
+    outstandingBalance,
+    referralBreakdown: Array.from(referralCounts.entries()).map(([name, count]) => ({ name, count })),
+    clients,
+  };
+}
+
+export async function getJourneyCompletionRate() {
+  const clients = await getClients();
+  const closed = clients.filter((c) => c.status === "journey_closed").length;
+  const total = clients.length || 1;
+  return Math.round((closed / total) * 100);
+}
+
+export type ReportsFilter = {
+  period?: "all" | "30d" | "3m" | "6m" | "year" | "custom";
+  status?: "all" | "active" | "completed";
+  stage?: "all" | JourneyPhase;
+  referral?: string;
+  start?: string;
+  end?: string;
+};
+
+export function parseReportsFilter(input: Record<string, string | undefined>): ReportsFilter {
+  const periods = new Set(["all", "30d", "3m", "6m", "year", "custom"]);
+  const statuses = new Set(["all", "active", "completed"]);
+  const stages = new Set<JourneyPhase>(["intake", "preparation", "harm_reduction_session", "post_journey_check_in", "integration_1", "integration_2", "closed"]);
+  return {
+    period: periods.has(input.period ?? "") ? input.period as ReportsFilter["period"] : "all",
+    status: statuses.has(input.status ?? "") ? input.status as ReportsFilter["status"] : "all",
+    stage: input.stage === "all" || stages.has(input.stage as JourneyPhase) ? input.stage as ReportsFilter["stage"] : "all",
+    referral: input.referral ?? "all",
+    start: input.start,
+    end: input.end,
+  };
+}
+
+function reportPeriodStart(filter: ReportsFilter, now: Date) {
+  if (filter.period === "30d") return new Date(now.getFullYear(), now.getMonth(), now.getDate() - 29);
+  if (filter.period === "3m") return new Date(now.getFullYear(), now.getMonth() - 2, 1);
+  if (filter.period === "6m") return new Date(now.getFullYear(), now.getMonth() - 5, 1);
+  if (filter.period === "year") return new Date(now.getFullYear(), 0, 1);
+  if (filter.period === "custom" && filter.start) return new Date(`${filter.start}T00:00:00`);
+  return null;
+}
+
+export async function getReportsSummary(filter: ReportsFilter = {}) {
+  const [allClients, allClientsForRevenue, allPayments, referralSources] = await Promise.all([
+    getClients(), getClientsIncludingOnHold(), getPayments(),
+    getReferralSources(),
+  ]);
+  const [milestonesByClient, sessionsByClient] = await Promise.all([
+    Promise.all(allClients.map((client) => getMilestones(client.id))),
+    Promise.all(allClients.map((client) => getSessions(client.id))),
+  ]);
+  const now = new Date();
+  const periodStart = reportPeriodStart(filter, now);
+  const periodEnd = filter.period === "custom" && filter.end ? new Date(`${filter.end}T23:59:59`) : now;
+  const milestoneMap = new Map(allClients.map((client, index) => [client.id, milestonesByClient[index]]));
+  const sessionMap = new Map(allClients.map((client, index) => [client.id, sessionsByClient[index]]));
+  const clients = allClients.filter((client) => {
+    if (filter.status === "active" && !isActiveClient(client.status)) return false;
+    if (filter.status === "completed" && client.status !== "journey_closed") return false;
+    if (filter.referral && filter.referral !== "all" && client.referral_source_id !== filter.referral) return false;
+    return !filter.stage || filter.stage === "all" || phaseForStatus(client.status, client.current_phase) === filter.stage;
+  });
+  const selectedClientIds = new Set(clients.map((client) => client.id));
+  const clientsForRevenue = allClientsForRevenue.filter((client) => selectedClientIds.has(client.id));
+  const payments = allPayments.filter((payment) => selectedClientIds.has(payment.client_id));
+  const periodPayments = payments.filter((payment) => {
+    const paidAt = new Date(`${payment.paid_at.slice(0, 10)}T12:00:00`);
+    return (!periodStart || paidAt >= periodStart) && paidAt <= periodEnd;
+  });
+  const scopedMilestonesByClient = clients.map((client) => milestoneMap.get(client.id) ?? []);
+  const scopedSessionsByClient = clients.map((client) => sessionMap.get(client.id) ?? []);
+  const currentYear = now.getFullYear().toString();
+  const currentYearMonth = `${currentYear}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const datedTotal = payments.reduce((sum, payment) => sum + payment.amount, 0);
+  const revenueTotal = periodPayments.reduce((sum, payment) => sum + payment.amount, 0) + (periodStart ? 0 : Math.max(0, clientsForRevenue.reduce((sum, client) => sum + (client.amount_paid ?? 0), 0) - datedTotal));
+  const averagePayment = periodPayments.length ? periodPayments.reduce((sum, payment) => sum + payment.amount, 0) / periodPayments.length : 0;
+  const legacyRevenue = periodStart ? 0 : Math.max(0, clientsForRevenue.reduce((sum, client) => sum + (client.amount_paid ?? 0), 0) - datedTotal);
+  const revenueMTD = payments.filter((payment) => payment.paid_at.startsWith(currentYearMonth)).reduce((sum, payment) => sum + payment.amount, 0);
+  const revenueYTD = legacyRevenue + payments.filter((payment) => payment.paid_at.startsWith(currentYear)).reduce((sum, payment) => sum + payment.amount, 0);
+  const expectedTotal = clientsForRevenue.reduce((sum, client) => sum + (client.package_value ?? 0), 0);
+  const outstandingBalance = clientsForRevenue.reduce((sum, client) => sum + Math.max(0, (client.package_value ?? 0) - (client.amount_paid ?? 0)), 0);
+  const chartStart = periodStart ?? new Date(now.getFullYear(), now.getMonth() - 11, 1);
+  const monthCount = Math.max(1, (periodEnd.getFullYear() - chartStart.getFullYear()) * 12 + periodEnd.getMonth() - chartStart.getMonth() + 1);
+  const monthKeys = Array.from({ length: monthCount }, (_, index) => {
+    const date = new Date(chartStart.getFullYear(), chartStart.getMonth() + index, 1);
+    const nextMonth = new Date(date.getFullYear(), date.getMonth() + 1, 1);
+    return {
+      key: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`,
+      name: date.toLocaleDateString("en-US", { month: "short" }),
+      endAt: nextMonth.getTime(),
+    };
+  });
+  const closedAtByClient = new Map(clients.map((client, index) => [
+    client.id,
+    scopedMilestonesByClient[index].find((milestone) => milestone.milestone_key === "journey_closed")?.completed_at,
+  ]));
+  const revenueByMonth = monthKeys.map((month) => ({
+    key: month.key,
+    name: month.name,
+    value: periodPayments.filter((payment) => payment.paid_at.startsWith(month.key)).reduce((sum, payment) => sum + payment.amount, 0),
+    activeClients: clients.filter((client) => {
+      const isCurrentlyActive = isActiveClient(client.status);
+      const hasHistoricalClosedJourney = client.status === "journey_closed";
+      if ((!isCurrentlyActive && !hasHistoricalClosedJourney) || new Date(client.created_at).getTime() >= month.endAt) return false;
+      const closedAt = closedAtByClient.get(client.id);
+      return !closedAt || new Date(closedAt).getTime() >= month.endAt;
+    }).length,
+  }));
+  const clientGrowth = monthKeys.map((month) => ({ name: month.name, value: clients.filter((client) => client.created_at.startsWith(month.key)).length }));
+  const referralCounts = new Map<string, number>();
+  for (const client of clients) {
+    const source = referralSources.find((item) => item.id === client.referral_source_id);
+    const name = source?.name ?? "Direct / unknown";
+    referralCounts.set(name, (referralCounts.get(name) ?? 0) + 1);
+  }
+  const completedJourneysCurrent = clients.filter((client) => client.status === "journey_closed").length;
+  const completedJourneys = clients.filter((client, index) => {
+    const closedAt = scopedMilestonesByClient[index].find((milestone) => milestone.milestone_key === "journey_closed")?.completed_at;
+    if (!closedAt) return false;
+    const closedDate = new Date(closedAt);
+    return (!periodStart || closedDate >= periodStart) && closedDate <= periodEnd;
+  }).length;
+  const activeClients = clients.filter((client) => isActiveClient(client.status)).length;
+  const averageCompletionRate = scopedMilestonesByClient.length
+    ? Math.round(scopedMilestonesByClient.reduce((total, milestones) => total + (milestones.length ? milestones.filter((milestone) => milestone.completed).length / milestones.length : 0), 0) / scopedMilestonesByClient.length * 100)
+    : 0;
+  const completionDurations = clients.flatMap((client, index) => {
+    const closedAt = scopedMilestonesByClient[index].find((milestone) => milestone.milestone_key === "journey_closed")?.completed_at;
+    if (!closedAt) return [];
+    const duration = Math.floor((new Date(closedAt).getTime() - new Date(client.created_at).getTime()) / 86_400_000);
+    return duration > 0 ? [duration] : [];
+  });
+  const completedJourneySessionCounts = clients.flatMap((client, index) => {
+    if (client.status !== "journey_closed") return [];
+    const closedAt = scopedMilestonesByClient[index].find((milestone) => milestone.milestone_key === "journey_closed")?.completed_at;
+    const completedSessions = scopedSessionsByClient[index].filter((session) => {
+      if (session.status !== "completed") return false;
+      return !closedAt || !session.scheduled_at || new Date(session.scheduled_at).getTime() <= new Date(closedAt).getTime();
+    });
+    return [completedSessions.length];
+  });
+  const sessionIntervalsInDays = scopedSessionsByClient.flatMap((sessions) => {
+    const datedSessions = sessions
+      .filter((session) => session.status === "completed" && session.scheduled_at)
+      .sort((a, b) => a.scheduled_at!.localeCompare(b.scheduled_at!));
+    return datedSessions.slice(1).flatMap((session, index) => {
+      const previous = datedSessions[index];
+      const interval = (new Date(session.scheduled_at!).getTime() - new Date(previous.scheduled_at!).getTime()) / 86_400_000;
+      return interval >= 0 ? [interval] : [];
+    });
+  });
+  const clientNames = new Map(clientsForRevenue.map((client) => [client.id, client.full_name]));
+  const outstandingPayments = clientsForRevenue.map((client) => ({
+    clientId: client.id, client: client.full_name,
+    amount: Math.max(0, (client.package_value ?? 0) - (client.amount_paid ?? 0)),
+    dueDate: client.payment_due_date ?? null, status: "Outstanding" as const,
+  })).filter((payment) => payment.amount > 0).sort((a, b) => b.amount - a.amount);
+  const recentPayments = [...periodPayments].sort((a, b) => b.paid_at.localeCompare(a.paid_at)).slice(0, 8).map((payment) => ({
+    id: payment.id, clientId: payment.client_id, client: clientNames.get(payment.client_id) ?? "Unknown client",
+    amount: payment.amount, date: payment.paid_at, method: payment.method, notes: payment.notes, status: "Paid" as const,
+  }));
+  return {
+    totalClients: clients.length, activeClients,
+    journeyCompletionRate: clients.length ? Math.round((completedJourneysCurrent / clients.length) * 100) : 0,
+    revenueTotal, revenueMTD, revenueYTD, expectedTotal, outstandingBalance, averagePayment, revenueByMonth,
+    revenuePayments: payments.map((payment) => ({ date: payment.paid_at, amount: payment.amount })), clientGrowth,
+    referralBreakdown: Array.from(referralCounts.entries()).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count),
+    journeyPerformance: {
+      completed: completedJourneys, inProgress: activeClients, averageCompletionRate,
+      averageDaysToCompletion: completionDurations.length ? Math.round(completionDurations.reduce((sum, days) => sum + days, 0) / completionDurations.length) : null,
+      averageDaysBetweenSessions: sessionIntervalsInDays.length
+        ? Math.round(sessionIntervalsInDays.reduce((sum, days) => sum + days, 0) / sessionIntervalsInDays.length)
+        : null,
+      averageSessionsPerJourney: completedJourneySessionCounts.length
+        ? completedJourneySessionCounts.reduce((sum, count) => sum + count, 0) / completedJourneySessionCounts.length
+        : null,
+    },
+    outstandingPayments, recentPayments, clients,
+  };
+}
+
+export interface SearchResult {
+  type: "client" | "transcript" | "session_note" | "theme" | "intention" | "action_item" | "insight";
+  clientId: string;
+  clientName: string;
+  snippet: string;
+  href: string;
+}
+
+// ---------------------------------------------------------------------------
+// PROSPECTS — pre-client CRM records for introductory calls
+// ---------------------------------------------------------------------------
+
+// Keep prospect data on the shared mock-store singleton. Server actions and
+// dynamic route modules can be evaluated by separate dev bundles; module-local
+// arrays made a newly created prospect disappear before its detail page loaded.
+const mockProspects = store.prospects;
+const mockProspectCalls = store.prospectCalls;
+
+async function allProspects(): Promise<Prospect[]> {
+  const prospects = await listAll(mockProspects, "prospects");
+  return prospects.sort((a, b) => (a.updated_at < b.updated_at ? 1 : -1));
+}
+
+/** Default prospect read — EXCLUDES anyone on hold. See getClients. */
+export async function getProspects(): Promise<Prospect[]> {
+  return (await allProspects()).filter((p) => !isOnHold(p));
+}
+
+/** Every prospect regardless of hold state. */
+export async function getProspectsIncludingOnHold(): Promise<Prospect[]> {
+  return allProspects();
+}
+
+/** Only prospects currently on hold, soonest follow-up first. */
+export async function getOnHoldProspects(): Promise<Prospect[]> {
+  return (await allProspects())
+    .filter(isOnHold)
+    .sort((a, b) => ((a.hold_follow_up_at ?? "") < (b.hold_follow_up_at ?? "") ? -1 : 1));
+}
+
+export async function getProspect(id: string): Promise<Prospect | undefined> {
+  return findById(mockProspects, "prospects", id);
+}
+
+export async function addProspect(input: {
+  full_name: string;
+  email?: string;
+  phone?: string;
+  referral_source?: string;
+}): Promise<Prospect> {
+  const practitioner = await getPractitioner();
+  const now = new Date().toISOString();
+  const prospect: Prospect = {
+    id: nextId("pro"),
+    practitioner_id: practitioner.id,
+    status: "new",
+    created_at: now,
+    updated_at: now,
+    ...input,
+  };
+  return create(mockProspects, "prospects", prospect);
+}
+
+export async function updateProspect(
+  id: string,
+  patch: Partial<Omit<Prospect, "id" | "practitioner_id" | "created_at">>
+): Promise<Prospect | undefined> {
+  return patchById(mockProspects, "prospects", id, {
+    ...patch,
+    updated_at: new Date().toISOString(),
+  });
+}
+
+export async function deleteProspect(id: string): Promise<void> {
+  await removeById(mockProspects, "prospects", id);
+  await removeWhere(mockProspectCalls, "prospectCalls", "prospect_id", id);
+}
+
+export async function getProspectCalls(prospectId: string): Promise<ProspectCall[]> {
+  const calls = await listWhere(mockProspectCalls, "prospectCalls", "prospect_id", prospectId);
+  return calls.sort((a, b) => (a.scheduled_at < b.scheduled_at ? -1 : 1));
+}
+
+export async function getProspectCall(callId: string): Promise<ProspectCall | undefined> {
+  return findById(mockProspectCalls, "prospectCalls", callId);
+}
+
+export async function getAllProspectCalls(): Promise<ProspectCall[]> {
+  const all = await listAll(mockProspectCalls, "prospectCalls");
+  return all.sort((a, b) => (a.scheduled_at < b.scheduled_at ? -1 : 1));
+}
+
+export async function addProspectCall(input: {
+  prospect_id: string;
+  client_id?: string;
+  prospect_name: string;
+  call_type: ProspectCall["call_type"];
+  scheduled_at: string;
+  duration_minutes?: number;
+  notes?: string;
+}): Promise<ProspectCall> {
+  const call: ProspectCall = {
+    id: nextId("pcall"),
+    status: "scheduled",
+    created_at: new Date().toISOString(),
+    ...input,
+  };
+  await create(mockProspectCalls, "prospectCalls", call);
+  // Update prospect status to reflect a scheduled call. Skipped for hold
+  // reminders — putting someone on hold shouldn't advance their status, and
+  // client holds have no prospect record at all.
+  if (input.call_type !== "hold_follow_up" && input.prospect_id) {
+    const prospect = await getProspect(input.prospect_id);
+    if (prospect && prospect.status === "new") {
+      await updateProspect(input.prospect_id, { status: "intro_scheduled" });
+    }
+  }
+  return call;
+}
+
+// ---------------------------------------------------------------------------
+// HOLDS
+// ---------------------------------------------------------------------------
+
+function holdFollowUpDefault(days = DEFAULT_HOLD_DAYS): string {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  // Land the reminder at 9am local rather than the current time of day.
+  d.setHours(9, 0, 0, 0);
+  return d.toISOString();
+}
+
+/**
+ * Park a client. Creates the follow-up reminder that will surface on the
+ * calendar, and records its id so releasing the hold can clean it up.
+ * The client's journey status and phase are left untouched.
+ */
+export async function putClientOnHold(
+  clientId: string,
+  opts: { followUpAt?: string; reason?: string } = {}
+): Promise<Client | undefined> {
+  const client = await getClient(clientId);
+  if (!client) return undefined;
+  if (isOnHold(client)) return client;
+
+  const followUpAt = opts.followUpAt ?? holdFollowUpDefault();
+  const reminder = await addProspectCall({
+    prospect_id: "",
+    client_id: clientId,
+    prospect_name: client.full_name,
+    call_type: "hold_follow_up",
+    scheduled_at: followUpAt,
+    duration_minutes: 30,
+    notes: opts.reason ? `On hold — ${opts.reason}` : "Follow up on hold",
+  });
+
+  return updateClient(clientId, {
+    on_hold_at: new Date().toISOString(),
+    hold_follow_up_at: followUpAt,
+    hold_reason: opts.reason,
+    hold_reminder_call_id: reminder.id,
+  });
+}
+
+/** Bring a client back into active views and drop the follow-up reminder. */
+export async function releaseClientHold(clientId: string): Promise<Client | undefined> {
+  const client = await getClient(clientId);
+  if (!client) return undefined;
+  if (client.hold_reminder_call_id) {
+    await deleteProspectCall(client.hold_reminder_call_id);
+  }
+  // Mock patch helpers skip undefined, so clear with empty strings — every
+  // hold check treats a falsy on_hold_at as "not on hold".
+  return updateClient(clientId, {
+    on_hold_at: "",
+    hold_follow_up_at: "",
+    hold_reason: "",
+    hold_reminder_call_id: "",
+  });
+}
+
+/** Park a prospect. Mirror of putClientOnHold. */
+export async function putProspectOnHold(
+  prospectId: string,
+  opts: { followUpAt?: string; reason?: string } = {}
+): Promise<Prospect | undefined> {
+  const prospect = await getProspect(prospectId);
+  if (!prospect) return undefined;
+  if (isOnHold(prospect)) return prospect;
+
+  const followUpAt = opts.followUpAt ?? holdFollowUpDefault();
+  const reminder = await addProspectCall({
+    prospect_id: prospectId,
+    prospect_name: prospect.full_name,
+    call_type: "hold_follow_up",
+    scheduled_at: followUpAt,
+    duration_minutes: 30,
+    notes: opts.reason ? `On hold — ${opts.reason}` : "Follow up on hold",
+  });
+
+  return updateProspect(prospectId, {
+    on_hold_at: new Date().toISOString(),
+    hold_follow_up_at: followUpAt,
+    hold_reason: opts.reason,
+    hold_reminder_call_id: reminder.id,
+  });
+}
+
+/** Bring a prospect back into active views and drop the follow-up reminder. */
+export async function releaseProspectHold(prospectId: string): Promise<Prospect | undefined> {
+  const prospect = await getProspect(prospectId);
+  if (!prospect) return undefined;
+  if (prospect.hold_reminder_call_id) {
+    await deleteProspectCall(prospect.hold_reminder_call_id);
+  }
+  return updateProspect(prospectId, {
+    on_hold_at: "",
+    hold_follow_up_at: "",
+    hold_reason: "",
+    hold_reminder_call_id: "",
+  });
+}
+
+export async function updateProspectCall(
+  callId: string,
+  patch: Partial<
+    Pick<
+      ProspectCall,
+      "status" | "notes" | "scheduled_at" | "duration_minutes" | "google_event_id" | "google_synced_at"
+    >
+  >
+): Promise<ProspectCall | undefined> {
+  return patchById<ProspectCall>(mockProspectCalls, "prospectCalls", callId, patch as Partial<ProspectCall>);
+}
+
+// See clearSessionGoogleEvent — same rule for prospect calls / hold reminders.
+export async function clearProspectCallGoogleEvent(callId: string): Promise<void> {
+  await clearFields(mockProspectCalls, "prospectCalls", callId, ["google_event_id"]);
+  await patchById<ProspectCall>(mockProspectCalls, "prospectCalls", callId, {
+    google_synced_at: new Date().toISOString(),
+  });
+}
+
+export async function deleteProspectCall(callId: string): Promise<void> {
+  await removeById(mockProspectCalls, "prospectCalls", callId);
+}
+
+// ---------------------------------------------------------------------------
+// PROSPECT TRANSCRIPTS — additional call transcripts beyond the original
+// intro-call transcript stored inline on Prospect.fathom_transcript. Lets a
+// practitioner record a second (or third) call before converting.
+// ---------------------------------------------------------------------------
+
+const mockProspectTranscripts = store.prospectTranscripts;
+
+export async function getProspectTranscripts(prospectId: string): Promise<ProspectTranscript[]> {
+  const list = await listWhere(mockProspectTranscripts, "prospectTranscripts", "prospect_id", prospectId);
+  return list.sort((a, b) => (a.created_at < b.created_at ? -1 : 1));
+}
+
+export async function addProspectTranscript(input: {
+  prospect_id: string;
+  label: string;
+  raw_text: string;
+}): Promise<ProspectTranscript> {
+  const now = new Date().toISOString();
+  const t: ProspectTranscript = {
+    id: nextId("ptx"),
+    created_at: now,
+    updated_at: now,
+    ...input,
+  };
+  return create(mockProspectTranscripts, "prospectTranscripts", t);
+}
+
+export async function updateProspectTranscript(
+  id: string,
+  patch: Partial<Pick<ProspectTranscript, "label" | "raw_text" | "ai_summary_content" | "ai_summary_model" | "ai_summary_generated_at">>
+): Promise<ProspectTranscript | undefined> {
+  return patchById<ProspectTranscript>(mockProspectTranscripts, "prospectTranscripts", id, {
+    ...patch,
+    updated_at: new Date().toISOString(),
+  } as Partial<ProspectTranscript>);
+}
+
+export async function deleteProspectTranscript(id: string): Promise<void> {
+  await removeById(mockProspectTranscripts, "prospectTranscripts", id);
+}
+
+export async function search(query: string): Promise<SearchResult[]> {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+  const results: SearchResult[] = [];
+
+  // Search intentionally spans held clients too — hiding someone from the
+  // working views shouldn't make them unfindable when you go looking by name.
+  // Held results are labelled so it's obvious why they aren't in the list.
+  const [clients, transcripts, sessionNotes, memory] = await Promise.all([
+    getClientsIncludingOnHold(),
+    listAll(store.transcripts, "transcripts"),
+    listAll(store.sessionNotes, "sessionNotes"),
+    listAll(store.memory, "memory"),
+  ]);
+  const clientName = (id: string) => clients.find((c) => c.id === id)?.full_name ?? "Unknown";
+
+  for (const c of clients) {
+    if (c.full_name.toLowerCase().includes(q) || (c.notes ?? "").toLowerCase().includes(q)) {
+      results.push({
+        type: "client",
+        clientId: c.id,
+        clientName: c.full_name,
+        snippet: isOnHold(c) ? `${c.full_name} · On hold` : c.full_name,
+        href: `/clients/${c.id}`,
+      });
+    }
+  }
+  for (const t of transcripts) {
+    if ((t.raw_text ?? "").toLowerCase().includes(q)) {
+      results.push({
+        type: "transcript",
+        clientId: t.client_id,
+        clientName: clientName(t.client_id),
+        snippet: (t.raw_text ?? "").slice(0, 140) + "...",
+        href: `/clients/${t.client_id}?tab=sessions`,
+      });
+    }
+  }
+  for (const n of sessionNotes) {
+    if (n.content.toLowerCase().includes(q)) {
+      results.push({
+        type: "session_note",
+        clientId: n.client_id,
+        clientName: clientName(n.client_id),
+        snippet: n.content,
+        href: `/clients/${n.client_id}?tab=sessions`,
+      });
+    }
+  }
+  for (const m of memory) {
+    if (m.content.toLowerCase().includes(q)) {
+      const typeMap: Record<string, SearchResult["type"]> = {
+        theme: "theme",
+        intention: "intention",
+        action_item: "action_item",
+        insight: "insight",
+      };
+      results.push({
+        type: typeMap[m.item_type] ?? "insight",
+        clientId: m.client_id,
+        clientName: clientName(m.client_id),
+        snippet: m.content,
+        href: `/clients/${m.client_id}?tab=journey`,
+      });
+    }
+  }
+  return results.slice(0, 50);
+}
+
+// ---------------------------------------------------------------------------
+// GOOGLE CALENDAR SYNC — settings/token singleton, plus mirrored "busy"
+// events pulled from the practitioner's primary calendar (see
+// lib/googleCalendarSync.ts for the actual sync logic; this is just storage).
+// ---------------------------------------------------------------------------
+
+const mockGoogleCalendarSettings: GoogleCalendarSettings = { connected: false };
+
+export async function getGoogleCalendarSettings(): Promise<GoogleCalendarSettings> {
+  if (isFirebaseConfigured) {
+    const existing = await getDocById<GoogleCalendarSettings>("meta", "googleCalendar");
+    return existing ?? { connected: false };
+  }
+  return mockGoogleCalendarSettings;
+}
+
+export async function saveGoogleCalendarSettings(
+  patch: Partial<GoogleCalendarSettings>
+): Promise<GoogleCalendarSettings> {
+  const current = await getGoogleCalendarSettings();
+  const updated: GoogleCalendarSettings = { ...current, ...patch };
+  if (isFirebaseConfigured) {
+    return setSingleton<GoogleCalendarSettings & Record<string, unknown>>(
+      "meta",
+      "googleCalendar",
+      updated as GoogleCalendarSettings & Record<string, unknown>
+    );
+  }
+  Object.assign(mockGoogleCalendarSettings, updated);
+  return mockGoogleCalendarSettings;
+}
+
+export async function clearGoogleCalendarSettings(): Promise<void> {
+  const cleared: GoogleCalendarSettings = { connected: false };
+  if (isFirebaseConfigured) {
+    const { getDb } = await import("@/lib/firebaseAdmin");
+    await getDb()!.collection("meta").doc("googleCalendar").set(cleared as unknown as Record<string, unknown>);
+    return;
+  }
+  for (const k of Object.keys(mockGoogleCalendarSettings)) {
+    delete (mockGoogleCalendarSettings as unknown as Record<string, unknown>)[k];
+  }
+  mockGoogleCalendarSettings.connected = false;
+}
+
+const mockExternalEvents: ExternalCalendarEvent[] = [];
+
+export async function getExternalCalendarEvents(): Promise<ExternalCalendarEvent[]> {
+  const all = await listAll(mockExternalEvents, "externalCalendarEvents");
+  return all
+    .filter((e) => e.status !== "cancelled")
+    .sort((a, b) => (a.start_at < b.start_at ? -1 : 1));
+}
+
+// Insert-or-update by google_event_id (Firestore doc id = our internal id,
+// not Google's, so we look up by the google_event_id field first).
+export async function upsertExternalCalendarEvent(
+  event: Omit<ExternalCalendarEvent, "id">
+): Promise<ExternalCalendarEvent> {
+  const matches = await listWhere(
+    mockExternalEvents,
+    "externalCalendarEvents",
+    "google_event_id",
+    event.google_event_id
+  );
+  const existing = matches[0];
+  if (existing) {
+    const updated = await patchById<ExternalCalendarEvent>(
+      mockExternalEvents,
+      "externalCalendarEvents",
+      existing.id,
+      event as Partial<ExternalCalendarEvent>
+    );
+    return updated!;
+  }
+  const rec: ExternalCalendarEvent = { id: nextId("extev"), ...event };
+  return create(mockExternalEvents, "externalCalendarEvents", rec);
+}
+
+export async function deleteExternalCalendarEventByGoogleId(googleEventId: string): Promise<void> {
+  const matches = await listWhere(
+    mockExternalEvents,
+    "externalCalendarEvents",
+    "google_event_id",
+    googleEventId
+  );
+  if (matches[0]) await removeById(mockExternalEvents, "externalCalendarEvents", matches[0].id);
+}
